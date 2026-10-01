@@ -1,31 +1,44 @@
 export default {
   async fetch(request, env) {
-
     const url = new URL(request.url);
 
     // =========================================
-    // Тест AI
+    // CORS
+    // =========================================
+
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "*"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: corsHeaders
+      });
+    }
+
+
+    // =========================================
+    // TEST AI
     // =========================================
 
     if (
       request.method === "GET" &&
       url.pathname === "/api/test-ai"
     ) {
-
       try {
-
-        const result =
-          await env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct-fp8",
-            {
-              messages: [
-                {
-                  role: "user",
-                  content: "Ответь одним словом: работает?"
-                }
-              ]
-            }
-          );
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fp8",
+          {
+            messages: [
+              {
+                role: "user",
+                content: "Ответь одним словом: работает?"
+              }
+            ]
+          }
+        );
 
         return Response.json({
           ok: true,
@@ -33,59 +46,49 @@ export default {
         });
 
       } catch (error) {
-
         return Response.json(
           {
             ok: false,
             error: error.message
           },
-          { status: 500 }
+          {
+            status: 500
+          }
         );
-
       }
-
     }
 
 
     // =========================================
-    // ТЕСТ HUGGING FACE ЧЕРЕЗ CLOUDFLARE
+    // TEST HUGGING FACE CONFIG
     // =========================================
 
     if (
       request.method === "GET" &&
       url.pathname === "/api/test-huggingface"
     ) {
-
-      const hfURL =
-        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json";
-
-
       try {
+        const hfURL =
+          "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json";
 
-        const response =
-          await fetch(hfURL);
+        const response = await fetch(hfURL);
 
+        const headers = new Headers(response.headers);
+
+        headers.set(
+          "Access-Control-Allow-Origin",
+          "*"
+        );
 
         return new Response(
-          await response.text(),
+          await response.arrayBuffer(),
           {
             status: response.status,
-
-            headers: {
-              "Content-Type":
-                response.headers.get(
-                  "Content-Type"
-                ) || "application/json",
-
-              "Access-Control-Allow-Origin":
-                "*"
-            }
-
+            headers
           }
         );
 
       } catch (error) {
-
         return Response.json(
           {
             ok: false,
@@ -93,34 +96,96 @@ export default {
           },
           {
             status: 500,
-            headers: {
-              "Access-Control-Allow-Origin":
-                "*"
-            }
+            headers: corsHeaders
+          }
+        );
+      }
+    }
+
+
+    // =========================================
+    // HUGGING FACE MODEL PROXY
+    // =========================================
+
+    if (
+      url.pathname.startsWith("/api/model/")
+    ) {
+
+      let path =
+        url.pathname.substring(
+          "/api/model/".length
+        );
+
+
+      // -----------------------------------------
+      // Защита от неправильного URL Transformers.js
+      //
+      // Иногда приходит:
+      //
+      // {file}/preprocessor_config.json
+      //
+      // Нам нужен:
+      //
+      // preprocessor_config.json
+      // -----------------------------------------
+
+      path = path.replace(
+        "{file}/",
+        ""
+      );
+
+
+      // -----------------------------------------
+      // Удаляем возможный повторный путь модели
+      // -----------------------------------------
+
+      const modelPrefix =
+        "studioludens/birefnet-lite-512/resolve/main/";
+
+      if (path.startsWith(modelPrefix)) {
+        path =
+          path.substring(
+            modelPrefix.length
+          );
+      }
+
+
+      // -----------------------------------------
+      // Разрешаем только файлы нашей модели
+      // -----------------------------------------
+
+      const allowedPrefixes = [
+        "config.json",
+        "preprocessor_config.json",
+        "onnx/",
+        "tokenizer",
+        "processor",
+        "generation",
+        "special_tokens"
+      ];
+
+      const allowed =
+        allowedPrefixes.some(
+          prefix => path.startsWith(prefix)
+        );
+
+
+      if (!allowed) {
+
+        return new Response(
+          "File not allowed",
+          {
+            status: 403,
+            headers: corsHeaders
           }
         );
 
       }
 
-    }
 
-
-    // =========================================
-    // PROXY HUGGING FACE
-    // =========================================
-
-    if (
-      url.pathname.startsWith(
-        "/api/model/"
-      )
-    ) {
-
-      const path =
-        url.pathname.replace(
-          "/api/model/",
-          ""
-        );
-
+      // -----------------------------------------
+      // Hugging Face URL
+      // -----------------------------------------
 
       const hfURL =
         "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/" +
@@ -129,8 +194,41 @@ export default {
 
       try {
 
+        // Передаём полезные заголовки браузера
+        const requestHeaders =
+          new Headers();
+
+
+        const range =
+          request.headers.get("Range");
+
+        if (range) {
+          requestHeaders.set(
+            "Range",
+            range
+          );
+        }
+
+
+        const accept =
+          request.headers.get("Accept");
+
+        if (accept) {
+          requestHeaders.set(
+            "Accept",
+            accept
+          );
+        }
+
+
         const response =
-          await fetch(hfURL);
+          await fetch(
+            hfURL,
+            {
+              method: "GET",
+              headers: requestHeaders
+            }
+          );
 
 
         const headers =
@@ -139,15 +237,27 @@ export default {
           );
 
 
+        // CORS
         headers.set(
           "Access-Control-Allow-Origin",
           "*"
         );
 
-
         headers.set(
           "Access-Control-Allow-Methods",
           "GET, OPTIONS"
+        );
+
+        headers.set(
+          "Access-Control-Allow-Headers",
+          "*"
+        );
+
+
+        // Разрешаем браузеру кешировать модель
+        headers.set(
+          "Cache-Control",
+          "public, max-age=31536000"
         );
 
 
@@ -159,24 +269,23 @@ export default {
           }
         );
 
+
       } catch (error) {
 
         return Response.json(
           {
             ok: false,
-            error: error.message
+            error: error.message,
+            requestedPath: path,
+            huggingFaceURL: hfURL
           },
           {
             status: 500,
-            headers: {
-              "Access-Control-Allow-Origin":
-                "*"
-            }
+            headers: corsHeaders
           }
         );
 
       }
-
     }
 
 
@@ -194,8 +303,10 @@ export default {
         const body =
           await request.json();
 
+
         const productName =
           body.productName || "";
+
 
         const features =
           body.features || "";
@@ -287,6 +398,7 @@ none | lines | circles | blobs | grid | diagonal
         } catch {
 
           data = {
+
             title:
               productName || "Товар",
 
@@ -330,7 +442,13 @@ none | lines | circles | blobs | grid | diagonal
         }
 
 
-        return Response.json(data);
+        return Response.json(
+          data,
+          {
+            headers: corsHeaders
+          }
+        );
+
 
       } catch (error) {
 
@@ -340,49 +458,21 @@ none | lines | circles | blobs | grid | diagonal
               error.message
           },
           {
-            status: 500
+            status: 500,
+            headers: corsHeaders
           }
         );
 
       }
-
     }
 
 
     // =========================================
-    // OPTIONS
-    // =========================================
-
-    if (
-      request.method === "OPTIONS"
-    ) {
-
-      return new Response(
-        null,
-        {
-          headers: {
-            "Access-Control-Allow-Origin":
-              "*",
-
-            "Access-Control-Allow-Methods":
-              "GET, POST, OPTIONS",
-
-            "Access-Control-Allow-Headers":
-              "Content-Type"
-          }
-        }
-      );
-
-    }
-
-
-    // =========================================
-    // САЙТ
+    // WEBSITE
     // =========================================
 
     return env.ASSETS.fetch(
       request
     );
-
   }
 };
