@@ -140,11 +140,6 @@
         Тест BiRefNet через Cloudflare Worker
     </div>
 
-
-    <!-- ==========================================
-         ДИАГНОСТИКА
-    =========================================== -->
-
     <div class="panel">
 
         <button id="diagnosticButton">
@@ -160,11 +155,6 @@
         </div>
 
     </div>
-
-
-    <!-- ==========================================
-         ЗАГРУЗКА ФОТО
-    =========================================== -->
 
     <div class="panel">
 
@@ -185,11 +175,6 @@
 
     </div>
 
-
-    <!-- ==========================================
-         ПРЕВЬЮ
-    =========================================== -->
-
     <div class="panel">
 
         <div class="images">
@@ -206,7 +191,6 @@
                 >
 
             </div>
-
 
             <div class="image-box checker">
 
@@ -230,840 +214,436 @@
 
 <script type="module">
 
-    /*
-     * ==========================================
-     * TRANSFORMERS.JS
-     * ==========================================
-     */
-
-    import {
-        AutoModel,
-        AutoProcessor,
-        RawImage,
-        env
-    } from
-    "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+import {
+    AutoModel,
+    AutoProcessor,
+    RawImage,
+    env
+} from
+"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
-    /*
-     * ==========================================
-     * CLOUDFLARE PROXY
-     * ==========================================
-     *
-     * ВАЖНО:
-     *
-     * remotePathTemplate НЕ содержит {file}.
-     *
-     * Transformers.js сам добавляет имя файла.
-     *
-     * Поэтому URL будет:
-     *
-     * /api/model/
-     * studiоludens/birefnet-lite-512/
-     * resolve/main/
-     * preprocessor_config.json
-     *
-     * вместо неправильного:
-     *
-     * /resolve/main/{file}/preprocessor_config.json
-     */
+/* ==========================================
+   TRANSFORMERS.JS
+========================================== */
 
-    env.allowRemoteModels = true;
+env.allowRemoteModels = true;
 
-    env.remoteHost =
-        window.location.origin + "/api/model/";
+env.remoteHost =
+    window.location.origin + "/api/model/";
 
-    env.remotePathTemplate =
-        "{model}/resolve/{revision}";
+env.remotePathTemplate =
+    "{model}/resolve/{revision}";
 
 
-    /*
-     * ==========================================
-     * ELEMENTS
-     * ==========================================
-     */
+/* ==========================================
+   ELEMENTS
+========================================== */
 
-    const status =
-        document.getElementById("status");
+const status =
+    document.getElementById("status");
 
-    const diagnosticButton =
-        document.getElementById("diagnosticButton");
+const diagnosticButton =
+    document.getElementById("diagnosticButton");
 
-    const loadButton =
-        document.getElementById("loadButton");
+const loadButton =
+    document.getElementById("loadButton");
 
-    const removeButton =
-        document.getElementById("removeButton");
+const removeButton =
+    document.getElementById("removeButton");
 
-    const fileInput =
-        document.getElementById("fileInput");
+const fileInput =
+    document.getElementById("fileInput");
 
-    const originalImage =
-        document.getElementById("originalImage");
+const originalImage =
+    document.getElementById("originalImage");
 
-    const resultImage =
-        document.getElementById("resultImage");
+const resultImage =
+    document.getElementById("resultImage");
 
 
-    /*
-     * ==========================================
-     * VARIABLES
-     * ==========================================
-     */
+/* ==========================================
+   VARIABLES
+========================================== */
 
-    let model = null;
-    let processor = null;
-    let selectedFile = null;
+let model = null;
+let processor = null;
+let selectedFile = null;
 
 
-    /*
-     * ==========================================
-     * STATUS
-     * ==========================================
-     */
+/* ==========================================
+   STATUS
+========================================== */
 
-    function setStatus(message) {
-        status.textContent = message;
+function setStatus(message) {
+
+    status.textContent = message;
+
+}
+
+
+/* ==========================================
+   FILE
+========================================== */
+
+fileInput.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        selectedFile = file;
+
+        originalImage.src =
+            URL.createObjectURL(file);
+
+        resultImage.src = "";
+
+        setStatus(
+            "✅ Изображение выбрано.\n\n" +
+            "Теперь можно удалить фон."
+        );
+
     }
+);
 
 
-    /*
-     * ==========================================
-     * ВЫБОР ФОТО
-     * ==========================================
-     */
+/* ==========================================
+   DIAGNOSTIC
+========================================== */
 
-    fileInput.addEventListener(
-        "change",
-        event => {
+diagnosticButton.addEventListener(
+    "click",
+    async () => {
 
-            const file =
-                event.target.files[0];
+        diagnosticButton.disabled = true;
 
-            if (!file) {
-                return;
-            }
+        let report = "";
 
-            selectedFile = file;
 
-            originalImage.src =
-                URL.createObjectURL(file);
+        try {
 
-            resultImage.src = "";
+            report +=
+                "1. Проверка WebGPU\n";
 
-            setStatus(
-                "✅ Изображение выбрано.\n\n" +
-                "Теперь можно загрузить модель " +
-                "и удалить фон."
-            );
 
-        }
-    );
-
-
-    /*
-     * ==========================================
-     * ДИАГНОСТИКА
-     * ==========================================
-     */
-
-    diagnosticButton.addEventListener(
-        "click",
-        async () => {
-
-            diagnosticButton.disabled = true;
-
-            let report = "";
-
-
-            try {
-
-                /*
-                 * ------------------------------
-                 * 1. WEBGPU
-                 * ------------------------------
-                 */
-
-                report +=
-                    "1. Проверка WebGPU\n";
-
-
-                if ("gpu" in navigator) {
-
-                    try {
-
-                        const adapter =
-                            await navigator.gpu.requestAdapter();
-
-
-                        if (adapter) {
-
-                            report +=
-                                "✅ GPU adapter найден\n";
-
-
-                            report +=
-                                "GPU: " +
-                                (
-                                    adapter.info?.device ||
-                                    adapter.info?.description ||
-                                    "unknown"
-                                ) +
-                                "\n\n";
-
-                        } else {
-
-                            report +=
-                                "⚠️ GPU adapter не найден\n\n";
-
-                        }
-
-                    } catch (error) {
-
-                        report +=
-                            "⚠️ WebGPU ошибка: " +
-                            error.message +
-                            "\n\n";
-
-                    }
-
-                } else {
-
-                    report +=
-                        "⚠️ WebGPU отсутствует\n\n";
-
-                }
-
-
-                /*
-                 * ------------------------------
-                 * 2. TRANSFORMERS.JS
-                 * ------------------------------
-                 */
-
-                report +=
-                    "2. Проверка Transformers.js\n";
-
-
-                report +=
-                    "✅ Transformers.js загружен\n";
-
-
-                report +=
-                    "AutoModel: " +
-                    (!!AutoModel) +
-                    "\n";
-
-
-                report +=
-                    "AutoProcessor: " +
-                    (!!AutoProcessor) +
-                    "\n";
-
-
-                report +=
-                    "RawImage: " +
-                    (!!RawImage) +
-                    "\n\n";
-
-
-                /*
-                 * ------------------------------
-                 * 3. CONFIG
-                 * ------------------------------
-                 */
-
-                report +=
-                    "3. Проверка Cloudflare Proxy\n";
-
-
-                const configURL =
-                    window.location.origin +
-                    "/api/model/config.json";
-
-
-                report +=
-                    "URL:\n" +
-                    configURL +
-                    "\n";
-
-
-                const configResponse =
-                    await fetch(
-                        configURL,
-                        {
-                            method: "GET",
-                            cache: "no-store"
-                        }
-                    );
-
-
-                if (!configResponse.ok) {
-
-                    throw new Error(
-                        "Proxy config HTTP " +
-                        configResponse.status
-                    );
-
-                }
-
-
-                const config =
-                    await configResponse.json();
-
-
-                report +=
-                    "✅ config.json загружен через Worker\n";
-
-
-                report +=
-                    "model_type: " +
-                    (
-                        config.model_type ||
-                        "unknown"
-                    ) +
-                    "\n\n";
-
-
-                /*
-                 * ------------------------------
-                 * 4. PREPROCESSOR CONFIG
-                 * ------------------------------
-                 */
-
-                report +=
-                    "4. Проверка preprocessor_config.json\n";
-
-
-                const preprocessorURL =
-                    window.location.origin +
-                    "/api/model/preprocessor_config.json";
-
-
-                report +=
-                    "URL:\n" +
-                    preprocessorURL +
-                    "\n";
-
-
-                const preprocessorResponse =
-                    await fetch(
-                        preprocessorURL,
-                        {
-                            method: "GET",
-                            cache: "no-store"
-                        }
-                    );
-
-
-                if (!preprocessorResponse.ok) {
-
-                    throw new Error(
-                        "Preprocessor HTTP " +
-                        preprocessorResponse.status
-                    );
-
-                }
-
-
-                report +=
-                    "✅ preprocessor_config.json доступен\n\n";
-
-
-                /*
-                 * ------------------------------
-                 * 5. ONNX
-                 * ------------------------------
-                 */
-
-                report +=
-                    "5. Проверка ONNX через Worker\n";
-
-
-                const onnxURL =
-                    window.location.origin +
-                    "/api/model/onnx/model_fp16.onnx";
-
-
-                report +=
-                    "URL:\n" +
-                    onnxURL +
-                    "\n\n";
-
-
-                const onnxResponse =
-                    await fetch(
-                        onnxURL,
-                        {
-                            method: "GET",
-                            cache: "no-store"
-                        }
-                    );
-
-
-                if (!onnxResponse.ok) {
-
-                    throw new Error(
-                        "ONNX HTTP " +
-                        onnxResponse.status
-                    );
-
-                }
-
-
-                report +=
-                    "✅ ONNX-файл доступен через Worker\n\n";
-
-
-                /*
-                 * ------------------------------
-                 * УСПЕХ
-                 * ------------------------------
-                 */
-
-                report +=
-                    "================================\n";
-
-                report +=
-                    "🎉 ПРОВЕРКА ПРОЙДЕНА\n";
-
-                report +=
-                    "================================\n\n";
-
-                report +=
-                    "Браузер → Cloudflare → Hugging Face работает.\n\n";
-
-                report +=
-                    "Теперь нажми «Загрузить AI-модель».";
-
-
-                setStatus(report);
-
-
-            } catch (error) {
-
-                report +=
-                    "\n================================\n";
-
-                report +=
-                    "❌ ОШИБКА\n";
-
-                report +=
-                    "================================\n\n";
-
-
-                report +=
-                    "Тип: " +
-                    error.name +
-                    "\n\n";
-
-
-                report +=
-                    "Сообщение:\n" +
-                    error.message;
-
-
-                setStatus(report);
-
-                console.error(error);
-
-            }
-
-
-            diagnosticButton.disabled = false;
-
-        }
-    );
-
-
-    /*
-     * ==========================================
-     * ЗАГРУЗКА AI-МОДЕЛИ
-     * ==========================================
-     */
-
-    loadButton.addEventListener(
-        "click",
-        async () => {
-
-            loadButton.disabled = true;
-
-
-            try {
-
-                /*
-                 * PROCESSOR
-                 */
-
-                setStatus(
-                    "⏳ Загружаю processor BiRefNet...\n\n" +
-                    "Первый запуск может быть долгим."
-                );
-
-
-                processor =
-                    await AutoProcessor.from_pretrained(
-                        "studioludens/birefnet-lite-512"
-                    );
-
-
-                setStatus(
-                    "✅ Processor загружен.\n\n" +
-                    "⏳ Загружаю AI-модель BiRefNet..."
-                );
-
-
-                /*
-                 * WEBGPU
-                 */
+            if ("gpu" in navigator) {
 
                 try {
 
-                    model =
-                        await AutoModel.from_pretrained(
-                            "studioludens/birefnet-lite-512",
-                            {
-                                dtype: "fp16",
-                                device: "webgpu"
-                            }
-                        );
+                    const adapter =
+                        await navigator.gpu.requestAdapter();
 
+                    if (adapter) {
 
-                    setStatus(
-                        "🎉 BiRefNet успешно загружен через WebGPU!"
-                    );
+                        report +=
+                            "✅ GPU adapter найден\n";
 
+                        report +=
+                            "GPU: " +
+                            (
+                                adapter.info?.device ||
+                                adapter.info?.description ||
+                                "unknown"
+                            ) +
+                            "\n\n";
 
-                } catch (webgpuError) {
+                    } else {
 
-                    console.warn(
-                        "WebGPU error:",
-                        webgpuError
-                    );
+                        report +=
+                            "⚠️ GPU adapter не найден\n\n";
 
+                    }
 
-                    setStatus(
-                        "⚠️ WebGPU не запустился.\n\n" +
-                        "Пробую WASM..."
-                    );
+                } catch (error) {
 
-
-                    /*
-                     * WASM FALLBACK
-                     */
-
-                    model =
-                        await AutoModel.from_pretrained(
-                            "studioludens/birefnet-lite-512",
-                            {
-                                dtype: "q8",
-                                device: "wasm"
-                            }
-                        );
-
-
-                    setStatus(
-                        "🎉 BiRefNet успешно загружен через WASM!"
-                    );
+                    report +=
+                        "⚠️ WebGPU ошибка: " +
+                        error.message +
+                        "\n\n";
 
                 }
 
+            } else {
 
-                removeButton.disabled = false;
-
-
-            } catch (error) {
-
-                console.error(
-                    "MODEL ERROR:",
-                    error
-                );
-
-
-                setStatus(
-                    "❌ Ошибка загрузки AI-модели.\n\n" +
-                    "Тип: " +
-                    error.name +
-                    "\n\n" +
-                    "Сообщение:\n" +
-                    error.message +
-                    "\n\n" +
-                    "Подробности смотрите в консоли браузера."
-                );
-
-
-                loadButton.disabled = false;
+                report +=
+                    "⚠️ WebGPU отсутствует\n\n";
 
             }
+
+
+            report +=
+                "2. Проверка Transformers.js\n";
+
+            report +=
+                "✅ Transformers.js загружен\n";
+
+            report +=
+                "AutoModel: " +
+                (!!AutoModel) +
+                "\n";
+
+            report +=
+                "AutoProcessor: " +
+                (!!AutoProcessor) +
+                "\n";
+
+            report +=
+                "RawImage: " +
+                (!!RawImage) +
+                "\n\n";
+
+
+            report +=
+                "3. Проверка Cloudflare Proxy\n";
+
+
+            const configURL =
+                window.location.origin +
+                "/api/model/config.json";
+
+
+            report +=
+                "URL:\n" +
+                configURL +
+                "\n";
+
+
+            const configResponse =
+                await fetch(
+                    configURL,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (!configResponse.ok) {
+
+                throw new Error(
+                    "Proxy config HTTP " +
+                    configResponse.status
+                );
+
+            }
+
+
+            const config =
+                await configResponse.json();
+
+
+            report +=
+                "✅ config.json загружен через Worker\n";
+
+
+            report +=
+                "model_type: " +
+                (
+                    config.model_type ||
+                    "unknown"
+                ) +
+                "\n\n";
+
+
+            report +=
+                "4. Проверка preprocessor_config.json\n";
+
+
+            const preprocessorURL =
+                window.location.origin +
+                "/api/model/preprocessor_config.json";
+
+
+            const preprocessorResponse =
+                await fetch(
+                    preprocessorURL,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (!preprocessorResponse.ok) {
+
+                throw new Error(
+                    "Preprocessor HTTP " +
+                    preprocessorResponse.status
+                );
+
+            }
+
+
+            report +=
+                "✅ preprocessor_config.json доступен\n\n";
+
+
+            report +=
+                "5. Проверка ONNX через Worker\n";
+
+
+            const onnxURL =
+                window.location.origin +
+                "/api/model/onnx/model_fp16.onnx";
+
+
+            const onnxResponse =
+                await fetch(
+                    onnxURL,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (!onnxResponse.ok) {
+
+                throw new Error(
+                    "ONNX HTTP " +
+                    onnxResponse.status
+                );
+
+            }
+
+
+            report +=
+                "✅ ONNX-файл доступен через Worker\n\n";
+
+
+            report +=
+                "================================\n";
+
+            report +=
+                "🎉 ПРОВЕРКА ПРОЙДЕНА\n";
+
+            report +=
+                "================================\n\n";
+
+            report +=
+                "Браузер → Cloudflare → Hugging Face работает.\n\n";
+
+            report +=
+                "Теперь нажми «Загрузить AI-модель».";
+
+
+            setStatus(report);
+
+
+        } catch (error) {
+
+            report +=
+                "\n================================\n";
+
+            report +=
+                "❌ ОШИБКА\n";
+
+            report +=
+                "================================\n\n";
+
+            report +=
+                "Тип: " +
+                error.name +
+                "\n\n";
+
+            report +=
+                "Сообщение:\n" +
+                error.message;
+
+
+            setStatus(report);
+
+            console.error(error);
 
         }
-    );
 
 
-    /*
-     * ==========================================
-     * УДАЛЕНИЕ ФОНА
-     * ==========================================
-     */
+        diagnosticButton.disabled = false;
 
-    removeButton.addEventListener(
-        "click",
-        async () => {
+    }
+);
 
-            if (!model || !processor) {
 
-                setStatus(
-                    "❌ Сначала загрузите AI-модель."
+/* ==========================================
+   LOAD MODEL
+========================================== */
+
+loadButton.addEventListener(
+    "click",
+    async () => {
+
+        loadButton.disabled = true;
+
+
+        try {
+
+            setStatus(
+                "⏳ Загружаю processor BiRefNet...\n\n" +
+                "Первый запуск может быть долгим."
+            );
+
+
+            processor =
+                await AutoProcessor.from_pretrained(
+                    "studioludens/birefnet-lite-512"
                 );
 
-                return;
 
-            }
-
-
-            if (!selectedFile) {
-
-                setStatus(
-                    "❌ Сначала выберите изображение."
-                );
-
-                return;
-
-            }
-
-
-            removeButton.disabled = true;
+            setStatus(
+                "✅ Processor загружен.\n\n" +
+                "⏳ Загружаю AI-модель BiRefNet..."
+            );
 
 
             try {
 
-                /*
-                 * IMAGE
-                 */
-
-                setStatus(
-                    "⏳ Читаю изображение..."
-                );
-
-
-                const image =
-                    await RawImage.read(
-                        selectedFile
-                    );
-
-
-                /*
-                 * PROCESSOR
-                 */
-
-                setStatus(
-                    "⏳ Подготавливаю изображение..."
-                );
-
-
-                const {
-                    pixel_values
-                } =
-                    await processor(
-                        image
-                    );
-
-
-                /*
-                 * MODEL
-                 */
-
-                setStatus(
-                    "⏳ BiRefNet удаляет фон..."
-                );
-
-
-                const output =
-                    await model({
-                        input_image:
-                            pixel_values
-                    });
-
-
-                /*
-                 * MASK
-                 */
-
-                let mask =
-                    output.logits.sigmoid();
-
-
-                /*
-                 * TENSOR → IMAGE
-                 */
-
-                mask =
-                    await RawImage.fromTensor(
-                        mask
-                    );
-
-
-                /*
-                 * RESIZE
-                 */
-
-                mask =
-                    await mask.resize(
-                        image.width,
-                        image.height
-                    );
-
-
-                /*
-                 * CANVAS
-                 */
-
-                const canvas =
-                    document.createElement(
-                        "canvas"
-                    );
-
-
-                canvas.width =
-                    image.width;
-
-
-                canvas.height =
-                    image.height;
-
-
-                const ctx =
-                    canvas.getContext(
-                        "2d"
-                    );
-
-
-                /*
-                 * ORIGINAL
-                 */
-
-                ctx.drawImage(
-                    image.toCanvas(),
-                    0,
-                    0,
-                    image.width,
-                    image.height
-                );
-
-
-                /*
-                 * PIXELS
-                 */
-
-                const imageData =
-                    ctx.getImageData(
-                        0,
-                        0,
-                        image.width,
-                        image.height
-                    );
-
-
-                const pixels =
-                    imageData.data;
-
-
-                const maskData =
-                    mask.data;
-
-
-                /*
-                 * APPLY ALPHA
-                 */
-
-                for (
-                    let i = 0;
-                    i < pixels.length;
-                    i += 4
-                ) {
-
-                    const index =
-                        i / 4;
-
-
-                    let alpha =
-                        maskData[index];
-
-
-                    alpha =
-                        Math.max(
-                            0,
-                            Math.min(
-                                1,
-                                alpha
-                            )
-                        );
-
-
-                    /*
-                     * Немного смягчаем
-                     * переход объекта/фона
-                     */
-
-                    alpha =
-                        Math.pow(
-                            alpha,
-                            0.8
-                        );
-
-
-                    pixels[i + 3] =
-                        Math.round(
-                            alpha * 255
-                        );
-
-                }
-
-
-                /*
-                 * RESULT
-                 */
-
-                ctx.putImageData(
-                    imageData,
-                    0,
-                    0
-                );
-
-
-                /*
-                 * PNG
-                 */
-
-                resultImage.src =
-                    canvas.toDataURL(
-                        "image/png"
+                model =
+                    await AutoModel.from_pretrained(
+                        "studioludens/birefnet-lite-512",
+                        {
+                            dtype: "fp16",
+                            device: "webgpu"
+                        }
                     );
 
 
                 setStatus(
-                    "🎉 Готово!\n\n" +
-                    "Фон удалён.\n\n" +
-                    "Справа показан результат " +
-                    "с прозрачным фоном."
+                    "🎉 BiRefNet успешно загружен через WebGPU!"
                 );
 
 
-            } catch (error) {
+            } catch (webgpuError) {
 
-                console.error(
-                    "BACKGROUND REMOVAL ERROR:",
-                    error
+                console.warn(
+                    "WebGPU error:",
+                    webgpuError
                 );
 
 
                 setStatus(
-                    "❌ Ошибка удаления фона.\n\n" +
-                    "Тип: " +
-                    error.name +
-                    "\n\n" +
-                    "Сообщение:\n" +
-                    error.message
+                    "⚠️ WebGPU не запустился.\n\n" +
+                    "Пробую WASM..."
+                );
+
+
+                model =
+                    await AutoModel.from_pretrained(
+                        "studioludens/birefnet-lite-512",
+                        {
+                            dtype: "q8",
+                            device: "wasm"
+                        }
+                    );
+
+
+                setStatus(
+                    "🎉 BiRefNet успешно загружен через WASM!"
                 );
 
             }
@@ -1071,8 +651,461 @@
 
             removeButton.disabled = false;
 
+
+        } catch (error) {
+
+            console.error(
+                "MODEL ERROR:",
+                error
+            );
+
+
+            setStatus(
+                "❌ Ошибка загрузки AI-модели.\n\n" +
+                "Тип: " +
+                error.name +
+                "\n\n" +
+                "Сообщение:\n" +
+                error.message
+            );
+
+
+            loadButton.disabled = false;
+
         }
+
+    }
+);
+
+
+/* ==========================================
+   GET MODEL TENSOR
+========================================== */
+
+function findMaskTensor(output) {
+
+    console.log(
+        "========== MODEL OUTPUT =========="
     );
+
+    console.log(output);
+
+    console.log(
+        "OUTPUT KEYS:",
+        Object.keys(output || {})
+    );
+
+
+    /*
+     * 1. Самый вероятный вариант
+     */
+
+    if (output?.logits) {
+        return output.logits;
+    }
+
+
+    /*
+     * 2. Некоторые модели
+     * возвращают prediction
+     */
+
+    if (output?.prediction) {
+        return output.prediction;
+    }
+
+
+    /*
+     * 3. Возможные варианты
+     */
+
+    if (output?.predictions) {
+        return output.predictions;
+    }
+
+
+    if (output?.output) {
+        return output.output;
+    }
+
+
+    if (output?.masks) {
+        return output.masks;
+    }
+
+
+    /*
+     * 4. Если результат является массивом
+     */
+
+    if (Array.isArray(output)) {
+
+        for (const item of output) {
+
+            if (
+                item &&
+                typeof item === "object" &&
+                typeof item.sigmoid === "function"
+            ) {
+
+                return item;
+
+            }
+
+        }
+
+    }
+
+
+    /*
+     * 5. Ищем любой объект,
+     * который похож на Tensor
+     */
+
+    if (
+        output &&
+        typeof output === "object"
+    ) {
+
+        for (const key of Object.keys(output)) {
+
+            const value =
+                output[key];
+
+
+            if (
+                value &&
+                typeof value === "object" &&
+                typeof value.sigmoid === "function"
+            ) {
+
+                console.log(
+                    "Найден Tensor:",
+                    key
+                );
+
+                return value;
+
+            }
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+/* ==========================================
+   REMOVE BACKGROUND
+========================================== */
+
+removeButton.addEventListener(
+    "click",
+    async () => {
+
+        if (!model || !processor) {
+
+            setStatus(
+                "❌ Сначала загрузите AI-модель."
+            );
+
+            return;
+
+        }
+
+
+        if (!selectedFile) {
+
+            setStatus(
+                "❌ Сначала выберите изображение."
+            );
+
+            return;
+
+        }
+
+
+        removeButton.disabled = true;
+
+
+        try {
+
+            /* IMAGE */
+
+            setStatus(
+                "⏳ Читаю изображение..."
+            );
+
+
+            const image =
+                await RawImage.read(
+                    selectedFile
+                );
+
+
+            /* PROCESSOR */
+
+            setStatus(
+                "⏳ Подготавливаю изображение..."
+            );
+
+
+            const {
+                pixel_values
+            } =
+                await processor(image);
+
+
+            /* MODEL */
+
+            setStatus(
+                "⏳ BiRefNet удаляет фон..."
+            );
+
+
+            const output =
+                await model({
+                    input_image:
+                        pixel_values
+                });
+
+
+            console.log(
+                "Полный результат модели:",
+                output
+            );
+
+
+            /* FIND MASK */
+
+            const maskTensor =
+                findMaskTensor(output);
+
+
+            if (!maskTensor) {
+
+                throw new Error(
+                    "Не найден выходной Tensor модели.\n\n" +
+                    "Откройте консоль браузера (F12) и пришлите мне блок:\n" +
+                    "\"MODEL OUTPUT\"."
+                );
+
+            }
+
+
+            console.log(
+                "Найден mask tensor:",
+                maskTensor
+            );
+
+
+            /* SIGMOID */
+
+            let mask =
+                maskTensor.sigmoid();
+
+
+            /*
+             * TENSOR → IMAGE
+             */
+
+            mask =
+                await RawImage.fromTensor(
+                    mask
+                );
+
+
+            /*
+             * RESIZE
+             */
+
+            mask =
+                await mask.resize(
+                    image.width,
+                    image.height
+                );
+
+
+            /*
+             * CANVAS
+             */
+
+            const canvas =
+                document.createElement(
+                    "canvas"
+                );
+
+
+            canvas.width =
+                image.width;
+
+            canvas.height =
+                image.height;
+
+
+            const ctx =
+                canvas.getContext(
+                    "2d"
+                );
+
+
+            /*
+             * ORIGINAL
+             */
+
+            const sourceCanvas =
+                image.toCanvas();
+
+
+            ctx.drawImage(
+                sourceCanvas,
+                0,
+                0,
+                image.width,
+                image.height
+            );
+
+
+            /*
+             * PIXELS
+             */
+
+            const imageData =
+                ctx.getImageData(
+                    0,
+                    0,
+                    image.width,
+                    image.height
+                );
+
+
+            const pixels =
+                imageData.data;
+
+
+            const maskData =
+                mask.data;
+
+
+            /*
+             * APPLY MASK
+             */
+
+            for (
+                let i = 0;
+                i < pixels.length;
+                i += 4
+            ) {
+
+                const index =
+                    i / 4;
+
+
+                let alpha =
+                    maskData[index];
+
+
+                /*
+                 * Если значение оказалось
+                 * 0–255, переводим в 0–1.
+                 */
+
+                if (alpha > 1) {
+
+                    alpha =
+                        alpha / 255;
+
+                }
+
+
+                alpha =
+                    Math.max(
+                        0,
+                        Math.min(
+                            1,
+                            alpha
+                        )
+                    );
+
+
+                /*
+                 * Немного смягчаем края.
+                 */
+
+                alpha =
+                    Math.pow(
+                        alpha,
+                        0.8
+                    );
+
+
+                pixels[i + 3] =
+                    Math.round(
+                        alpha * 255
+                    );
+
+            }
+
+
+            /*
+             * PUT PIXELS
+             */
+
+            ctx.putImageData(
+                imageData,
+                0,
+                0
+            );
+
+
+            /*
+             * RESULT
+             */
+
+            resultImage.src =
+                canvas.toDataURL(
+                    "image/png"
+                );
+
+
+            setStatus(
+                "🎉 Готово!\n\n" +
+                "Фон удалён.\n\n" +
+                "Справа показан результат " +
+                "с прозрачным фоном."
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "BACKGROUND REMOVAL ERROR:",
+                error
+            );
+
+
+            setStatus(
+                "❌ Ошибка удаления фона.\n\n" +
+                "Тип: " +
+                error.name +
+                "\n\n" +
+                "Сообщение:\n" +
+                error.message +
+                "\n\n" +
+                "Открой F12 → Console и, если ошибка повторится, пришли мне блок:\n" +
+                "MODEL OUTPUT"
+            );
+
+        }
+
+
+        removeButton.disabled = false;
+
+    }
+);
 
 </script>
 
