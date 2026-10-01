@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardly AI — тест удаления фона</title>
+  <title>Cardly AI — Background Removal</title>
 
   <style>
     body {
@@ -12,30 +12,30 @@
       padding: 40px;
       font-family: Arial, sans-serif;
       background: #f3f5f8;
-      text-align: center;
     }
 
     .box {
       max-width: 700px;
       margin: auto;
-      background: white;
       padding: 30px;
+      background: white;
       border-radius: 20px;
-    }
-
-    button,
-    input {
-      margin: 10px;
+      text-align: center;
     }
 
     button {
-      padding: 12px 20px;
+      margin-top: 15px;
+      padding: 12px 22px;
       border: 0;
       border-radius: 10px;
-      cursor: pointer;
       background: #111;
       color: white;
-      font-size: 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
     }
 
     #status {
@@ -43,18 +43,27 @@
       color: #555;
     }
 
-    canvas {
+    #result {
       max-width: 100%;
       margin-top: 20px;
-      border-radius: 12px;
+    }
+
+    .checker {
+      display: inline-block;
+      padding: 10px;
 
       background-image:
         linear-gradient(45deg, #ddd 25%, transparent 25%),
         linear-gradient(-45deg, #ddd 25%, transparent 25%),
         linear-gradient(45deg, transparent 75%, #ddd 75%),
         linear-gradient(-45deg, transparent 75%, #ddd 75%);
+
       background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      background-position:
+        0 0,
+        0 10px,
+        10px -10px,
+        -10px 0;
     }
   </style>
 </head>
@@ -65,7 +74,7 @@
 
   <h1>✂️ Cardly AI</h1>
 
-  <p>Тест автоматического удаления фона</p>
+  <p>Тест удаления фона</p>
 
   <input
     id="imageInput"
@@ -83,66 +92,53 @@
     Выбери фотографию товара
   </div>
 
-  <canvas id="canvas"></canvas>
+  <div class="checker">
+    <img id="result">
+  </div>
 
 </div>
 
+
 <script type="module">
 
-import {
-  AutoModel,
-  AutoProcessor,
-  RawImage
-} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0";
-
-const MODEL = "studioludens/birefnet-lite-512";
-
-const imageInput = document.getElementById("imageInput");
-const removeBtn = document.getElementById("removeBtn");
-const status = document.getElementById("status");
-const canvas = document.getElementById("canvas");
-
-let model = null;
-let processor = null;
-let selectedImage = null;
+import { pipeline } from
+  "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
-// ----------------------------------------
-// Загрузка модели
-// ----------------------------------------
-
-async function loadModel() {
-
-  if (model && processor) {
-    return;
-  }
-
-  status.textContent =
-    "⏳ Первый запуск: загружаю модель (~94 МБ)...";
-
-  model = await AutoModel.from_pretrained(MODEL, {
-    dtype: "fp16",
-    device: "webgpu"
-  });
-
-  processor = await AutoProcessor.from_pretrained(MODEL);
-
-  status.textContent =
-    "✅ Модель загружена";
-}
+const MODEL =
+  "studioludens/birefnet-lite-512";
 
 
-// ----------------------------------------
-// Выбор изображения
-// ----------------------------------------
+const imageInput =
+  document.getElementById("imageInput");
 
-imageInput.addEventListener("change", async (event) => {
+const removeBtn =
+  document.getElementById("removeBtn");
 
-  const file = event.target.files[0];
+const status =
+  document.getElementById("status");
 
-  if (!file) return;
+const result =
+  document.getElementById("result");
 
-  selectedImage = file;
+
+let imageFile = null;
+let remover = null;
+
+
+// ----------------------------------
+// Выбор фотографии
+// ----------------------------------
+
+imageInput.addEventListener("change", (event) => {
+
+  imageFile =
+    event.target.files[0];
+
+  if (!imageFile) return;
+
+  result.src =
+    URL.createObjectURL(imageFile);
 
   status.textContent =
     "Фото выбрано. Нажми «Убрать фон».";
@@ -150,13 +146,13 @@ imageInput.addEventListener("change", async (event) => {
 });
 
 
-// ----------------------------------------
+// ----------------------------------
 // Удаление фона
-// ----------------------------------------
+// ----------------------------------
 
 removeBtn.addEventListener("click", async () => {
 
-  if (!selectedImage) {
+  if (!imageFile) {
 
     status.textContent =
       "Сначала выбери фотографию.";
@@ -164,95 +160,167 @@ removeBtn.addEventListener("click", async () => {
     return;
   }
 
+
   try {
 
     removeBtn.disabled = true;
 
-    await loadModel();
+
+    // Загружаем модель только один раз
+
+    if (!remover) {
+
+      status.textContent =
+        "⏳ Загружаю AI-модель. Первый запуск может занять некоторое время...";
+
+
+      remover =
+        await pipeline(
+          "image-segmentation",
+          MODEL,
+          {
+            device: "webgpu"
+          }
+        );
+
+    }
+
 
     status.textContent =
-      "🔍 Анализирую товар...";
+      "✂️ AI удаляет фон...";
 
-    const imageUrl =
-      URL.createObjectURL(selectedImage);
+
+    const output =
+      await remover(imageFile);
+
+
+    console.log("AI OUTPUT:", output);
+
+
+    if (!output || !output[0]) {
+
+      throw new Error(
+        "Модель не вернула результат"
+      );
+
+    }
+
+
+    const mask =
+      output[0].mask;
+
+
+    // Загружаем исходное фото
 
     const image =
-      await RawImage.read(imageUrl);
-
-    URL.revokeObjectURL(imageUrl);
+      await createImageBitmap(imageFile);
 
 
-    // Подготовка изображения
-    const {
-      pixel_values
-    } = await processor(image);
+    const canvas =
+      document.createElement("canvas");
 
-
-    status.textContent =
-      "✂️ Удаляю фон...";
-
-
-    // Запуск модели
-    const {
-      logits
-    } = await model({
-      input_image: pixel_values
-    });
-
-
-    // Получаем данные маски
-    const mask =
-      logits
-        .sigmoid()
-        .mul(255)
-        .to("cpu");
-
-
-    const width =
+    canvas.width =
       image.width;
 
-    const height =
+    canvas.height =
       image.height;
 
-
-    // ----------------------------------------
-    // Рисуем исходное изображение
-    // ----------------------------------------
-
-    canvas.width = width;
-    canvas.height = height;
 
     const ctx =
       canvas.getContext("2d");
 
+
+    ctx.drawImage(
+      image,
+      0,
+      0
+    );
+
+
     const imageData =
-      await image.toImageData();
+      ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
 
-    // ----------------------------------------
-    // Применяем маску
-    // ----------------------------------------
+    // Маска модели
 
-    const pixels =
-      imageData.data;
+    const maskCanvas =
+      document.createElement("canvas");
 
-    const maskData =
-      mask.data;
+    maskCanvas.width =
+      mask.width;
+
+    maskCanvas.height =
+      mask.height;
+
+
+    const maskCtx =
+      maskCanvas.getContext("2d");
+
+
+    const maskImageData =
+      new ImageData(
+        new Uint8ClampedArray(mask.data),
+        mask.width,
+        mask.height
+      );
+
+
+    maskCtx.putImageData(
+      maskImageData,
+      0,
+      0
+    );
+
+
+    // Растягиваем маску до размера фотографии
+
+    const resizedMask =
+      document.createElement("canvas");
+
+    resizedMask.width =
+      canvas.width;
+
+    resizedMask.height =
+      canvas.height;
+
+
+    const resizedCtx =
+      resizedMask.getContext("2d");
+
+    resizedCtx.drawImage(
+      maskCanvas,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    const resizedMaskData =
+      resizedCtx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      ).data;
+
+
+    // Применяем прозрачность
 
     for (
       let i = 0;
-      i < pixels.length;
+      i < imageData.data.length;
       i += 4
     ) {
 
-      const maskIndex =
-        Math.floor(i / 4);
+      imageData.data[i + 3] =
+        resizedMaskData[i];
 
-      const alpha =
-        maskData[maskIndex];
-
-      pixels[i + 3] =
-        alpha;
     }
 
 
@@ -263,17 +331,27 @@ removeBtn.addEventListener("click", async () => {
     );
 
 
-    status.textContent =
-      "✅ Готово — фон удалён";
+    // Показываем результат
 
-  } catch (error) {
+    result.src =
+      canvas.toDataURL("image/png");
+
+
+    status.textContent =
+      "✅ Готово! Фон удалён.";
+
+  }
+
+  catch (error) {
 
     console.error(error);
 
     status.textContent =
-      "❌ Ошибка. Открой F12 → Console и пришли мне красную ошибку.";
+      "❌ Ошибка: " + error.message;
 
-  } finally {
+  }
+
+  finally {
 
     removeBtn.disabled = false;
 
