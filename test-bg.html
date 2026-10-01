@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Cardly AI — Background Removal Test</title>
 
     <style>
@@ -142,9 +141,9 @@
     </div>
 
 
-    <!-- ======================================
-         DIAGNOSTICS
-    ======================================= -->
+    <!-- ==========================================
+         ДИАГНОСТИКА
+    =========================================== -->
 
     <div class="panel">
 
@@ -163,9 +162,9 @@
     </div>
 
 
-    <!-- ======================================
-         IMAGE
-    ======================================= -->
+    <!-- ==========================================
+         ЗАГРУЗКА ФОТО
+    =========================================== -->
 
     <div class="panel">
 
@@ -187,9 +186,9 @@
     </div>
 
 
-    <!-- ======================================
-         PREVIEW
-    ======================================= -->
+    <!-- ==========================================
+         ПРЕВЬЮ
+    =========================================== -->
 
     <div class="panel">
 
@@ -250,6 +249,23 @@
      * ==========================================
      * CLOUDFLARE PROXY
      * ==========================================
+     *
+     * ВАЖНО:
+     *
+     * remotePathTemplate НЕ содержит {file}.
+     *
+     * Transformers.js сам добавляет имя файла.
+     *
+     * Поэтому URL будет:
+     *
+     * /api/model/
+     * studiоludens/birefnet-lite-512/
+     * resolve/main/
+     * preprocessor_config.json
+     *
+     * вместо неправильного:
+     *
+     * /resolve/main/{file}/preprocessor_config.json
      */
 
     env.allowRemoteModels = true;
@@ -258,7 +274,7 @@
         window.location.origin + "/api/model/";
 
     env.remotePathTemplate =
-        "{model}/resolve/{revision}/{file}";
+        "{model}/resolve/{revision}";
 
 
     /*
@@ -313,7 +329,7 @@
 
     /*
      * ==========================================
-     * FILE
+     * ВЫБОР ФОТО
      * ==========================================
      */
 
@@ -337,7 +353,8 @@
 
             setStatus(
                 "✅ Изображение выбрано.\n\n" +
-                "Можно запускать удаление фона."
+                "Теперь можно загрузить модель " +
+                "и удалить фон."
             );
 
         }
@@ -346,7 +363,7 @@
 
     /*
      * ==========================================
-     * DIAGNOSTICS
+     * ДИАГНОСТИКА
      * ==========================================
      */
 
@@ -358,28 +375,32 @@
 
             let report = "";
 
+
             try {
 
                 /*
-                 * WEBGPU
+                 * ------------------------------
+                 * 1. WEBGPU
+                 * ------------------------------
                  */
 
                 report +=
                     "1. Проверка WebGPU\n";
 
-                if (
-                    "gpu" in navigator
-                ) {
+
+                if ("gpu" in navigator) {
 
                     try {
 
                         const adapter =
                             await navigator.gpu.requestAdapter();
 
+
                         if (adapter) {
 
                             report +=
                                 "✅ GPU adapter найден\n";
+
 
                             report +=
                                 "GPU: " +
@@ -415,24 +436,30 @@
 
 
                 /*
-                 * TRANSFORMERS
+                 * ------------------------------
+                 * 2. TRANSFORMERS.JS
+                 * ------------------------------
                  */
 
                 report +=
                     "2. Проверка Transformers.js\n";
 
+
                 report +=
                     "✅ Transformers.js загружен\n";
+
 
                 report +=
                     "AutoModel: " +
                     (!!AutoModel) +
                     "\n";
 
+
                 report +=
                     "AutoProcessor: " +
                     (!!AutoProcessor) +
                     "\n";
+
 
                 report +=
                     "RawImage: " +
@@ -441,11 +468,14 @@
 
 
                 /*
-                 * CLOUDFLARE CONFIG
+                 * ------------------------------
+                 * 3. CONFIG
+                 * ------------------------------
                  */
 
                 report +=
                     "3. Проверка Cloudflare Proxy\n";
+
 
                 const configURL =
                     window.location.origin +
@@ -468,9 +498,7 @@
                     );
 
 
-                if (
-                    !configResponse.ok
-                ) {
+                if (!configResponse.ok) {
 
                     throw new Error(
                         "Proxy config HTTP " +
@@ -485,15 +513,71 @@
 
 
                 report +=
-                    "✅ config.json загружен через Worker\n\n";
+                    "✅ config.json загружен через Worker\n";
+
+
+                report +=
+                    "model_type: " +
+                    (
+                        config.model_type ||
+                        "unknown"
+                    ) +
+                    "\n\n";
 
 
                 /*
-                 * ONNX
+                 * ------------------------------
+                 * 4. PREPROCESSOR CONFIG
+                 * ------------------------------
                  */
 
                 report +=
-                    "4. Проверка ONNX-файла через Worker\n";
+                    "4. Проверка preprocessor_config.json\n";
+
+
+                const preprocessorURL =
+                    window.location.origin +
+                    "/api/model/preprocessor_config.json";
+
+
+                report +=
+                    "URL:\n" +
+                    preprocessorURL +
+                    "\n";
+
+
+                const preprocessorResponse =
+                    await fetch(
+                        preprocessorURL,
+                        {
+                            method: "GET",
+                            cache: "no-store"
+                        }
+                    );
+
+
+                if (!preprocessorResponse.ok) {
+
+                    throw new Error(
+                        "Preprocessor HTTP " +
+                        preprocessorResponse.status
+                    );
+
+                }
+
+
+                report +=
+                    "✅ preprocessor_config.json доступен\n\n";
+
+
+                /*
+                 * ------------------------------
+                 * 5. ONNX
+                 * ------------------------------
+                 */
+
+                report +=
+                    "5. Проверка ONNX через Worker\n";
 
 
                 const onnxURL =
@@ -517,9 +601,7 @@
                     );
 
 
-                if (
-                    !onnxResponse.ok
-                ) {
+                if (!onnxResponse.ok) {
 
                     throw new Error(
                         "ONNX HTTP " +
@@ -530,8 +612,14 @@
 
 
                 report +=
-                    "✅ ONNX-файл доступен через Cloudflare Worker\n\n";
+                    "✅ ONNX-файл доступен через Worker\n\n";
 
+
+                /*
+                 * ------------------------------
+                 * УСПЕХ
+                 * ------------------------------
+                 */
 
                 report +=
                     "================================\n";
@@ -546,7 +634,7 @@
                     "Браузер → Cloudflare → Hugging Face работает.\n\n";
 
                 report +=
-                    "Теперь можно загружать BiRefNet.";
+                    "Теперь нажми «Загрузить AI-модель».";
 
 
                 setStatus(report);
@@ -563,13 +651,15 @@
                 report +=
                     "================================\n\n";
 
+
                 report +=
                     "Тип: " +
                     error.name +
                     "\n\n";
 
+
                 report +=
-                    "Сообщение: " +
+                    "Сообщение:\n" +
                     error.message;
 
 
@@ -588,7 +678,7 @@
 
     /*
      * ==========================================
-     * LOAD AI
+     * ЗАГРУЗКА AI-МОДЕЛИ
      * ==========================================
      */
 
@@ -601,9 +691,13 @@
 
             try {
 
+                /*
+                 * PROCESSOR
+                 */
+
                 setStatus(
                     "⏳ Загружаю processor BiRefNet...\n\n" +
-                    "Первый запуск может занять некоторое время."
+                    "Первый запуск может быть долгим."
                 );
 
 
@@ -615,12 +709,12 @@
 
                 setStatus(
                     "✅ Processor загружен.\n\n" +
-                    "⏳ Загружаю модель BiRefNet..."
+                    "⏳ Загружаю AI-модель BiRefNet..."
                 );
 
 
                 /*
-                 * Сначала WebGPU
+                 * WEBGPU
                  */
 
                 try {
@@ -655,7 +749,7 @@
 
 
                     /*
-                     * WASM fallback
+                     * WASM FALLBACK
                      */
 
                     model =
@@ -687,14 +781,14 @@
 
 
                 setStatus(
-                    "❌ Ошибка загрузки BiRefNet.\n\n" +
+                    "❌ Ошибка загрузки AI-модели.\n\n" +
                     "Тип: " +
                     error.name +
                     "\n\n" +
                     "Сообщение:\n" +
                     error.message +
                     "\n\n" +
-                    "Полная ошибка находится в консоли браузера."
+                    "Подробности смотрите в консоли браузера."
                 );
 
 
@@ -708,7 +802,7 @@
 
     /*
      * ==========================================
-     * REMOVE BACKGROUND
+     * УДАЛЕНИЕ ФОНА
      * ==========================================
      */
 
@@ -743,6 +837,10 @@
 
             try {
 
+                /*
+                 * IMAGE
+                 */
+
                 setStatus(
                     "⏳ Читаю изображение..."
                 );
@@ -754,8 +852,12 @@
                     );
 
 
+                /*
+                 * PROCESSOR
+                 */
+
                 setStatus(
-                    "⏳ Подготавливаю изображение для AI..."
+                    "⏳ Подготавливаю изображение..."
                 );
 
 
@@ -767,9 +869,12 @@
                     );
 
 
+                /*
+                 * MODEL
+                 */
+
                 setStatus(
-                    "⏳ BiRefNet удаляет фон...\n\n" +
-                    "Это может занять несколько секунд."
+                    "⏳ BiRefNet удаляет фон..."
                 );
 
 
@@ -781,7 +886,7 @@
 
 
                 /*
-                 * LOGITS → PROBABILITY
+                 * MASK
                  */
 
                 let mask =
@@ -789,7 +894,7 @@
 
 
                 /*
-                 * Tensor → Image
+                 * TENSOR → IMAGE
                  */
 
                 mask =
@@ -799,7 +904,7 @@
 
 
                 /*
-                 * RESIZE MASK
+                 * RESIZE
                  */
 
                 mask =
@@ -818,8 +923,10 @@
                         "canvas"
                     );
 
+
                 canvas.width =
                     image.width;
+
 
                 canvas.height =
                     image.height;
@@ -832,15 +939,11 @@
 
 
                 /*
-                 * IMAGE → CANVAS
+                 * ORIGINAL
                  */
 
-                const sourceCanvas =
-                    image.toCanvas();
-
-
                 ctx.drawImage(
-                    sourceCanvas,
+                    image.toCanvas(),
                     0,
                     0,
                     image.width,
@@ -870,7 +973,7 @@
 
 
                 /*
-                 * APPLY MASK
+                 * APPLY ALPHA
                  */
 
                 for (
@@ -887,10 +990,6 @@
                         maskData[index];
 
 
-                    /*
-                     * Ограничиваем значение
-                     */
-
                     alpha =
                         Math.max(
                             0,
@@ -902,8 +1001,8 @@
 
 
                     /*
-                     * Небольшое усиление
-                     * границы объекта
+                     * Немного смягчаем
+                     * переход объекта/фона
                      */
 
                     alpha =
@@ -945,7 +1044,8 @@
                 setStatus(
                     "🎉 Готово!\n\n" +
                     "Фон удалён.\n\n" +
-                    "Справа показан PNG с прозрачностью."
+                    "Справа показан результат " +
+                    "с прозрачным фоном."
                 );
 
 
