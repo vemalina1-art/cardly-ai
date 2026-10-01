@@ -574,7 +574,7 @@ document
 
 /* СОЗДАНИЕ КАРТОЧКИ */
 
-function generateCard() {
+async function generateCard() {
 
   const name =
     document
@@ -583,190 +583,287 @@ function generateCard() {
       .trim() ||
     "Современный смеситель";
 
-
   const rawFeatures =
     document
       .getElementById("features")
       .value
       .trim();
 
-
-  const features = rawFeatures
-    ? rawFeatures
-        .split("\n")
-        .map(x => x.trim())
-        .filter(x => x)
-        .slice(0, 4)
-    : [
-        "Надёжный материал",
-        "Современный дизайн",
-        "Простая установка"
-      ];
-
-
   const card =
     document.getElementById("card");
 
+  // Показываем загрузку
+  card.innerHTML = `
+    <div style="
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:16px;
+      font-family:Arial,sans-serif;
+    ">
+      <div style="
+        width:42px;
+        height:42px;
+        border:4px solid #e5e8ed;
+        border-top-color:#4565ff;
+        border-radius:50%;
+        animation:spin 1s linear infinite;
+      "></div>
 
-  /* БАЗОВЫЙ СТИЛЬ */
+      <div style="
+        font-size:20px;
+        font-weight:700;
+      ">
+        AI создаёт дизайн...
+      </div>
 
-  let bg = "#ffffff";
-  let main = "#111318";
-  let accent = "#4565ff";
-  let secondary = "#68707d";
+      <div style="
+        font-size:14px;
+        color:#68707d;
+      ">
+        Анализируем товар и преимущества
+      </div>
+    </div>
+  `;
+
+  try {
+
+    // Отправляем данные в наш Cloudflare Worker
+    const response = await fetch("/api/generate", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        productName: name,
+        features: rawFeatures
+      })
+
+    });
+
+    const ai = await response.json();
+
+    if (!response.ok) {
+      throw new Error(ai.error || "Ошибка AI");
+    }
+
+    // Данные, которые придумал AI
+    const title =
+      ai.title ||
+      name;
+
+    const subtitle =
+      ai.subtitle ||
+      "Основные преимущества товара";
+
+    const features =
+      Array.isArray(ai.features)
+        ? ai.features.slice(0, 4)
+        : [];
+
+    const card =
+      document.getElementById("card");
 
 
-  if (selectedStyle === "accent") {
+    /* ЦВЕТА */
 
-    bg = "#eef3ff";
-    main = "#111318";
-    accent = "#4565ff";
-    secondary = "#59647a";
+    let bg = "#ffffff";
+    let main = "#111318";
+    let accent = "#4565ff";
+    let secondary = "#68707d";
 
-  }
+    if (selectedStyle === "accent") {
 
+      bg = "#eef3ff";
+      main = "#111318";
+      accent = "#4565ff";
+      secondary = "#59647a";
 
-  if (selectedStyle === "dark") {
+    }
 
-    bg = "#171a20";
-    main = "#ffffff";
-    accent = "#62d6c7";
-    secondary = "#b7bec9";
+    if (selectedStyle === "dark") {
 
-  }
+      bg = "#171a20";
+      main = "#ffffff";
+      accent = "#62d6c7";
+      secondary = "#b7bec9";
 
-
-  card.style.background = bg;
-
-
-  let imageHTML = "";
-
-  if (selectedImage) {
-
-    imageHTML = `
-      <img
-        src="${selectedImage}"
-        class="product-photo"
-        style="
-          width:72%;
-          height:45%;
-          left:14%;
-          top:18%;
-        "
-      >
-    `;
-
-  }
+    }
 
 
-  let featuresHTML = "";
+    card.style.background = bg;
 
 
-  features.forEach((feature, index) => {
+    /* ФОТО */
 
-    featuresHTML += `
+    let imageHTML = "";
 
-      <div
-        class="feature"
-        style="
-          left:9%;
-          bottom:${19 - index * 7}%;
-        "
-      >
+    if (selectedImage) {
 
-        <div
-          class="feature-number"
+      imageHTML = `
+        <img
+          src="${selectedImage}"
+          class="product-photo"
           style="
-            background:${accent};
-            color:#fff;
+            width:72%;
+            height:43%;
+            left:14%;
+            top:19%;
+            object-fit:contain;
           "
         >
-          ${index + 1}
-        </div>
+      `;
+
+    }
+
+
+    /* ПРЕИМУЩЕСТВА */
+
+    let featuresHTML = "";
+
+    features.forEach((feature, index) => {
+
+      featuresHTML += `
 
         <div
-          class="feature-text"
-          style="color:${main};"
+          class="feature"
+          style="
+            left:9%;
+            bottom:${19 - index * 7}%;
+          "
         >
-          ${escapeHTML(feature)}
+
+          <div
+            class="feature-number"
+            style="
+              background:${accent};
+              color:#fff;
+            "
+          >
+            ${index + 1}
+          </div>
+
+          <div
+            class="feature-text"
+            style="
+              color:${main};
+            "
+          >
+            ${escapeHTML(feature)}
+          </div>
+
         </div>
+
+      `;
+
+    });
+
+
+    /* ГОТОВАЯ КАРТОЧКА */
+
+    card.innerHTML = `
+
+      ${imageHTML}
+
+
+      <div
+        style="
+          position:absolute;
+          top:6%;
+          left:8%;
+          color:${secondary};
+          font-size:11px;
+          font-weight:700;
+          letter-spacing:2px;
+        "
+      >
+        CARDLY AI
+      </div>
+
+
+      <div
+        class="card-name"
+        style="
+          top:10%;
+          left:8%;
+          width:84%;
+          color:${main};
+          font-size:31px;
+          font-weight:800;
+        "
+      >
+        ${escapeHTML(title)}
+      </div>
+
+
+      <div
+        class="card-subtitle"
+        style="
+          top:16%;
+          left:8%;
+          width:80%;
+          color:${secondary};
+        "
+      >
+        ${escapeHTML(subtitle)}
+      </div>
+
+
+      <div
+        style="
+          position:absolute;
+          width:84%;
+          height:1px;
+          left:8%;
+          bottom:42%;
+          background:${
+            selectedStyle === "dark"
+              ? "#343942"
+              : "#e5e8ed"
+          };
+        "
+      ></div>
+
+
+      ${featuresHTML}
+
+    `;
+
+
+    // Показываем кнопку скачивания
+    document
+      .getElementById("downloadBtn")
+      .style.display = "block";
+
+
+  } catch (error) {
+
+    card.innerHTML = `
+
+      <div style="
+        padding:40px;
+        font-family:Arial,sans-serif;
+        color:#d33;
+      ">
+
+        <h2>Не удалось создать карточку</h2>
+
+        <p>
+          ${escapeHTML(error.message)}
+        </p>
 
       </div>
 
     `;
 
-  });
+    console.error(error);
 
-
-  card.innerHTML = `
-
-    ${imageHTML}
-
-    <div
-      style="
-        position:absolute;
-        top:6%;
-        left:8%;
-        color:${secondary};
-        font-size:11px;
-        font-weight:700;
-        letter-spacing:2px;
-        text-transform:uppercase;
-      "
-    >
-      CARDLY AI
-    </div>
-
-
-    <div
-      class="card-name"
-      style="
-        top:10%;
-        left:8%;
-        width:84%;
-        color:${main};
-        font-size:31px;
-      "
-    >
-      ${escapeHTML(name)}
-    </div>
-
-
-    <div
-      class="card-subtitle"
-      style="
-        top:16%;
-        left:8%;
-        width:80%;
-        color:${secondary};
-      "
-    >
-      Качество · Надёжность · Удобство
-    </div>
-
-
-    <div
-      style="
-        position:absolute;
-        width:84%;
-        height:1px;
-        left:8%;
-        bottom:42%;
-        background:${selectedStyle === "dark"
-          ? "#343942"
-          : "#e5e8ed"};
-      "
-    ></div>
-
-
-    ${featuresHTML}
-
-  `;
-
-
-  document
-    .getElementById("downloadBtn")
-    .style.display = "block";
+  }
 
 }
 
