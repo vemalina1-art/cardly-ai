@@ -3,459 +3,341 @@ export default {
 
     const url = new URL(request.url);
 
-    // =========================
-    // TEST AI
-    // =========================
-
-    if (url.pathname === "/api/test-ai") {
-      try {
-
-        const response = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          {
-            messages: [
-              {
-                role: "user",
-                content:
-                  "Ответь одним коротким предложением: что такое инфографика для карточки товара?"
-              }
-            ]
-          }
-        );
-
-        return Response.json(response);
-
-      } catch (error) {
-
-        return Response.json(
-          { error: error.message },
-          { status: 500 }
-        );
-
-      }
-    }
-
-
-    // =========================
-    // GENERATE CARD
-    // =========================
+    // =========================================
+    // Тест AI
+    // =========================================
 
     if (
-      url.pathname === "/api/generate" &&
-      request.method === "POST"
+      request.method === "GET" &&
+      url.pathname === "/api/test-ai"
     ) {
 
       try {
 
-        const data = await request.json();
+        const result =
+          await env.AI.run(
+            "@cf/meta/llama-3.1-8b-instruct-fp8",
+            {
+              messages: [
+                {
+                  role: "user",
+                  content: "Ответь одним словом: работает?"
+                }
+              ]
+            }
+          );
 
-        const productName = data.productName || "";
-        const features = data.features || "";
+        return Response.json({
+          ok: true,
+          result
+        });
+
+      } catch (error) {
+
+        return Response.json(
+          {
+            ok: false,
+            error: error.message
+          },
+          { status: 500 }
+        );
+
+      }
+
+    }
+
+
+    // =========================================
+    // ТЕСТ HUGGING FACE ЧЕРЕЗ CLOUDFLARE
+    // =========================================
+
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/test-huggingface"
+    ) {
+
+      const hfURL =
+        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json";
+
+
+      try {
+
+        const response =
+          await fetch(hfURL);
+
+
+        return new Response(
+          await response.text(),
+          {
+            status: response.status,
+
+            headers: {
+              "Content-Type":
+                response.headers.get(
+                  "Content-Type"
+                ) || "application/json",
+
+              "Access-Control-Allow-Origin":
+                "*"
+            }
+
+          }
+        );
+
+      } catch (error) {
+
+        return Response.json(
+          {
+            ok: false,
+            error: error.message
+          },
+          {
+            status: 500,
+            headers: {
+              "Access-Control-Allow-Origin":
+                "*"
+            }
+          }
+        );
+
+      }
+
+    }
+
+
+    // =========================================
+    // PROXY HUGGING FACE
+    // =========================================
+
+    if (
+      url.pathname.startsWith(
+        "/api/model/"
+      )
+    ) {
+
+      const path =
+        url.pathname.replace(
+          "/api/model/",
+          ""
+        );
+
+
+      const hfURL =
+        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/" +
+        path;
+
+
+      try {
+
+        const response =
+          await fetch(hfURL);
+
+
+        const headers =
+          new Headers(
+            response.headers
+          );
+
+
+        headers.set(
+          "Access-Control-Allow-Origin",
+          "*"
+        );
+
+
+        headers.set(
+          "Access-Control-Allow-Methods",
+          "GET, OPTIONS"
+        );
+
+
+        return new Response(
+          response.body,
+          {
+            status: response.status,
+            headers
+          }
+        );
+
+      } catch (error) {
+
+        return Response.json(
+          {
+            ok: false,
+            error: error.message
+          },
+          {
+            status: 500,
+            headers: {
+              "Access-Control-Allow-Origin":
+                "*"
+            }
+          }
+        );
+
+      }
+
+    }
+
+
+    // =========================================
+    // GENERATE CARD
+    // =========================================
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/generate"
+    ) {
+
+      try {
+
+        const body =
+          await request.json();
+
+        const productName =
+          body.productName || "";
+
+        const features =
+          body.features || "";
 
 
         const prompt = `
-Ты — профессиональный дизайнер инфографики для Wildberries и Ozon.
+Ты AI-дизайнер маркетплейсов.
 
-Тебе нужно спроектировать ОДНУ красивую карточку товара размером 900x1200.
+Создай структуру инфографики товара.
 
-ТОВАР:
+Название:
 ${productName}
 
-ХАРАКТЕРИСТИКИ:
+Характеристики:
 ${features}
 
+Используй ТОЛЬКО информацию пользователя.
 
-ГЛАВНОЕ ПРАВИЛО:
-
-Используй ТОЛЬКО информацию, которую дал пользователь.
-
-НЕЛЬЗЯ:
-- придумывать характеристики;
-- придумывать материалы;
-- придумывать сертификаты;
-- придумывать гарантии;
-- придумывать технологии;
-- придумывать преимущества, которых нет в описании.
-
-
-ТЕКСТ:
-
-Создай:
-- короткий title;
-- короткий subtitle;
-- максимум 4 коротких преимущества.
-
-Текст должен выглядеть как настоящая marketplace-инфографика.
-
-
-ТЕПЕРЬ СПРОЕКТИРУЙ КОМПОЗИЦИЮ.
-
-
-ВЫБЕРИ ОДИН DESIGN:
-
-hero
-split
-editorial
-dynamic
-info
-premium
-
-
-ОПИСАНИЕ DESIGN:
-
-hero:
-Большой товар является главным объектом.
-Товар обычно находится снизу или по центру.
-Заголовок сверху.
-Минимум декоративных элементов.
-
-split:
-Карточка делится на две визуальные зоны.
-Товар справа или слева.
-Текст находится в противоположной части.
-
-editorial:
-Стиль современного журнала.
-Асимметричная композиция.
-Большой заголовок.
-Декоративные линии и небольшие текстовые элементы.
-
-dynamic:
-Более энергичная композиция.
-Товар может находиться в углу.
-Используй диагональные или круглые декоративные элементы.
-Текст может быть смещён относительно центра.
-
-info:
-Товар является центральным объектом.
-Характеристики располагаются вокруг него.
-Можно использовать линии, точки, небольшие карточки характеристик.
-
-premium:
-Много свободного пространства.
-Минималистичная композиция.
-Большой качественный товар.
-Мягкая тень.
-Небольшое количество текста.
-
-
-ПОЗИЦИЯ ТОВАРА:
-
-Выбери одну:
-
-center
-center-bottom
-center-top
-left
-right
-left-bottom
-right-bottom
-left-top
-right-top
-
-
-МАСШТАБ ТОВАРА:
-
-Число от 0.55 до 0.95.
-
-0.55 = небольшой товар.
-0.95 = очень крупный товар.
-
-
-ПОЗИЦИЯ TITLE:
-
-Выбери:
-
-top-left
-top-center
-top-right
-middle-left
-middle-right
-bottom-left
-
-
-ПОЗИЦИЯ FEATURES:
-
-Выбери:
-
-left
-right
-bottom
-bottom-left
-bottom-right
-around
-
-
-ФОН:
-
-Выбери:
-
-light
-dark
-gradient
-soft
-accent
-
-
-ACCENT:
-
-Выбери один:
-
-blue
-cyan
-green
-orange
-violet
-red
-none
-
-
-SHADOW:
-
-Выбери:
-
-none
-soft
-medium
-
-
-DECORATION:
-
-Выбери:
-
-none
-lines
-circles
-blobs
-grid
-diagonal
-
-
-Верни ТОЛЬКО JSON.
+Верни только JSON.
 
 Формат:
 
 {
-  "title": "",
-  "subtitle": "",
-  "features": [
-    "",
-    "",
-    "",
-    ""
-  ],
-  "design": "",
-  "productPosition": "",
+  "title": "...",
+  "subtitle": "...",
+  "features": ["...", "...", "..."],
+  "design": "hero",
+  "productPosition": "center",
   "productScale": 0.8,
-  "titlePosition": "",
-  "featuresPosition": "",
-  "background": "",
-  "accent": "",
-  "shadow": "",
-  "decoration": ""
+  "titlePosition": "top",
+  "featuresPosition": "bottom",
+  "background": "light",
+  "accent": "blue",
+  "shadow": "soft",
+  "decoration": "none"
 }
+
+design:
+hero | split | editorial | dynamic | info | premium
+
+productPosition:
+center | center-bottom | center-top |
+left | right |
+left-bottom | right-bottom |
+left-top | right-top
+
+background:
+light | dark | gradient | soft | accent
+
+accent:
+blue | cyan | green | orange | violet | red | none
+
+shadow:
+none | soft | medium
+
+decoration:
+none | lines | circles | blobs | grid | diagonal
+
+Ответь только JSON.
 `;
 
 
-        const result = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          {
-            messages: [
-              {
-                role: "system",
-                content:
-                  "Ты профессиональный дизайнер marketplace-инфографики. Всегда возвращай только JSON без Markdown."
-              },
-              {
-                role: "user",
-                content: prompt
-              }
-            ],
-
-            temperature: 0.8,
-
-            max_tokens: 700
-          }
-        );
+        const result =
+          await env.AI.run(
+            "@cf/meta/llama-3.1-8b-instruct-fp8",
+            {
+              messages: [
+                {
+                  role: "user",
+                  content: prompt
+                }
+              ]
+            }
+          );
 
 
-        const raw = result.response || "";
+        let text =
+          result.response || "";
 
 
-        let generated;
+        let data;
 
 
         try {
 
-          const match = raw.match(/\{[\s\S]*\}/);
-
-          generated = JSON.parse(
-            match ? match[0] : raw
-          );
+          data =
+            JSON.parse(text);
 
         } catch {
 
-          generated = {
-
+          data = {
             title:
-              productName || "Ваш товар",
+              productName || "Товар",
 
             subtitle:
-              "Основные характеристики",
+              "",
 
             features:
               features
                 .split("\n")
-                .map(x => x.trim())
                 .filter(Boolean)
                 .slice(0, 4),
 
-            design: "hero",
+            design:
+              "hero",
 
-            productPosition: "center-bottom",
+            productPosition:
+              "center-bottom",
 
-            productScale: 0.8,
+            productScale:
+              0.8,
 
-            titlePosition: "top-left",
+            titlePosition:
+              "top",
 
-            featuresPosition: "bottom-left",
+            featuresPosition:
+              "bottom",
 
-            background: "light",
+            background:
+              "light",
 
-            accent: "blue",
+            accent:
+              "blue",
 
-            shadow: "soft",
+            shadow:
+              "soft",
 
-            decoration: "none"
-
+            decoration:
+              "none"
           };
 
         }
 
 
-        // =========================
-        // SAFETY DEFAULTS
-        // =========================
-
-        const allowedDesigns = [
-          "hero",
-          "split",
-          "editorial",
-          "dynamic",
-          "info",
-          "premium"
-        ];
-
-        const allowedPositions = [
-          "center",
-          "center-bottom",
-          "center-top",
-          "left",
-          "right",
-          "left-bottom",
-          "right-bottom",
-          "left-top",
-          "right-top"
-        ];
-
-        const allowedBackgrounds = [
-          "light",
-          "dark",
-          "gradient",
-          "soft",
-          "accent"
-        ];
-
-        const allowedAccents = [
-          "blue",
-          "cyan",
-          "green",
-          "orange",
-          "violet",
-          "red",
-          "none"
-        ];
-
-        const allowedShadows = [
-          "none",
-          "soft",
-          "medium"
-        ];
-
-        const allowedDecorations = [
-          "none",
-          "lines",
-          "circles",
-          "blobs",
-          "grid",
-          "diagonal"
-        ];
-
-
-        if (!allowedDesigns.includes(generated.design)) {
-          generated.design = "hero";
-        }
-
-        if (
-          !allowedPositions.includes(
-            generated.productPosition
-          )
-        ) {
-          generated.productPosition =
-            "center-bottom";
-        }
-
-        if (
-          !allowedBackgrounds.includes(
-            generated.background
-          )
-        ) {
-          generated.background = "light";
-        }
-
-        if (
-          !allowedAccents.includes(
-            generated.accent
-          )
-        ) {
-          generated.accent = "blue";
-        }
-
-        if (
-          !allowedShadows.includes(
-            generated.shadow
-          )
-        ) {
-          generated.shadow = "soft";
-        }
-
-        if (
-          !allowedDecorations.includes(
-            generated.decoration
-          )
-        ) {
-          generated.decoration = "none";
-        }
-
-
-        generated.productScale =
-          Math.min(
-            0.95,
-            Math.max(
-              0.55,
-              Number(generated.productScale) || 0.8
-            )
-          );
-
-
-        return Response.json(generated);
-
+        return Response.json(data);
 
       } catch (error) {
 
         return Response.json(
           {
-            error: error.message
+            error:
+              error.message
           },
           {
             status: 500
@@ -463,14 +345,44 @@ diagonal
         );
 
       }
+
     }
 
 
-    // =========================
-    // WEBSITE
-    // =========================
+    // =========================================
+    // OPTIONS
+    // =========================================
 
-    return env.ASSETS.fetch(request);
+    if (
+      request.method === "OPTIONS"
+    ) {
+
+      return new Response(
+        null,
+        {
+          headers: {
+            "Access-Control-Allow-Origin":
+              "*",
+
+            "Access-Control-Allow-Methods":
+              "GET, POST, OPTIONS",
+
+            "Access-Control-Allow-Headers":
+              "Content-Type"
+          }
+        }
+      );
+
+    }
+
+
+    // =========================================
+    // САЙТ
+    // =========================================
+
+    return env.ASSETS.fetch(
+      request
+    );
 
   }
 };
