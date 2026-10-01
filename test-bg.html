@@ -630,12 +630,11 @@ removeButton.addEventListener("click", async () => {
 
 
         /* =================================
-           4. OUTPUT
+           4. MODEL OUTPUT
         ================================= */
 
         const outputImage =
             output.output_image;
-
 
         if (!outputImage) {
 
@@ -645,10 +644,8 @@ removeButton.addEventListener("click", async () => {
 
         }
 
-
         const dims =
             outputImage.dims;
-
 
         console.log(
             "MODEL OUTPUT DIMS:",
@@ -656,11 +653,18 @@ removeButton.addEventListener("click", async () => {
         );
 
 
-        /*
-         * Ожидаем:
-         *
-         * [1, 1, 512, 512]
-         */
+        if (
+            !dims ||
+            dims.length !== 4
+        ) {
+
+            throw new Error(
+                "Неожиданная размерность mask: " +
+                JSON.stringify(dims)
+            );
+
+        }
+
 
         const maskHeight =
             dims[2];
@@ -670,12 +674,11 @@ removeButton.addEventListener("click", async () => {
 
 
         /* =================================
-           5. ORT TENSOR
+           5. GET RAW MASK
         ================================= */
 
         const ortTensor =
             outputImage.ort_tensor;
-
 
         if (!ortTensor) {
 
@@ -685,10 +688,8 @@ removeButton.addEventListener("click", async () => {
 
         }
 
-
         const rawData =
             ortTensor.data;
-
 
         if (!rawData) {
 
@@ -697,7 +698,6 @@ removeButton.addEventListener("click", async () => {
             );
 
         }
-
 
         console.log(
             "RAW MASK DATA LENGTH:",
@@ -711,19 +711,18 @@ removeButton.addEventListener("click", async () => {
 
         const alphaMask =
             new Float32Array(
-                rawData.length
+                maskWidth * maskHeight
             );
 
 
         for (
             let i = 0;
-            i < rawData.length;
+            i < alphaMask.length;
             i++
         ) {
 
             const value =
                 Number(rawData[i]);
-
 
             alphaMask[i] =
                 1 /
@@ -736,17 +735,15 @@ removeButton.addEventListener("click", async () => {
 
 
         /* =================================
-           7. CREATE NORMAL HTML CANVAS
+           7. CREATE REAL BROWSER CANVAS
         ================================= */
 
         setStatus(
             "⏳ Создаю прозрачное изображение..."
         );
 
-
         const canvas =
             document.createElement("canvas");
-
 
         canvas.width =
             image.width;
@@ -754,10 +751,10 @@ removeButton.addEventListener("click", async () => {
         canvas.height =
             image.height;
 
-
         const ctx =
-            canvas.getContext("2d");
-
+            canvas.getContext("2d", {
+                willReadFrequently: true
+            });
 
         if (!ctx) {
 
@@ -769,7 +766,7 @@ removeButton.addEventListener("click", async () => {
 
 
         /* =================================
-           8. LOAD ORIGINAL FILE
+           8. CREATE IMAGE BITMAP
         ================================= */
 
         const bitmap =
@@ -778,47 +775,51 @@ removeButton.addEventListener("click", async () => {
             );
 
 
-        /*
-         * Теперь это настоящий
-         * HTML Canvas.
-         */
+        /* =================================
+           9. DRAW ORIGINAL IMAGE
+        ================================= */
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
         ctx.drawImage(
             bitmap,
             0,
             0,
-            image.width,
-            image.height
+            canvas.width,
+            canvas.height
         );
-
 
         bitmap.close();
 
 
         /* =================================
-           9. GET PIXELS
+           10. GET ORIGINAL PIXELS
         ================================= */
 
         const imageData =
             ctx.getImageData(
                 0,
                 0,
-                image.width,
-                image.height
+                canvas.width,
+                canvas.height
             );
-
 
         const pixels =
             imageData.data;
 
 
         /* =================================
-           10. APPLY MASK
+           11. APPLY MASK
         ================================= */
 
         for (
             let y = 0;
-            y < image.height;
+            y < canvas.height;
             y++
         ) {
 
@@ -828,14 +829,14 @@ removeButton.addEventListener("click", async () => {
                     Math.floor(
                         y *
                         maskHeight /
-                        image.height
+                        canvas.height
                     )
                 );
 
 
             for (
                 let x = 0;
-                x < image.width;
+                x < canvas.width;
                 x++
             ) {
 
@@ -845,9 +846,9 @@ removeButton.addEventListener("click", async () => {
                         Math.floor(
                             x *
                             maskWidth /
-                            image.width
-                    )
-                );
+                            canvas.width
+                        )
+                    );
 
 
                 const maskIndex =
@@ -859,10 +860,9 @@ removeButton.addEventListener("click", async () => {
                 const pixelIndex =
                     (
                         y *
-                        image.width +
+                        canvas.width +
                         x
-                    ) *
-                    4;
+                    ) * 4;
 
 
                 let alpha =
@@ -870,7 +870,7 @@ removeButton.addEventListener("click", async () => {
 
 
                 /*
-                 * Смягчаем края.
+                 * Немного смягчаем края.
                  */
 
                 alpha =
@@ -893,7 +893,7 @@ removeButton.addEventListener("click", async () => {
 
 
         /* =================================
-           11. APPLY PIXELS
+           12. PUT PIXELS BACK
         ================================= */
 
         ctx.putImageData(
@@ -904,13 +904,22 @@ removeButton.addEventListener("click", async () => {
 
 
         /* =================================
-           12. EXPORT PNG
+           13. EXPORT PNG
         ================================= */
 
         const resultURL =
             canvas.toDataURL(
                 "image/png"
             );
+
+
+        if (!resultURL) {
+
+            throw new Error(
+                "Не удалось создать PNG."
+            );
+
+        }
 
 
         resultImage.src =
@@ -924,7 +933,7 @@ removeButton.addEventListener("click", async () => {
         setStatus(
             "🎉 ГОТОВО!\n\n" +
             "Фон успешно удалён.\n\n" +
-            "Справа находится PNG " +
+            "Справа находится изображение " +
             "с прозрачным фоном."
         );
 
@@ -951,7 +960,11 @@ removeButton.addEventListener("click", async () => {
             "Original:\n" +
             image.width +
             " × " +
-            image.height
+            image.height +
+            "\n\n" +
+
+            "Export:\n" +
+            "PNG with transparency"
         );
 
 
@@ -974,7 +987,7 @@ removeButton.addEventListener("click", async () => {
 
         setDebug(
             "================================\n" +
-            "❌ ERROR\n" +
+            "❌ ОШИБКА\n" +
             "================================\n\n" +
 
             "Тип:\n" +
