@@ -1,399 +1,504 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardly AI — генератор карточек</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardly AI — генератор инфографики</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      color: #171a21;
-    }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f9;
+  color: #111318;
+}
 
-    header {
-      height: 72px;
-      background: white;
-      border-bottom: 1px solid #e8eaf0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 7%;
-    }
+header {
+  height: 72px;
+  background: #fff;
+  border-bottom: 1px solid #e5e8ee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6%;
+}
 
-    .logo {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
 
-    .logo span {
-      color: #4f6cff;
-    }
+.logo span {
+  color: #4565ff;
+}
 
-    .header-btn {
-      border: none;
-      background: #171a21;
-      color: white;
-      padding: 11px 18px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+.header-button {
+  border: 0;
+  background: #111318;
+  color: #fff;
+  border-radius: 10px;
+  padding: 11px 18px;
+  cursor: pointer;
+}
 
-    .hero {
-      text-align: center;
-      padding: 55px 20px 35px;
-    }
+.hero {
+  text-align: center;
+  padding: 42px 20px 30px;
+}
 
-    .hero h1 {
-      font-size: 42px;
-      line-height: 1.1;
-      letter-spacing: -1.5px;
-      margin-bottom: 14px;
-    }
+.hero h1 {
+  font-size: 42px;
+  line-height: 1.08;
+  letter-spacing: -1.5px;
+}
 
-    .hero h1 span {
-      color: #4f6cff;
-    }
+.hero h1 span {
+  color: #4565ff;
+}
 
-    .hero p {
-      color: #707582;
-      font-size: 17px;
-    }
+.hero p {
+  margin-top: 13px;
+  color: #747b88;
+  font-size: 16px;
+}
 
-    .generator {
-      width: 90%;
-      max-width: 1150px;
-      margin: 0 auto 70px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 25px;
-    }
+.workspace {
+  width: 92%;
+  max-width: 1200px;
+  margin: 0 auto 70px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 25px;
+}
 
-    .panel {
-      background: white;
-      border: 1px solid #e5e8ef;
-      border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 10px 30px rgba(20, 30, 60, 0.05);
-    }
+.panel {
+  background: #fff;
+  border: 1px solid #e2e6ed;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 12px 35px rgba(20,30,50,.05);
+}
 
-    .panel h2 {
-      font-size: 20px;
-      margin-bottom: 22px;
-    }
+.panel-title {
+  font-size: 19px;
+  font-weight: 750;
+  margin-bottom: 20px;
+}
 
-    .upload {
-      border: 2px dashed #cfd5e2;
-      border-radius: 15px;
-      min-height: 210px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: .2s;
-      overflow: hidden;
-      position: relative;
-    }
+.step {
+  margin-bottom: 22px;
+}
 
-    .upload:hover {
-      border-color: #4f6cff;
-      background: #f8f9ff;
-    }
+.step-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #343945;
+}
 
-    .upload-icon {
-      font-size: 42px;
-      margin-bottom: 10px;
-    }
+.upload {
+  height: 150px;
+  border: 2px dashed #ccd2dc;
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  background: #fafbfc;
+  transition: .2s;
+}
 
-    .upload strong {
-      font-size: 16px;
-      margin-bottom: 5px;
-    }
+.upload:hover {
+  border-color: #4565ff;
+  background: #f7f8ff;
+}
 
-    .upload small {
-      color: #8b91a0;
-    }
+.upload-content {
+  color: #737a87;
+}
 
-    #fileInput {
-      display: none;
-    }
+.upload-icon {
+  font-size: 32px;
+  margin-bottom: 7px;
+}
 
-    #uploadedImage {
-      width: 100%;
-      height: 210px;
-      object-fit: contain;
-      display: none;
-      background: #f3f4f7;
-    }
+.upload-content strong {
+  display: block;
+  color: #292d35;
+  margin-bottom: 4px;
+}
 
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin: 20px 0 8px;
-    }
+#fileInput {
+  display: none;
+}
 
-    textarea,
-    input {
-      width: 100%;
-      border: 1px solid #dfe3eb;
-      border-radius: 11px;
-      padding: 13px;
-      font-size: 15px;
-      outline: none;
-      resize: vertical;
-    }
+#uploadedImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
+}
 
-    textarea {
-      min-height: 105px;
-    }
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #dfe3ea;
+  border-radius: 10px;
+  padding: 12px 13px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
 
-    textarea:focus,
-    input:focus {
-      border-color: #4f6cff;
-    }
+textarea {
+  min-height: 105px;
+  resize: vertical;
+}
 
-    .styles {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
+input:focus,
+textarea:focus {
+  border-color: #4565ff;
+}
 
-    .style {
-      border: 1px solid #dfe3eb;
-      background: white;
-      border-radius: 10px;
-      padding: 12px 5px;
-      cursor: pointer;
-      font-size: 13px;
-    }
+.styles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
 
-    .style.active {
-      border: 2px solid #4f6cff;
-      background: #f3f5ff;
-      color: #3e58d9;
-      font-weight: 700;
-    }
+.style-button {
+  border: 1px solid #dfe3ea;
+  background: #fff;
+  padding: 11px 4px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 12px;
+}
 
-    .generate {
-      width: 100%;
-      border: none;
-      background: #4f6cff;
-      color: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin-top: 25px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: .2s;
-    }
+.style-button.active {
+  border: 2px solid #4565ff;
+  color: #4565ff;
+  background: #f4f6ff;
+  font-weight: 700;
+}
 
-    .generate:hover {
-      background: #3d58df;
-      transform: translateY(-1px);
-    }
+.generate {
+  width: 100%;
+  border: 0;
+  background: #4565ff;
+  color: #fff;
+  padding: 15px;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+}
 
-    .preview-area {
-      min-height: 620px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f4f5f8;
-      border-radius: 15px;
-      padding: 20px;
-    }
+.generate:hover {
+  background: #354fd4;
+  transform: translateY(-1px);
+}
 
-    .card-preview {
-      width: 300px;
-      height: 400px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 15px 40px rgba(0,0,0,.15);
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
+.preview-panel {
+  min-height: 680px;
+}
 
-    .preview-placeholder {
-      color: #8b91a0;
-      text-align: center;
-      padding: 30px;
-      line-height: 1.5;
-    }
+.preview-title {
+  font-size: 19px;
+  font-weight: 750;
+  margin-bottom: 20px;
+}
 
-    .preview-image {
-      width: 100%;
-      height: 215px;
-      object-fit: contain;
-      background: #f3f4f7;
-    }
+.preview-wrapper {
+  background: #eef0f4;
+  border-radius: 15px;
+  min-height: 610px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+}
 
-    .preview-content {
-      padding: 18px;
-    }
+#card {
+  width: 450px;
+  height: 600px;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(0,0,0,.17);
+}
 
-    .preview-title {
-      font-size: 21px;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #9aa0ab;
+  font-size: 17px;
+}
 
-    .preview-features {
-      color: #555b68;
-      font-size: 13px;
-      line-height: 1.6;
-      white-space: pre-line;
-    }
+.product-photo {
+  position: absolute;
+  object-fit: contain;
+}
 
-    .badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: #4f6cff;
-      color: white;
-      padding: 6px 9px;
-      border-radius: 7px;
-      font-size: 10px;
-      font-weight: 700;
-    }
+.card-name {
+  position: absolute;
+  font-weight: 800;
+  line-height: 1.03;
+  letter-spacing: -1px;
+}
 
-    .download {
-      display: none;
-      width: 100%;
-      margin-top: 15px;
-      padding: 13px;
-      border-radius: 11px;
-      border: 1px solid #dfe3eb;
-      background: white;
-      cursor: pointer;
-      font-weight: 700;
-    }
+.card-subtitle {
+  position: absolute;
+  font-size: 13px;
+  line-height: 1.4;
+}
 
-    .download:hover {
-      background: #f5f6f9;
-    }
+.feature {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-    @media (max-width: 800px) {
-      .generator {
-        grid-template-columns: 1fr;
-      }
+.feature-number {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 800;
+  font-size: 13px;
+}
 
-      .hero h1 {
-        font-size: 32px;
-      }
+.feature-text {
+  font-weight: 700;
+  font-size: 13px;
+}
 
-      .preview-area {
-        min-height: 500px;
-      }
-    }
-  </style>
+.download {
+  width: 100%;
+  border: 1px solid #dfe3ea;
+  background: #fff;
+  padding: 13px;
+  margin-top: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  display: none;
+}
+
+.download:hover {
+  background: #f6f7f9;
+}
+
+@media(max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-wrapper {
+    min-height: 550px;
+  }
+}
+
+@media(max-width: 520px) {
+  .hero h1 {
+    font-size: 31px;
+  }
+
+  .preview-wrapper {
+    padding: 10px;
+  }
+
+  #card {
+    width: 360px;
+    height: 480px;
+  }
+}
+</style>
 </head>
 
 <body>
 
 <header>
   <div class="logo">Cardly<span>AI</span></div>
-  <button class="header-btn">Мои карточки</button>
+  <button class="header-button">Мои карточки</button>
 </header>
 
 <section class="hero">
-  <h1>Создай карточку товара<br><span>за несколько секунд</span></h1>
-  <p>Загрузи товар — Cardly AI поможет оформить инфографику для маркетплейса.</p>
+  <h1>
+    Карточка товара<br>
+    <span>за несколько секунд</span>
+  </h1>
+
+  <p>
+    Создай современную инфографику для Wildberries и Ozon
+  </p>
 </section>
 
-<main class="generator">
+
+<main class="workspace">
+
+  <!-- ЛЕВАЯ ПАНЕЛЬ -->
 
   <section class="panel">
 
-    <h2>Создание карточки</h2>
+    <div class="panel-title">
+      Создание карточки
+    </div>
 
-    <label>1. Фото товара</label>
+    <div class="step">
 
-    <label class="upload" for="fileInput">
-      <div id="uploadContent">
-        <div class="upload-icon">📷</div>
-        <strong>Нажми, чтобы загрузить фото</strong>
-        <small>PNG, JPG или WEBP</small>
+      <div class="step-title">
+        01 — Фото товара
       </div>
 
-      <img id="uploadedImage">
+      <label class="upload" for="fileInput">
 
-      <input type="file" id="fileInput" accept="image/*">
-    </label>
+        <div class="upload-content" id="uploadContent">
 
-    <label>2. Название товара</label>
-    <input
-      id="productName"
-      type="text"
-      placeholder="Например: Смеситель для кухни"
-    >
+          <div class="upload-icon">
+            ↑
+          </div>
 
-    <label>3. Характеристики</label>
-    <textarea
-      id="features"
-      placeholder="Например:
-Нержавеющая сталь
-Керамический картридж
-Гарантия 5 лет
-Простая установка"
-    ></textarea>
+          <strong>
+            Загрузить фотографию
+          </strong>
 
-    <label>4. Стиль</label>
+          <span>
+            PNG, JPG или WEBP
+          </span>
 
-    <div class="styles">
+        </div>
 
-      <button class="style active" data-style="minimal">
-        Минимализм
-      </button>
+        <img id="uploadedImage">
 
-      <button class="style" data-style="bright">
-        Яркий
-      </button>
+        <input
+          id="fileInput"
+          type="file"
+          accept="image/*"
+        >
 
-      <button class="style" data-style="premium">
-        Premium
-      </button>
+      </label>
 
     </div>
 
-    <button class="generate" onclick="generateCard()">
-      ✨ Создать карточку
+
+    <div class="step">
+
+      <div class="step-title">
+        02 — Название товара
+      </div>
+
+      <input
+        id="productName"
+        placeholder="Например: Смеситель для кухни"
+      >
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-title">
+        03 — Характеристики
+      </div>
+
+      <textarea
+        id="features"
+        placeholder="Нержавеющая сталь
+Керамический картридж
+Гарантия 5 лет"
+      ></textarea>
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-title">
+        04 — Стиль дизайна
+      </div>
+
+      <div class="styles">
+
+        <button
+          class="style-button active"
+          data-style="minimal"
+        >
+          Minimal
+        </button>
+
+        <button
+          class="style-button"
+          data-style="accent"
+        >
+          Accent
+        </button>
+
+        <button
+          class="style-button"
+          data-style="dark"
+        >
+          Dark
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="generate"
+      onclick="generateCard()"
+    >
+      ✦ Создать карточку
     </button>
 
   </section>
 
 
-  <section class="panel">
+  <!-- ПРЕДПРОСМОТР -->
 
-    <h2>Предпросмотр</h2>
+  <section class="panel preview-panel">
 
-    <div class="preview-area">
+    <div class="preview-title">
+      Предпросмотр · 900 × 1200
+    </div>
 
-      <div class="card-preview" id="cardPreview">
+    <div class="preview-wrapper">
 
-        <div class="preview-placeholder" id="placeholder">
+      <div id="card">
+
+        <div class="placeholder" id="placeholder">
           Здесь появится<br>
-          твоя карточка товара
+          готовая карточка
         </div>
 
       </div>
 
     </div>
 
-    <button class="download" id="downloadBtn" onclick="downloadCard()">
-      Скачать карточку
+    <button
+      class="download"
+      id="downloadBtn"
+      onclick="downloadCard()"
+    >
+      ↓ Скачать PNG
     </button>
 
   </section>
@@ -406,9 +511,17 @@
 let selectedImage = null;
 let selectedStyle = "minimal";
 
-const fileInput = document.getElementById("fileInput");
-const uploadedImage = document.getElementById("uploadedImage");
-const uploadContent = document.getElementById("uploadContent");
+const fileInput =
+  document.getElementById("fileInput");
+
+const uploadedImage =
+  document.getElementById("uploadedImage");
+
+const uploadContent =
+  document.getElementById("uploadContent");
+
+
+/* ЗАГРУЗКА ФОТО */
 
 fileInput.addEventListener("change", function() {
 
@@ -423,7 +536,9 @@ fileInput.addEventListener("change", function() {
     selectedImage = e.target.result;
 
     uploadedImage.src = selectedImage;
+
     uploadedImage.style.display = "block";
+
     uploadContent.style.display = "none";
 
   };
@@ -433,92 +548,507 @@ fileInput.addEventListener("change", function() {
 });
 
 
-document.querySelectorAll(".style").forEach(button => {
+/* ВЫБОР СТИЛЯ */
 
-  button.addEventListener("click", function() {
+document
+  .querySelectorAll(".style-button")
+  .forEach(button => {
 
-    document.querySelectorAll(".style").forEach(b => {
-      b.classList.remove("active");
+    button.addEventListener("click", function() {
+
+      document
+        .querySelectorAll(".style-button")
+        .forEach(b =>
+          b.classList.remove("active")
+        );
+
+      this.classList.add("active");
+
+      selectedStyle =
+        this.dataset.style;
+
     });
-
-    this.classList.add("active");
-
-    selectedStyle = this.dataset.style;
 
   });
 
-});
 
+/* СОЗДАНИЕ КАРТОЧКИ */
 
 function generateCard() {
 
   const name =
-    document.getElementById("productName").value ||
-    "Название товара";
+    document
+      .getElementById("productName")
+      .value
+      .trim() ||
+    "Современный смеситель";
 
-  const features =
-    document.getElementById("features").value ||
-    "Добавьте характеристики товара";
 
-  const preview =
-    document.getElementById("cardPreview");
+  const rawFeatures =
+    document
+      .getElementById("features")
+      .value
+      .trim();
 
-  let background = "#ffffff";
-  let textColor = "#171a21";
-  let accent = "#4f6cff";
 
-  if (selectedStyle === "bright") {
-    background = "#eef4ff";
-    accent = "#ff5c35";
+  const features = rawFeatures
+    ? rawFeatures
+        .split("\n")
+        .map(x => x.trim())
+        .filter(x => x)
+        .slice(0, 4)
+    : [
+        "Надёжный материал",
+        "Современный дизайн",
+        "Простая установка"
+      ];
+
+
+  const card =
+    document.getElementById("card");
+
+
+  /* БАЗОВЫЙ СТИЛЬ */
+
+  let bg = "#ffffff";
+  let main = "#111318";
+  let accent = "#4565ff";
+  let secondary = "#68707d";
+
+
+  if (selectedStyle === "accent") {
+
+    bg = "#eef3ff";
+    main = "#111318";
+    accent = "#4565ff";
+    secondary = "#59647a";
+
   }
 
-  if (selectedStyle === "premium") {
-    background = "#20242c";
-    textColor = "#ffffff";
-    accent = "#58d6c0";
+
+  if (selectedStyle === "dark") {
+
+    bg = "#171a20";
+    main = "#ffffff";
+    accent = "#62d6c7";
+    secondary = "#b7bec9";
+
   }
 
-  preview.style.background = background;
-  preview.style.color = textColor;
 
-  preview.innerHTML = `
+  card.style.background = bg;
+
+
+  let imageHTML = "";
+
+  if (selectedImage) {
+
+    imageHTML = `
+      <img
+        src="${selectedImage}"
+        class="product-photo"
+        style="
+          width:72%;
+          height:45%;
+          left:14%;
+          top:18%;
+        "
+      >
+    `;
+
+  }
+
+
+  let featuresHTML = "";
+
+
+  features.forEach((feature, index) => {
+
+    featuresHTML += `
+
+      <div
+        class="feature"
+        style="
+          left:9%;
+          bottom:${19 - index * 7}%;
+        "
+      >
+
+        <div
+          class="feature-number"
+          style="
+            background:${accent};
+            color:#fff;
+          "
+        >
+          ${index + 1}
+        </div>
+
+        <div
+          class="feature-text"
+          style="color:${main};"
+        >
+          ${escapeHTML(feature)}
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+
+  card.innerHTML = `
+
+    ${imageHTML}
 
     <div
-      class="badge"
-      style="background:${accent};"
+      style="
+        position:absolute;
+        top:6%;
+        left:8%;
+        color:${secondary};
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:2px;
+        text-transform:uppercase;
+      "
     >
       CARDLY AI
     </div>
 
-    ${
-      selectedImage
-      ? `<img class="preview-image" src="${selectedImage}">`
-      : `<div class="preview-image"></div>`
-    }
 
-    <div class="preview-content">
-
-      <div class="preview-title">
-        ${name}
-      </div>
-
-      <div class="preview-features">
-        ${features}
-      </div>
-
+    <div
+      class="card-name"
+      style="
+        top:10%;
+        left:8%;
+        width:84%;
+        color:${main};
+        font-size:31px;
+      "
+    >
+      ${escapeHTML(name)}
     </div>
+
+
+    <div
+      class="card-subtitle"
+      style="
+        top:16%;
+        left:8%;
+        width:80%;
+        color:${secondary};
+      "
+    >
+      Качество · Надёжность · Удобство
+    </div>
+
+
+    <div
+      style="
+        position:absolute;
+        width:84%;
+        height:1px;
+        left:8%;
+        bottom:42%;
+        background:${selectedStyle === "dark"
+          ? "#343942"
+          : "#e5e8ed"};
+      "
+    ></div>
+
+
+    ${featuresHTML}
+
   `;
 
-  document.getElementById("downloadBtn").style.display = "block";
+
+  document
+    .getElementById("downloadBtn")
+    .style.display = "block";
 
 }
 
 
-function downloadCard() {
+/* ЭКРАНИРОВАНИЕ ТЕКСТА */
 
-  alert(
-    "Скачивание PNG подключим следующим этапом вместе с настоящим AI."
-  );
+function escapeHTML(text) {
+
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* СКАЧИВАНИЕ */
+
+async function downloadCard() {
+
+  const card =
+    document.getElementById("card");
+
+
+  const width = 900;
+  const height = 1200;
+
+
+  const canvas =
+    document.createElement("canvas");
+
+  canvas.width = width;
+  canvas.height = height;
+
+
+  const ctx =
+    canvas.getContext("2d");
+
+
+  /*
+    Пока делаем PNG через SVG.
+    Это позволяет сохранить текст
+    и изображение товара.
+  */
+
+  const serializer =
+    new XMLSerializer();
+
+  const svg =
+    document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    );
+
+
+  svg.setAttribute("width", width);
+  svg.setAttribute("height", height);
+
+
+  const bg =
+    window.getComputedStyle(card)
+      .backgroundColor;
+
+
+  let svgContent = `
+    <rect
+      width="900"
+      height="1200"
+      fill="${bg}"
+    />
+  `;
+
+
+  if (selectedImage) {
+
+    svgContent += `
+      <image
+        href="${selectedImage}"
+        x="126"
+        y="216"
+        width="648"
+        height="540"
+        preserveAspectRatio="xMidYMid meet"
+      />
+    `;
+
+  }
+
+
+  const name =
+    document
+      .getElementById("productName")
+      .value
+      .trim() ||
+    "Современный смеситель";
+
+
+  const raw =
+    document
+      .getElementById("features")
+      .value
+      .trim();
+
+
+  const features =
+    raw
+      ? raw
+        .split("\n")
+        .map(x => x.trim())
+        .filter(x => x)
+        .slice(0,4)
+      : [];
+
+
+  const textColor =
+    selectedStyle === "dark"
+      ? "#ffffff"
+      : "#111318";
+
+
+  const accent =
+    selectedStyle === "dark"
+      ? "#62d6c7"
+      : "#4565ff";
+
+
+  svgContent += `
+
+    <text
+      x="72"
+      y="90"
+      font-family="Arial"
+      font-size="22"
+      font-weight="700"
+      letter-spacing="4"
+      fill="#68707d"
+    >
+      CARDLY AI
+    </text>
+
+
+    <text
+      x="72"
+      y="165"
+      font-family="Arial"
+      font-size="62"
+      font-weight="800"
+      fill="${textColor}"
+    >
+      ${escapeXML(name)}
+    </text>
+
+
+    <text
+      x="72"
+      y="205"
+      font-family="Arial"
+      font-size="25"
+      fill="#68707d"
+    >
+      Качество · Надёжность · Удобство
+    </text>
+
+
+    <line
+      x1="72"
+      y1="700"
+      x2="828"
+      y2="700"
+      stroke="#e1e4e9"
+      stroke-width="2"
+    />
+  `;
+
+
+  features.forEach((feature,index) => {
+
+    const y =
+      820 + index * 82;
+
+
+    svgContent += `
+
+      <circle
+        cx="100"
+        cy="${y}"
+        r="25"
+        fill="${accent}"
+      />
+
+      <text
+        x="100"
+        y="${y + 8}"
+        text-anchor="middle"
+        font-family="Arial"
+        font-size="20"
+        font-weight="700"
+        fill="#ffffff"
+      >
+        ${index + 1}
+      </text>
+
+
+      <text
+        x="145"
+        y="${y + 8}"
+        font-family="Arial"
+        font-size="25"
+        font-weight="700"
+        fill="${textColor}"
+      >
+        ${escapeXML(feature)}
+      </text>
+
+    `;
+
+  });
+
+
+  svg.innerHTML = svgContent;
+
+
+  const svgBlob =
+    new Blob(
+      [serializer.serializeToString(svg)],
+      {
+        type: "image/svg+xml;charset=utf-8"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(svgBlob);
+
+
+  const img =
+    new Image();
+
+
+  img.onload = function() {
+
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    URL.revokeObjectURL(url);
+
+
+    const link =
+      document.createElement("a");
+
+    link.download =
+      "cardly-ai-card.png";
+
+    link.href =
+      canvas.toDataURL("image/png");
+
+    link.click();
+
+  };
+
+
+  img.src = url;
+
+}
+
+
+function escapeXML(text) {
+
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 
 }
 
