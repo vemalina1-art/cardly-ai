@@ -1,11 +1,12 @@
-```html
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cardly AI — AI генератор карточек</title>
+<title>Cardly AI — генератор инфографики</title>
 
 <style>
 
@@ -15,15 +16,19 @@
 
 body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Inter, Arial, sans-serif;
     background: #f5f7fb;
-    color: #101828;
+    color: #111827;
 }
 
-/* ================= HEADER ================= */
+button,
+input,
+textarea {
+    font: inherit;
+}
 
 .header {
-    height: 70px;
+    height: 72px;
     background: white;
     border-bottom: 1px solid #e5e7eb;
 
@@ -31,1285 +36,1225 @@ body {
     align-items: center;
     justify-content: space-between;
 
-    padding: 0 6%;
+    padding: 0 32px;
 }
 
 .logo {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .logo span {
-    color: #3867ff;
+    color: #2563eb;
 }
 
-.nav a {
-    margin-left: 25px;
-    text-decoration: none;
-    color: #667085;
+.header-right {
     font-size: 14px;
+    color: #6b7280;
 }
 
-/* ================= HERO ================= */
 
-.hero {
-    text-align: center;
-    padding: 65px 20px 45px;
+/* ============================= */
+/* MAIN */
+/* ============================= */
+
+.main {
+    max-width: 1400px;
+    margin: auto;
+    padding: 36px;
 }
 
-.hero h1 {
+.page-title {
+    margin-bottom: 28px;
+}
+
+.page-title h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    letter-spacing: -1px;
+}
+
+.page-title p {
     margin: 0;
-
-    font-size: clamp(42px, 6vw, 68px);
-    line-height: .98;
-
-    letter-spacing: -4px;
+    color: #6b7280;
 }
 
-.hero h1 span {
-    color: #3867ff;
-}
 
-.hero p {
-    max-width: 650px;
-
-    margin: 22px auto 0;
-
-    color: #667085;
-
-    line-height: 1.5;
-}
-
-/* ================= WORKSPACE ================= */
+/* ============================= */
+/* WORKSPACE */
+/* ============================= */
 
 .workspace {
-    max-width: 1180px;
-    margin: auto;
-    padding: 20px;
-}
-
-.workspace-grid {
     display: grid;
-
-    grid-template-columns: 360px 1fr;
-
-    gap: 25px;
+    grid-template-columns: 390px 1fr;
+    gap: 28px;
 }
+
+
+/* ============================= */
+/* LEFT PANEL */
+/* ============================= */
 
 .panel {
     background: white;
-
     border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 24px;
 
-    border-radius: 22px;
-
-    padding: 25px;
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
-.panel h2 {
-    margin: 0 0 8px;
-
-    font-size: 21px;
-}
-
-.description {
-    margin: 0 0 25px;
-
-    color: #667085;
-
-    font-size: 13px;
-
-    line-height: 1.5;
-}
-
-/* ================= FORM ================= */
-
-.field {
-    margin-top: 18px;
-}
-
-.field-title {
-    display: block;
-
-    margin-bottom: 7px;
-
-    font-size: 13px;
-
+.panel-title {
+    font-size: 18px;
     font-weight: 700;
+    margin-bottom: 20px;
 }
 
-input[type="text"],
-textarea {
+.label {
+    display: block;
+    margin-bottom: 8px;
 
+    font-size: 13px;
+    font-weight: 600;
+
+    color: #374151;
+}
+
+.input,
+.textarea {
     width: 100%;
 
-    padding: 12px;
+    border: 1px solid #dbe1ea;
+    border-radius: 12px;
 
-    border: 1px solid #d9dee7;
-
-    border-radius: 11px;
+    padding: 13px 14px;
 
     outline: none;
 
-    font-family: Arial, Helvetica, sans-serif;
-
-    font-size: 14px;
+    transition: .2s;
 }
 
-input[type="text"]:focus,
-textarea:focus {
-    border-color: #3867ff;
+.input:focus,
+.textarea:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, .1);
 }
 
-textarea {
+.textarea {
     min-height: 120px;
-
     resize: vertical;
 }
 
-/* ================= UPLOAD ================= */
 
-.upload-area {
+/* ============================= */
+/* UPLOAD */
+/* ============================= */
 
-    border: 2px dashed #d7dce5;
-
-    border-radius: 15px;
-
-    padding: 20px 15px;
-
-    text-align: center;
-
-    background: #fafbfc;
-}
-
-/* Здесь показывается загруженное фото СЛЕВА */
-
-.upload-preview {
-
-    width: 100%;
-
-    height: 140px;
-
-    display: none;
-
-    align-items: center;
-
-    justify-content: center;
-
-    margin-bottom: 12px;
-
-    border-radius: 12px;
-
-    overflow: hidden;
-
-    background: white;
-
-    border: 1px solid #e5e7eb;
-}
-
-.upload-preview img {
-
-    width: 100%;
-    height: 100%;
-
-    object-fit: contain;
-}
-
-.upload-icon {
-    font-size: 30px;
-
-    margin-bottom: 8px;
-}
-
-.upload-title {
-
-    font-size: 13px;
-
-    font-weight: 700;
-}
-
-.upload-description {
-
-    margin-top: 5px;
-
-    color: #98a2b3;
-
-    font-size: 11px;
-}
-
-.upload-label {
-
-    display: inline-block;
-
-    margin-top: 13px;
-
-    padding: 10px 16px;
-
-    border-radius: 9px;
-
-    background: #eef2ff;
-
-    color: #3867ff;
-
-    font-size: 12px;
-
-    font-weight: 700;
-
-    cursor: pointer;
-}
-
-.upload-label input {
-    display: none;
-}
-
-#fileName {
-
-    margin-top: 9px;
-
-    color: #667085;
-
-    font-size: 11px;
-
-    word-break: break-word;
-}
-
-/* ================= BUTTON ================= */
-
-.generate-button {
-
-    width: 100%;
-
-    margin-top: 22px;
-
-    padding: 14px;
-
-    border: 0;
-
-    border-radius: 11px;
-
-    background: #3867ff;
-
-    color: white;
-
-    font-size: 14px;
-
-    font-weight: 700;
-
-    cursor: pointer;
-}
-
-.generate-button:hover {
-    opacity: .92;
-}
-
-.generate-button:disabled {
-    opacity: .6;
-
-    cursor: wait;
-}
-
-/* ================= PREVIEW ================= */
-
-.preview-header {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    margin-bottom: 18px;
-}
-
-.preview-header strong {
-    font-size: 16px;
-}
-
-.preview-size {
-
-    color: #98a2b3;
-
-    font-size: 11px;
-}
-
-.preview-area {
-
-    min-height: 620px;
-
-    background: #edf0f5;
-
-    border-radius: 16px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    padding: 30px;
-
-    overflow: hidden;
-}
-
-/* ================= EMPTY STATE ================= */
-
-.empty-preview {
-
-    text-align: center;
-
-    color: #98a2b3;
-}
-
-.empty-icon {
-
-    font-size: 45px;
-
-    margin-bottom: 15px;
-}
-
-.empty-preview strong {
-
-    display: block;
-
-    color: #667085;
-
-    font-size: 14px;
-}
-
-.empty-preview p {
-
-    margin-top: 7px;
-
-    font-size: 12px;
-}
-
-/* ================= CARD ================= */
-
-.product-card {
-
-    width: 390px;
-
-    height: 520px;
-
+.upload {
     position: relative;
 
-    flex-shrink: 0;
+    border: 2px dashed #d5dbe5;
+    border-radius: 16px;
 
-    overflow: hidden;
-
-    border-radius: 18px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #ffffff 0%,
-            #eef4ff 100%
-        );
-
-    box-shadow:
-        0 25px 60px rgba(16,24,40,.18);
-
-    display: none;
-}
-
-.card-inner {
-
-    position: absolute;
-
-    inset: 0;
-
-    overflow: hidden;
-
-    padding: 28px;
-}
-
-.card-label {
-
-    font-size: 9px;
-
-    font-weight: 800;
-
-    letter-spacing: 2px;
-
-    color: #667085;
-}
-
-.card-title {
-
-    margin-top: 15px;
-
-    max-width: 300px;
-
-    font-size: 30px;
-
-    line-height: 1.05;
-
-    font-weight: 900;
-}
-
-.card-subtitle {
-
-    margin-top: 9px;
-
-    max-width: 285px;
-
-    font-size: 12px;
-
-    line-height: 1.4;
-
-    color: #667085;
-}
-
-/* ================= CARD PHOTO ================= */
-
-/*
-    ВАЖНО:
-
-    Это фото появляется здесь ТОЛЬКО
-    после нажатия "Создать карточку".
-*/
-
-.card-photo {
-
-    position: absolute;
-
-    left: 35px;
-
-    right: 35px;
-
-    top: 165px;
-
-    height: 220px;
-
-    border-radius: 18px;
-
-    background: white;
-
-    border: 1px solid #e5e7eb;
-
-    overflow: hidden;
+    min-height: 230px;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-}
 
-.card-photo img {
-
-    width: 100%;
-
-    height: 100%;
-
-    object-fit: contain;
-
-    display: block;
-}
-
-/* ================= FEATURES ================= */
-
-.card-features {
-
-    position: absolute;
-
-    left: 28px;
-
-    right: 28px;
-
-    bottom: 25px;
-
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 7px;
-}
-
-.card-feature {
-
-    min-height: 34px;
-
-    display: flex;
-
-    align-items: center;
-
-    padding: 8px;
-
-    background: rgba(255,255,255,.94);
-
-    border: 1px solid #e5e7eb;
-
-    border-radius: 8px;
-
-    font-size: 9px;
-
-    font-weight: 700;
-
-    line-height: 1.2;
-}
-
-.card-watermark {
-
-    position: absolute;
-
-    right: 15px;
-
-    bottom: 9px;
-
-    font-size: 7px;
-
-    color: #98a2b3;
-}
-
-/* ================= ACTIONS ================= */
-
-.actions {
-
-    display: none;
-
-    gap: 10px;
-
-    margin-top: 15px;
-}
-
-.action-button {
-
-    flex: 1;
-
-    padding: 12px;
-
-    border-radius: 10px;
-
-    border: 1px solid #d9dee7;
-
-    background: white;
-
-    font-weight: 700;
+    text-align: center;
 
     cursor: pointer;
+
+    overflow: hidden;
+
+    transition: .2s;
 }
 
-.action-button.dark {
-
-    background: #111827;
-
-    color: white;
-
-    border-color: #111827;
+.upload:hover {
+    border-color: #2563eb;
+    background: #f8faff;
 }
 
-/* ================= PRICING ================= */
+.upload input {
+    display: none;
+}
 
-.pricing {
-
-    max-width: 1180px;
-
-    margin: 80px auto;
-
+.upload-content {
     padding: 20px;
 }
 
-.pricing-title {
-
-    text-align: center;
-
-    font-size: 34px;
-
-    margin-bottom: 30px;
+.upload-icon {
+    font-size: 38px;
+    margin-bottom: 10px;
 }
 
-.pricing-grid {
-
-    display: grid;
-
-    grid-template-columns: repeat(3,1fr);
-
-    gap: 20px;
+.upload-title {
+    font-weight: 700;
+    margin-bottom: 5px;
 }
 
-.price-card {
+.upload-subtitle {
+    font-size: 13px;
+    color: #6b7280;
+}
 
+.upload img {
+    width: 100%;
+    height: 230px;
+
+    object-fit: contain;
+
+    padding: 15px;
+}
+
+
+/* ============================= */
+/* BUTTON */
+/* ============================= */
+
+.generate {
+    width: 100%;
+
+    margin-top: 20px;
+
+    padding: 15px;
+
+    border: none;
+    border-radius: 13px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.generate:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.generate:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+
+/* ============================= */
+/* RIGHT */
+/* ============================= */
+
+.preview-panel {
     background: white;
 
     border: 1px solid #e5e7eb;
 
     border-radius: 20px;
 
-    padding: 25px;
+    padding: 24px;
+
+    min-height: 700px;
 }
 
-.price-card h3 {
-    margin-top: 0;
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
 }
 
-.price {
-
-    font-size: 34px;
-
-    font-weight: 900;
-
-    margin: 20px 0;
+.preview-title {
+    font-size: 18px;
+    font-weight: 700;
 }
 
-.price-card p {
-
-    color: #667085;
-
-    font-size: 13px;
-
-    line-height: 1.6;
-}
-
-.price-button {
-
-    width: 100%;
-
-    margin-top: 15px;
-
-    padding: 12px;
-
-    border-radius: 10px;
-
-    border: 1px solid #d9dee7;
+.variant {
+    border: 1px solid #dbe1ea;
 
     background: white;
 
-    font-weight: 700;
+    border-radius: 10px;
+
+    padding: 9px 14px;
 
     cursor: pointer;
 }
 
-.price-button.primary {
-
-    background: #3867ff;
-
-    color: white;
-
-    border-color: #3867ff;
+.variant:hover {
+    background: #f5f7fb;
 }
 
-/* ================= MOBILE ================= */
 
-@media(max-width:850px) {
+/* ============================= */
+/* EMPTY */
+/* ============================= */
 
-    .workspace-grid {
+.empty {
+    min-height: 620px;
+
+    border-radius: 16px;
+
+    border: 1px dashed #d5dbe5;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #9ca3af;
+
+    text-align: center;
+}
+
+.empty-inner {
+    max-width: 300px;
+}
+
+.empty-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+
+/* ============================= */
+/* CARD */
+/* ============================= */
+
+.card-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.card {
+    width: min(450px, 100%);
+    aspect-ratio: 3 / 4;
+
+    position: relative;
+
+    overflow: hidden;
+
+    border-radius: 4px;
+
+    background: #f5f5f5;
+
+    isolation: isolate;
+}
+
+
+/* ============================= */
+/* BACKGROUNDS */
+/* ============================= */
+
+.bg-light {
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #edf2f7
+        );
+}
+
+.bg-dark {
+    background:
+        linear-gradient(
+            135deg,
+            #111827,
+            #1f2937
+        );
+
+    color: white;
+}
+
+.bg-gradient {
+    background:
+        radial-gradient(
+            circle at 20% 10%,
+            #dbeafe,
+            transparent 40%
+        ),
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #e0f2fe
+        );
+}
+
+.bg-soft {
+    background:
+        radial-gradient(
+            circle at 80% 20%,
+            #e5e7eb,
+            transparent 35%
+        ),
+        #f8fafc;
+}
+
+.bg-accent {
+    background:
+        linear-gradient(
+            145deg,
+            #eff6ff,
+            #dbeafe
+        );
+}
+
+
+/* ============================= */
+/* ACCENTS */
+/* ============================= */
+
+.accent-blue {
+    --accent: #2563eb;
+}
+
+.accent-cyan {
+    --accent: #06b6d4;
+}
+
+.accent-green {
+    --accent: #16a34a;
+}
+
+.accent-orange {
+    --accent: #f97316;
+}
+
+.accent-violet {
+    --accent: #7c3aed;
+}
+
+.accent-red {
+    --accent: #ef4444;
+}
+
+.accent-none {
+    --accent: #111827;
+}
+
+
+/* ============================= */
+/* PRODUCT */
+/* ============================= */
+
+.product {
+    position: absolute;
+
+    object-fit: contain;
+
+    z-index: 5;
+
+    transition: .3s;
+}
+
+.product-shadow {
+    filter:
+        drop-shadow(
+            0 25px 22px rgba(0,0,0,.18)
+        );
+}
+
+.product-shadow-medium {
+    filter:
+        drop-shadow(
+            0 30px 28px rgba(0,0,0,.28)
+        );
+}
+
+
+/* ============================= */
+/* POSITIONS */
+/* ============================= */
+
+.pos-center {
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+}
+
+.pos-center-bottom {
+    left: 50%;
+    bottom: 4%;
+
+    transform:
+        translateX(-50%);
+}
+
+.pos-center-top {
+    left: 50%;
+    top: 18%;
+
+    transform:
+        translateX(-50%);
+}
+
+.pos-left {
+    left: 4%;
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+}
+
+.pos-right {
+    right: 4%;
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+}
+
+.pos-left-bottom {
+    left: 3%;
+    bottom: 5%;
+}
+
+.pos-right-bottom {
+    right: 3%;
+    bottom: 5%;
+}
+
+.pos-left-top {
+    left: 3%;
+    top: 10%;
+}
+
+.pos-right-top {
+    right: 3%;
+    top: 10%;
+}
+
+
+/* ============================= */
+/* TEXT */
+/* ============================= */
+
+.card-title {
+    position: absolute;
+
+    z-index: 10;
+
+    margin: 0;
+
+    max-width: 82%;
+
+    font-size: 32px;
+
+    line-height: 1.02;
+
+    letter-spacing: -1.5px;
+
+    font-weight: 850;
+}
+
+.card-subtitle {
+    position: absolute;
+
+    z-index: 10;
+
+    max-width: 65%;
+
+    font-size: 14px;
+
+    line-height: 1.4;
+
+    opacity: .72;
+}
+
+.features {
+    position: absolute;
+
+    z-index: 10;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    max-width: 45%;
+}
+
+.feature {
+    padding: 9px 12px;
+
+    background: rgba(255,255,255,.78);
+
+    backdrop-filter: blur(8px);
+
+    border-radius: 10px;
+
+    font-size: 11px;
+
+    line-height: 1.3;
+
+    box-shadow:
+        0 5px 20px rgba(0,0,0,.06);
+}
+
+.dark-card .feature {
+    background: rgba(255,255,255,.1);
+}
+
+
+/* ============================= */
+/* TITLE POSITIONS */
+/* ============================= */
+
+.title-top-left {
+    top: 8%;
+    left: 7%;
+}
+
+.title-top-center {
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.title-top-right {
+    top: 8%;
+    right: 7%;
+    text-align: right;
+}
+
+.title-middle-left {
+    left: 7%;
+    top: 40%;
+}
+
+.title-middle-right {
+    right: 7%;
+    top: 40%;
+    text-align: right;
+}
+
+.title-bottom-left {
+    left: 7%;
+    bottom: 8%;
+}
+
+
+/* ============================= */
+/* FEATURES POSITIONS */
+/* ============================= */
+
+.features-left {
+    left: 7%;
+    bottom: 8%;
+}
+
+.features-right {
+    right: 7%;
+    bottom: 8%;
+}
+
+.features-bottom {
+    left: 50%;
+    bottom: 6%;
+    transform: translateX(-50%);
+    width: 84%;
+    max-width: none;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.features-bottom-left {
+    left: 7%;
+    bottom: 7%;
+}
+
+.features-bottom-right {
+    right: 7%;
+    bottom: 7%;
+}
+
+.features-around {
+    left: 7%;
+    right: 7%;
+    bottom: 8%;
+}
+
+
+/* ============================= */
+/* DECORATIONS */
+/* ============================= */
+
+.decor {
+    position: absolute;
+
+    z-index: 1;
+
+    pointer-events: none;
+}
+
+.decor-line {
+    width: 160px;
+    height: 2px;
+
+    background: var(--accent);
+
+    opacity: .55;
+
+    transform: rotate(-25deg);
+}
+
+.decor-circle {
+    width: 150px;
+    height: 150px;
+
+    border-radius: 50%;
+
+    border: 2px solid var(--accent);
+
+    opacity: .2;
+}
+
+.decor-blob {
+    width: 230px;
+    height: 180px;
+
+    border-radius: 50%;
+
+    background: var(--accent);
+
+    opacity: .09;
+
+    filter: blur(2px);
+}
+
+.decor-grid {
+    width: 100%;
+    height: 100%;
+
+    opacity: .08;
+
+    background-image:
+        linear-gradient(
+            var(--accent) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            var(--accent) 1px,
+            transparent 1px
+        );
+
+    background-size: 25px 25px;
+}
+
+
+/* ============================= */
+/* DESIGN VARIATIONS */
+/* ============================= */
+
+
+/* HERO */
+
+.design-hero .card-title {
+    font-size: 34px;
+}
+
+.design-hero .product {
+    width: 78%;
+}
+
+
+/* SPLIT */
+
+.design-split .card-title {
+    font-size: 31px;
+    max-width: 45%;
+}
+
+.design-split .product {
+    width: 54%;
+}
+
+
+/* EDITORIAL */
+
+.design-editorial .card-title {
+    font-size: 39px;
+    max-width: 75%;
+}
+
+.design-editorial .product {
+    width: 62%;
+}
+
+.design-editorial::after {
+    content: "";
+    position: absolute;
+
+    right: -60px;
+    top: 25%;
+
+    width: 180px;
+    height: 180px;
+
+    border-radius: 50%;
+
+    border: 35px solid var(--accent);
+
+    opacity: .08;
+}
+
+
+/* DYNAMIC */
+
+.design-dynamic .card-title {
+    font-size: 36px;
+    max-width: 70%;
+}
+
+.design-dynamic .product {
+    width: 68%;
+}
+
+.design-dynamic::before {
+    content: "";
+
+    position: absolute;
+
+    width: 150%;
+    height: 180px;
+
+    left: -25%;
+    top: 45%;
+
+    background: var(--accent);
+
+    opacity: .08;
+
+    transform: rotate(-14deg);
+}
+
+
+/* INFO */
+
+.design-info .card-title {
+    font-size: 29px;
+    max-width: 70%;
+}
+
+.design-info .product {
+    width: 58%;
+}
+
+.design-info .feature {
+    border-left: 3px solid var(--accent);
+}
+
+
+/* PREMIUM */
+
+.design-premium {
+    background: #fafafa;
+}
+
+.design-premium .card-title {
+    font-size: 38px;
+    font-weight: 700;
+}
+
+.design-premium .product {
+    width: 76%;
+}
+
+.design-premium .feature {
+    background: rgba(255,255,255,.9);
+
+    border: 1px solid rgba(0,0,0,.07);
+
+    box-shadow: none;
+}
+
+
+/* ============================= */
+/* DESIGN LABEL */
+/* ============================= */
+
+.design-label {
+    position: absolute;
+
+    top: 14px;
+    left: 14px;
+
+    z-index: 20;
+
+    padding: 6px 9px;
+
+    border-radius: 7px;
+
+    background: rgba(255,255,255,.75);
+
+    backdrop-filter: blur(10px);
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .5px;
+
+    color: #374151;
+}
+
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 1000px) {
+
+    .workspace {
         grid-template-columns: 1fr;
     }
 
-    .pricing-grid {
-        grid-template-columns: 1fr;
+    .preview-panel {
+        min-height: auto;
     }
 
-    .product-card {
-        width: 330px;
-        height: 440px;
+}
+
+@media (max-width: 600px) {
+
+    .main {
+        padding: 18px;
     }
 
-    .preview-area {
-        min-height: 540px;
+    .header {
+        padding: 0 18px;
     }
+
+    .page-title h1 {
+        font-size: 26px;
+    }
+
 }
 
 </style>
+
 </head>
 
 
 <body>
 
 
-<!-- ================= HEADER ================= -->
-
 <header class="header">
 
     <div class="logo">
-        Cardly<span>AI</span>
+        Cardly <span>AI</span>
     </div>
 
-    <nav class="nav">
-        <a href="#generator">
-            Генератор
-        </a>
-
-        <a href="#pricing">
-            Тарифы
-        </a>
-    </nav>
+    <div class="header-right">
+        AI генератор инфографики
+    </div>
 
 </header>
 
 
-<!-- ================= HERO ================= -->
-
-<section class="hero">
-
-    <h1>
-        Карточки товаров<br>
-        <span>с помощью AI</span>
-    </h1>
-
-    <p>
-        Загрузи товар и его характеристики —
-        Cardly AI подготовит структуру
-        профессиональной карточки для маркетплейса.
-    </p>
-
-</section>
+<main class="main">
 
 
-<!-- ================= GENERATOR ================= -->
+    <div class="page-title">
 
-<section
-    class="workspace"
-    id="generator"
->
+        <h1>Создайте карточку товара</h1>
 
-<div class="workspace-grid">
+        <p>
+            Загрузите товар — AI создаст композицию и текст инфографики
+        </p>
 
-
-<!-- ================================================= -->
-<!-- ЛЕВАЯ ПАНЕЛЬ                                      -->
-<!-- ================================================= -->
-
-<div class="panel">
-
-    <h2>
-        Создать карточку
-    </h2>
-
-    <p class="description">
-        Загрузи фото и введи информацию
-        о товаре.
-    </p>
+    </div>
 
 
-    <!-- ================= PHOTO ================= -->
-
-    <div class="field">
-
-        <span class="field-title">
-            Фото товара
-        </span>
+    <div class="workspace">
 
 
-        <div class="upload-area">
+        <!-- ====================== -->
+        <!-- LEFT -->
+        <!-- ====================== -->
 
+        <section class="panel">
 
-            <!--
-                ВАЖНО:
-                Здесь находится фото пользователя.
-
-                Оно НЕ появляется справа,
-                пока не нажата кнопка.
-            -->
-
-            <div
-                class="upload-preview"
-                id="uploadPreview"
-            >
-
-                <img
-                    id="uploadedPhoto"
-                    alt="Загруженное фото"
-                >
-
+            <div class="panel-title">
+                Данные товара
             </div>
 
 
-            <div
-                class="upload-icon"
-                id="uploadIcon"
-            >
-                📷
-            </div>
+            <label class="label">
+                Фото товара
+            </label>
 
-
-            <div class="upload-title">
-                Загрузите фото товара
-            </div>
-
-
-            <div class="upload-description">
-                PNG, JPG или WEBP
-            </div>
-
-
-            <label class="upload-label">
-
-                Выбрать фото
+            <label class="upload" id="uploadBox">
 
                 <input
                     type="file"
-                    id="photoInput"
-                    accept="image/png,image/jpeg,image/webp"
+                    id="imageInput"
+                    accept="image/*"
                 >
+
+                <div
+                    class="upload-content"
+                    id="uploadContent"
+                >
+
+                    <div class="upload-icon">
+                        📦
+                    </div>
+
+                    <div class="upload-title">
+                        Загрузите фото
+                    </div>
+
+                    <div class="upload-subtitle">
+                        PNG, JPG или WEBP
+                    </div>
+
+                </div>
 
             </label>
 
 
-            <div id="fileName"></div>
-
-        </div>
-
-    </div>
+            <div style="height:20px"></div>
 
 
-    <!-- ================= NAME ================= -->
+            <label class="label">
+                Название товара
+            </label>
 
-    <div class="field">
-
-        <span class="field-title">
-            Название товара
-        </span>
-
-
-        <input
-            type="text"
-            id="productName"
-            placeholder="Например: Смеситель для кухни"
-        >
-
-    </div>
+            <input
+                id="productName"
+                class="input"
+                placeholder="Например: Смеситель для кухни"
+            >
 
 
-    <!-- ================= FEATURES ================= -->
-
-    <div class="field">
-
-        <span class="field-title">
-            Характеристики
-        </span>
+            <div style="height:16px"></div>
 
 
-        <textarea
-            id="featuresInput"
-            placeholder="Материал — нержавеющая сталь
-Цвет — хром
-Поворотный излив
-Для кухни"
-        ></textarea>
+            <label class="label">
+                Характеристики
+            </label>
 
-    </div>
-
-
-    <!-- ================= GENERATE ================= -->
-
-    <button
-        class="generate-button"
-        id="generateButton"
-        onclick="generateCard()"
-    >
-        ✨ Создать карточку
-    </button>
-
-</div>
+            <textarea
+                id="featuresInput"
+                class="textarea"
+                placeholder="Например:
+Материал: нержавеющая сталь
+Высота: 35 см
+Цвет: чёрный
+Поворотный излив"
+            ></textarea>
 
 
-<!-- ================================================= -->
-<!-- ПРАВАЯ ПАНЕЛЬ                                     -->
-<!-- ================================================= -->
+            <button
+                class="generate"
+                id="generateBtn"
+            >
+                ✨ Создать карточку
+            </button>
 
-<div class="panel">
-
-    <div class="preview-header">
-
-        <strong>
-            Предпросмотр
-        </strong>
-
-        <span class="preview-size">
-            900 × 1200
-        </span>
-
-    </div>
+        </section>
 
 
-    <div
-        class="preview-area"
-        id="previewArea"
-    >
+        <!-- ====================== -->
+        <!-- RIGHT -->
+        <!-- ====================== -->
+
+        <section class="preview-panel">
 
 
-        <!-- ================= EMPTY ================= -->
+            <div class="preview-header">
 
-        <div
-            class="empty-preview"
-            id="emptyPreview"
-        >
+                <div class="preview-title">
+                    Предпросмотр
+                </div>
 
-            <div class="empty-icon">
-                ✨
+                <button
+                    class="variant"
+                    id="variantBtn"
+                    style="display:none"
+                >
+                    Другой вариант
+                </button>
+
             </div>
 
-            <strong>
-                Здесь появится готовая карточка
-            </strong>
 
-            <p>
-                Загрузи фото и нажми<br>
-                «Создать карточку»
-            </p>
+            <div
+                class="empty"
+                id="emptyPreview"
+            >
 
-        </div>
+                <div class="empty-inner">
 
+                    <div class="empty-icon">
+                        ✨
+                    </div>
 
-        <!-- ================= CARD ================= -->
+                    <strong>
+                        Здесь появится ваша инфографика
+                    </strong>
 
-        <div
-            class="product-card"
-            id="productCard"
-        >
+                    <p>
+                        AI выберет композицию,
+                        расположение товара,
+                        фон и оформление.
+                    </p>
 
-            <div class="card-inner">
-
-
-                <div class="card-label">
-                    CARDLY AI
                 </div>
 
+            </div>
+
+
+            <div
+                class="card-wrapper"
+                id="cardWrapper"
+                style="display:none"
+            >
 
                 <div
-                    class="card-title"
-                    id="cardTitle"
-                >
-                    Ваш товар
-                </div>
-
-
-                <div
-                    class="card-subtitle"
-                    id="cardSubtitle"
-                >
-                    Описание товара
-                </div>
-
-
-                <!--
-                    Фото попадёт сюда
-                    ТОЛЬКО после генерации.
-                -->
-
-                <div class="card-photo">
-
-                    <img
-                        id="cardPhoto"
-                        alt="Фото товара"
-                    >
-
-                </div>
-
-
-                <div
-                    class="card-features"
-                    id="cardFeatures"
+                    class="card"
+                    id="card"
                 >
 
                 </div>
 
-
             </div>
 
 
-            <div class="card-watermark">
-                CARDLY AI
-            </div>
+        </section>
 
-        </div>
 
     </div>
 
 
-    <!-- ================= ACTIONS ================= -->
-
-    <div
-        class="actions"
-        id="actions"
-    >
-
-        <button
-            class="action-button"
-            onclick="generateCard()"
-        >
-            🔄 Другой вариант
-        </button>
-
-
-        <button
-            class="action-button dark"
-            onclick="downloadCard()"
-        >
-            ↓ Скачать
-        </button>
-
-    </div>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- ================= PRICING ================= -->
-
-<section
-    class="pricing"
-    id="pricing"
->
-
-    <h2 class="pricing-title">
-        Тарифы
-    </h2>
-
-
-    <div class="pricing-grid">
-
-
-        <div class="price-card">
-
-            <h3>
-                Start
-            </h3>
-
-            <div class="price">
-                $4.99
-            </div>
-
-            <p>
-                До 20 карточек в месяц.
-                Для небольших продавцов.
-            </p>
-
-            <button
-                class="price-button"
-                onclick="choosePlan('Start')"
-            >
-                Выбрать
-            </button>
-
-        </div>
-
-
-        <div class="price-card">
-
-            <h3>
-                Pro
-            </h3>
-
-            <div class="price">
-                $9.99
-            </div>
-
-            <p>
-                До 60 карточек в месяц.
-                Для активных продавцов.
-            </p>
-
-            <button
-                class="price-button primary"
-                onclick="choosePlan('Pro')"
-            >
-                Выбрать
-            </button>
-
-        </div>
-
-
-        <div class="price-card">
-
-            <h3>
-                Business
-            </h3>
-
-            <div class="price">
-                $19.99
-            </div>
-
-            <p>
-                До 200 карточек в месяц.
-                Для большого количества товаров.
-            </p>
-
-            <button
-                class="price-button"
-                onclick="choosePlan('Business')"
-            >
-                Выбрать
-            </button>
-
-        </div>
-
-
-    </div>
-
-</section>
+</main>
 
 
 <script>
 
-/* ================================================= */
-/* СОСТОЯНИЕ                                         */
-/* ================================================= */
 
-let selectedImageURL = null;
+/* ================================= */
+/* VARIABLES */
+/* ================================= */
 
+const imageInput =
+    document.getElementById("imageInput");
 
-/* ================================================= */
-/* ЭЛЕМЕНТЫ                                          */
-/* ================================================= */
+const uploadBox =
+    document.getElementById("uploadBox");
 
-const photoInput =
-    document.getElementById("photoInput");
+const uploadContent =
+    document.getElementById("uploadContent");
 
-const uploadedPhoto =
-    document.getElementById("uploadedPhoto");
+const productName =
+    document.getElementById("productName");
 
-const uploadPreview =
-    document.getElementById("uploadPreview");
+const featuresInput =
+    document.getElementById("featuresInput");
 
-const uploadIcon =
-    document.getElementById("uploadIcon");
+const generateBtn =
+    document.getElementById("generateBtn");
 
-const fileName =
-    document.getElementById("fileName");
-
-const productCard =
-    document.getElementById("productCard");
+const variantBtn =
+    document.getElementById("variantBtn");
 
 const emptyPreview =
     document.getElementById("emptyPreview");
 
-const actions =
-    document.getElementById("actions");
+const cardWrapper =
+    document.getElementById("cardWrapper");
 
-const cardPhoto =
-    document.getElementById("cardPhoto");
+const card =
+    document.getElementById("card");
 
 
-/* ================================================= */
-/* ЗАГРУЗКА ФОТО                                     */
-/* ================================================= */
+let uploadedImage = null;
 
-/*
-    Здесь фото показывается ТОЛЬКО СЛЕВА.
+let lastGenerated = null;
 
-    Оно пока НЕ копируется в карточку.
-*/
 
-photoInput.addEventListener(
+/* ================================= */
+/* IMAGE UPLOAD */
+/* ================================= */
+
+imageInput.addEventListener(
     "change",
-    function(event) {
+    function () {
 
-        const file =
-            event.target.files[0];
+        const file = this.files[0];
 
-        if (!file) {
-            return;
-        }
+        if (!file) return;
 
+        const reader =
+            new FileReader();
 
-        if (!file.type.startsWith("image/")) {
+        reader.onload = function (e) {
 
-            alert(
-                "Выбери изображение."
-            );
+            uploadedImage =
+                e.target.result;
 
-            return;
-        }
+            uploadContent.innerHTML = `
+                <img src="${uploadedImage}">
+            `;
 
+        };
 
-        if (selectedImageURL) {
-
-            URL.revokeObjectURL(
-                selectedImageURL
-            );
-
-        }
-
-
-        selectedImageURL =
-            URL.createObjectURL(file);
-
-
-        /*
-            Показываем фото
-            в левом блоке.
-        */
-
-        uploadedPhoto.src =
-            selectedImageURL;
-
-        uploadPreview.style.display =
-            "flex";
-
-        uploadIcon.style.display =
-            "none";
-
-
-        fileName.textContent =
-            file.name;
+        reader.readAsDataURL(file);
 
     }
 );
 
 
-/* ================================================= */
-/* ГЕНЕРАЦИЯ                                         */
-/* ================================================= */
+/* ================================= */
+/* GENERATE */
+/* ================================= */
 
 async function generateCard() {
 
-    const productName =
-        document
-            .getElementById("productName")
-            .value
-            .trim();
-
-
-    const features =
-        document
-            .getElementById("featuresInput")
-            .value
-            .trim();
-
-
-    if (!selectedImageURL) {
+    if (!uploadedImage) {
 
         alert(
-            "Сначала загрузи фото товара."
+            "Сначала загрузите фото товара"
         );
 
         return;
     }
 
 
-    if (!productName) {
+    if (!productName.value.trim()) {
 
         alert(
-            "Введи название товара."
+            "Введите название товара"
         );
 
         return;
     }
 
 
-    const button =
-        document.getElementById(
-            "generateButton"
-        );
+    generateBtn.disabled = true;
 
-
-    button.disabled = true;
-
-    button.textContent =
-        "✨ Создаём карточку...";
+    generateBtn.textContent =
+        "✨ AI создаёт дизайн...";
 
 
     try {
-
-        /*
-            Отправляем текст в AI.
-        */
 
         const response =
             await fetch(
@@ -1326,10 +1271,10 @@ async function generateCard() {
                     body: JSON.stringify({
 
                         productName:
-                            productName,
+                            productName.value,
 
                         features:
-                            features
+                            featuresInput.value
 
                     })
 
@@ -1337,163 +1282,482 @@ async function generateCard() {
             );
 
 
-        if (!response.ok) {
+        const data =
+            await response.json();
+
+
+        if (data.error) {
 
             throw new Error(
-                "Ошибка сервера: " +
-                response.status
+                data.error
             );
 
         }
 
 
-        const data =
-            await response.json();
+        lastGenerated = data;
 
+        renderCard(data);
 
-        /* =============================== */
-        /* ТЕПЕРЬ ПОКАЗЫВАЕМ КАРТОЧКУ       */
-        /* =============================== */
 
         emptyPreview.style.display =
             "none";
 
+        cardWrapper.style.display =
+            "flex";
 
-        productCard.style.display =
+        variantBtn.style.display =
             "block";
 
 
-        actions.style.display =
-            "flex";
-
-
-        /* =============================== */
-        /* ПЕРЕНОСИМ ФОТО В КАРТОЧКУ        */
-        /* =============================== */
-
-        cardPhoto.src =
-            selectedImageURL;
-
-
-        /* =============================== */
-        /* TITLE                            */
-        /* =============================== */
-
-        document
-            .getElementById("cardTitle")
-            .textContent =
-            data.title ||
-            productName;
-
-
-        /* =============================== */
-        /* SUBTITLE                         */
-        /* =============================== */
-
-        document
-            .getElementById("cardSubtitle")
-            .textContent =
-            data.subtitle ||
-            "";
-
-
-        /* =============================== */
-        /* FEATURES                         */
-        /* =============================== */
-
-        const container =
-            document.getElementById(
-                "cardFeatures"
-            );
-
-
-        container.innerHTML =
-            "";
-
-
-        const generatedFeatures =
-            Array.isArray(data.features)
-                ? data.features
-                : [];
-
-
-        generatedFeatures
-            .slice(0,4)
-            .forEach(
-                function(feature) {
-
-                    const element =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    element.className =
-                        "card-feature";
-
-
-                    element.textContent =
-                        feature;
-
-
-                    container.appendChild(
-                        element
-                    );
-
-                }
-            );
-
-
-    } catch(error) {
+    } catch (error) {
 
         console.error(error);
 
         alert(
-            "Не удалось подключиться к AI."
+            "Ошибка: " +
+            error.message
         );
-
-    } finally {
-
-        button.disabled =
-            false;
-
-        button.textContent =
-            "✨ Создать карточку";
 
     }
 
-}
 
+    generateBtn.disabled = false;
 
-/* ================================================= */
-/* СКАЧИВАНИЕ                                        */
-/* ================================================= */
-
-function downloadCard() {
-
-    alert(
-        "PNG-скачивание подключим следующим этапом."
-    );
+    generateBtn.textContent =
+        "✨ Создать карточку";
 
 }
 
 
-/* ================================================= */
-/* ТАРИФ                                             */
-/* ================================================= */
+/* ================================= */
+/* RENDER CARD */
+/* ================================= */
 
-function choosePlan(plan) {
+function renderCard(data) {
 
-    alert(
-        "Тариф " +
-        plan +
-        ". Оплату подключим следующим этапом."
-    );
+
+    const design =
+        data.design || "hero";
+
+    const background =
+        data.background || "light";
+
+    const accent =
+        data.accent || "blue";
+
+    const productPosition =
+        data.productPosition ||
+        "center-bottom";
+
+    const productScale =
+        data.productScale ||
+        0.8;
+
+    const titlePosition =
+        data.titlePosition ||
+        "top-left";
+
+    const featuresPosition =
+        data.featuresPosition ||
+        "bottom";
+
+    const shadow =
+        data.shadow ||
+        "soft";
+
+
+    /* CARD */
+
+    card.className =
+        `card
+        design-${design}
+        bg-${background}
+        accent-${accent}`;
+
+
+    if (background === "dark") {
+
+        card.classList.add(
+            "dark-card"
+        );
+
+    }
+
+
+    /* PRODUCT */
+
+    let shadowClass = "";
+
+    if (shadow === "soft") {
+
+        shadowClass =
+            "product-shadow";
+
+    }
+
+    if (shadow === "medium") {
+
+        shadowClass =
+            "product-shadow-medium";
+
+    }
+
+
+    const productWidth =
+        Math.round(
+            productScale * 100
+        );
+
+
+    /* FEATURES */
+
+    const featureList =
+        Array.isArray(data.features)
+            ? data.features
+            : [];
+
+
+    const featuresHTML =
+        featureList
+            .slice(0, 4)
+            .map(
+                feature =>
+                    `<div class="feature">
+                        ${escapeHTML(feature)}
+                    </div>`
+            )
+            .join("");
+
+
+    /* DECOR */
+
+    const decoration =
+        data.decoration ||
+        "none";
+
+
+    let decorationHTML = "";
+
+
+    if (decoration === "lines") {
+
+        decorationHTML = `
+            <div
+                class="decor decor-line"
+                style="
+                    top:25%;
+                    right:0;
+                "
+            ></div>
+
+            <div
+                class="decor decor-line"
+                style="
+                    bottom:20%;
+                    left:-20px;
+                "
+            ></div>
+        `;
+
+    }
+
+
+    if (decoration === "circles") {
+
+        decorationHTML = `
+            <div
+                class="decor decor-circle"
+                style="
+                    top:-40px;
+                    right:-40px;
+                "
+            ></div>
+
+            <div
+                class="decor decor-circle"
+                style="
+                    bottom:40px;
+                    left:-60px;
+                "
+            ></div>
+        `;
+
+    }
+
+
+    if (decoration === "blobs") {
+
+        decorationHTML = `
+            <div
+                class="decor decor-blob"
+                style="
+                    top:-50px;
+                    right:-70px;
+                "
+            ></div>
+
+            <div
+                class="decor decor-blob"
+                style="
+                    bottom:-70px;
+                    left:-70px;
+                "
+            ></div>
+        `;
+
+    }
+
+
+    if (decoration === "grid") {
+
+        decorationHTML = `
+            <div class="decor decor-grid"></div>
+        `;
+
+    }
+
+
+    if (decoration === "diagonal") {
+
+        decorationHTML = `
+            <div
+                class="decor"
+                style="
+                    width:150%;
+                    height:100px;
+                    left:-25%;
+                    top:40%;
+                    background:var(--accent);
+                    opacity:.08;
+                    transform:rotate(-18deg);
+                "
+            ></div>
+        `;
+
+    }
+
+
+    /* DESIGN LABEL */
+
+    const designNames = {
+
+        hero: "PRODUCT HERO",
+
+        split: "SPLIT",
+
+        editorial: "EDITORIAL",
+
+        dynamic: "DYNAMIC",
+
+        info: "INFOGRAPHIC",
+
+        premium: "PREMIUM"
+
+    };
+
+
+    card.innerHTML = `
+
+        <div class="design-label">
+            ${designNames[design] || "CARDLY AI"}
+        </div>
+
+
+        ${decorationHTML}
+
+
+        <h2
+            class="
+                card-title
+                title-${titlePosition}
+            "
+        >
+            ${escapeHTML(
+                data.title ||
+                productName.value
+            )}
+        </h2>
+
+
+        <div
+            class="card-subtitle"
+            style="
+                ${
+                    titlePosition.includes("right")
+                    ? "right:7%;"
+                    : "left:7%;"
+                }
+
+                ${
+                    titlePosition.includes("top")
+                    ? "top:18%;"
+                    : "top:55%;"
+                }
+            "
+        >
+            ${escapeHTML(
+                data.subtitle || ""
+            )}
+        </div>
+
+
+        <img
+            src="${uploadedImage}"
+            class="
+                product
+                pos-${productPosition}
+                ${shadowClass}
+            "
+            style="
+                width:${productWidth}%;
+            "
+        >
+
+
+        <div
+            class="
+                features
+                features-${featuresPosition}
+            "
+        >
+
+            ${featuresHTML}
+
+        </div>
+
+    `;
 
 }
+
+
+/* ================================= */
+/* OTHER VARIANT */
+/* ================================= */
+
+variantBtn.addEventListener(
+    "click",
+    async function () {
+
+        if (!productName.value.trim())
+            return;
+
+
+        generateBtn.disabled = true;
+
+        variantBtn.disabled = true;
+
+        variantBtn.textContent =
+            "Создаю...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/generate",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            productName:
+                                productName.value,
+
+                            features:
+                                featuresInput.value
+
+                        })
+
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.error)
+                throw new Error(
+                    data.error
+                );
+
+
+            lastGenerated = data;
+
+            renderCard(data);
+
+
+        } catch (error) {
+
+            alert(
+                "Ошибка: " +
+                error.message
+            );
+
+        }
+
+
+        generateBtn.disabled = false;
+
+        variantBtn.disabled = false;
+
+        variantBtn.textContent =
+            "Другой вариант";
+
+    }
+);
+
+
+/* ================================= */
+/* HTML ESCAPE */
+/* ================================= */
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* ================================= */
+/* BUTTON */
+/* ================================= */
+
+generateBtn.addEventListener(
+    "click",
+    generateCard
+);
+
 
 </script>
 
 </body>
+
 </html>
-```
