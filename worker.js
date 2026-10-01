@@ -3,7 +3,10 @@ export default {
 
     const url = new URL(request.url);
 
-    // Проверка AI
+    // =========================
+    // TEST AI
+    // =========================
+
     if (url.pathname === "/api/test-ai") {
       try {
 
@@ -33,8 +36,14 @@ export default {
     }
 
 
-    // Генерация контента карточки
-    if (url.pathname === "/api/generate" && request.method === "POST") {
+    // =========================
+    // GENERATE CARD
+    // =========================
+
+    if (
+      url.pathname === "/api/generate" &&
+      request.method === "POST"
+    ) {
 
       try {
 
@@ -45,51 +54,206 @@ export default {
 
 
         const prompt = `
-Ты — профессиональный дизайнер маркетплейсов и копирайтер.
+Ты — профессиональный дизайнер инфографики для Wildberries и Ozon.
 
-Создай структуру инфографики для карточки товара.
+Тебе нужно спроектировать ОДНУ красивую карточку товара размером 900x1200.
 
-Товар:
+ТОВАР:
 ${productName}
 
-Характеристики товара:
+ХАРАКТЕРИСТИКИ:
 ${features}
 
 
-ВАЖНЫЕ ПРАВИЛА:
+ГЛАВНОЕ ПРАВИЛО:
 
-- Используй ТОЛЬКО информацию, которую дал пользователь.
-- Не придумывай характеристики.
-- Не придумывай сертификаты, гарантии, материалы, технологии или преимущества.
-- Текст должен быть коротким и продающим.
-- Сделай структуру подходящей для Wildberries/Ozon.
-- Не используй слишком длинные предложения.
-- Выбирай layout в зависимости от типа товара и количества информации.
+Используй ТОЛЬКО информацию, которую дал пользователь.
 
-
-Верни ТОЛЬКО JSON такого формата:
-
-{
-  "title": "короткий заголовок",
-  "subtitle": "короткое описание",
-  "features": [
-    "преимущество 1",
-    "преимущество 2",
-    "преимущество 3",
-    "преимущество 4"
-  ],
-  "layout": "hero"
-}
+НЕЛЬЗЯ:
+- придумывать характеристики;
+- придумывать материалы;
+- придумывать сертификаты;
+- придумывать гарантии;
+- придумывать технологии;
+- придумывать преимущества, которых нет в описании.
 
 
-В поле layout используй ТОЛЬКО одно из:
+ТЕКСТ:
+
+Создай:
+- короткий title;
+- короткий subtitle;
+- максимум 4 коротких преимущества.
+
+Текст должен выглядеть как настоящая marketplace-инфографика.
+
+
+ТЕПЕРЬ СПРОЕКТИРУЙ КОМПОЗИЦИЮ.
+
+
+ВЫБЕРИ ОДИН DESIGN:
 
 hero
 split
 editorial
-minimal
-product-focus
-badge
+dynamic
+info
+premium
+
+
+ОПИСАНИЕ DESIGN:
+
+hero:
+Большой товар является главным объектом.
+Товар обычно находится снизу или по центру.
+Заголовок сверху.
+Минимум декоративных элементов.
+
+split:
+Карточка делится на две визуальные зоны.
+Товар справа или слева.
+Текст находится в противоположной части.
+
+editorial:
+Стиль современного журнала.
+Асимметричная композиция.
+Большой заголовок.
+Декоративные линии и небольшие текстовые элементы.
+
+dynamic:
+Более энергичная композиция.
+Товар может находиться в углу.
+Используй диагональные или круглые декоративные элементы.
+Текст может быть смещён относительно центра.
+
+info:
+Товар является центральным объектом.
+Характеристики располагаются вокруг него.
+Можно использовать линии, точки, небольшие карточки характеристик.
+
+premium:
+Много свободного пространства.
+Минималистичная композиция.
+Большой качественный товар.
+Мягкая тень.
+Небольшое количество текста.
+
+
+ПОЗИЦИЯ ТОВАРА:
+
+Выбери одну:
+
+center
+center-bottom
+center-top
+left
+right
+left-bottom
+right-bottom
+left-top
+right-top
+
+
+МАСШТАБ ТОВАРА:
+
+Число от 0.55 до 0.95.
+
+0.55 = небольшой товар.
+0.95 = очень крупный товар.
+
+
+ПОЗИЦИЯ TITLE:
+
+Выбери:
+
+top-left
+top-center
+top-right
+middle-left
+middle-right
+bottom-left
+
+
+ПОЗИЦИЯ FEATURES:
+
+Выбери:
+
+left
+right
+bottom
+bottom-left
+bottom-right
+around
+
+
+ФОН:
+
+Выбери:
+
+light
+dark
+gradient
+soft
+accent
+
+
+ACCENT:
+
+Выбери один:
+
+blue
+cyan
+green
+orange
+violet
+red
+none
+
+
+SHADOW:
+
+Выбери:
+
+none
+soft
+medium
+
+
+DECORATION:
+
+Выбери:
+
+none
+lines
+circles
+blobs
+grid
+diagonal
+
+
+Верни ТОЛЬКО JSON.
+
+Формат:
+
+{
+  "title": "",
+  "subtitle": "",
+  "features": [
+    "",
+    "",
+    "",
+    ""
+  ],
+  "design": "",
+  "productPosition": "",
+  "productScale": 0.8,
+  "titlePosition": "",
+  "featuresPosition": "",
+  "background": "",
+  "accent": "",
+  "shadow": "",
+  "decoration": ""
+}
 `;
 
 
@@ -100,18 +264,23 @@ badge
               {
                 role: "system",
                 content:
-                  "Ты создаёшь структурированные данные для дизайна карточек товаров."
+                  "Ты профессиональный дизайнер marketplace-инфографики. Всегда возвращай только JSON без Markdown."
               },
               {
                 role: "user",
                 content: prompt
               }
-            ]
+            ],
+
+            temperature: 0.8,
+
+            max_tokens: 700
           }
         );
 
 
         const raw = result.response || "";
+
 
         let generated;
 
@@ -128,21 +297,155 @@ badge
 
           generated = {
 
-            title: productName || "Ваш товар",
+            title:
+              productName || "Ваш товар",
 
             subtitle:
-              "Основные характеристики товара",
+              "Основные характеристики",
 
-            features: features
-              .split("\n")
-              .filter(Boolean)
-              .slice(0, 4),
+            features:
+              features
+                .split("\n")
+                .map(x => x.trim())
+                .filter(Boolean)
+                .slice(0, 4),
 
-            layout: "hero"
+            design: "hero",
+
+            productPosition: "center-bottom",
+
+            productScale: 0.8,
+
+            titlePosition: "top-left",
+
+            featuresPosition: "bottom-left",
+
+            background: "light",
+
+            accent: "blue",
+
+            shadow: "soft",
+
+            decoration: "none"
 
           };
 
         }
+
+
+        // =========================
+        // SAFETY DEFAULTS
+        // =========================
+
+        const allowedDesigns = [
+          "hero",
+          "split",
+          "editorial",
+          "dynamic",
+          "info",
+          "premium"
+        ];
+
+        const allowedPositions = [
+          "center",
+          "center-bottom",
+          "center-top",
+          "left",
+          "right",
+          "left-bottom",
+          "right-bottom",
+          "left-top",
+          "right-top"
+        ];
+
+        const allowedBackgrounds = [
+          "light",
+          "dark",
+          "gradient",
+          "soft",
+          "accent"
+        ];
+
+        const allowedAccents = [
+          "blue",
+          "cyan",
+          "green",
+          "orange",
+          "violet",
+          "red",
+          "none"
+        ];
+
+        const allowedShadows = [
+          "none",
+          "soft",
+          "medium"
+        ];
+
+        const allowedDecorations = [
+          "none",
+          "lines",
+          "circles",
+          "blobs",
+          "grid",
+          "diagonal"
+        ];
+
+
+        if (!allowedDesigns.includes(generated.design)) {
+          generated.design = "hero";
+        }
+
+        if (
+          !allowedPositions.includes(
+            generated.productPosition
+          )
+        ) {
+          generated.productPosition =
+            "center-bottom";
+        }
+
+        if (
+          !allowedBackgrounds.includes(
+            generated.background
+          )
+        ) {
+          generated.background = "light";
+        }
+
+        if (
+          !allowedAccents.includes(
+            generated.accent
+          )
+        ) {
+          generated.accent = "blue";
+        }
+
+        if (
+          !allowedShadows.includes(
+            generated.shadow
+          )
+        ) {
+          generated.shadow = "soft";
+        }
+
+        if (
+          !allowedDecorations.includes(
+            generated.decoration
+          )
+        ) {
+          generated.decoration = "none";
+        }
+
+
+        generated.productScale =
+          Math.min(
+            0.95,
+            Math.max(
+              0.55,
+              Number(generated.productScale) || 0.8
+            )
+          );
 
 
         return Response.json(generated);
@@ -163,7 +466,10 @@ badge
     }
 
 
-    // Показываем сайт
+    // =========================
+    // WEBSITE
+    // =========================
+
     return env.ASSETS.fetch(request);
 
   }
