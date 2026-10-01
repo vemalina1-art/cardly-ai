@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardly AI — Background Removal</title>
+
+  <title>Cardly AI — тест удаления фона</title>
 
   <style>
     body {
@@ -36,20 +37,18 @@
 
     button:disabled {
       opacity: .5;
+      cursor: wait;
     }
 
     #status {
       margin: 20px 0;
       color: #555;
-    }
-
-    #result {
-      max-width: 100%;
-      margin-top: 20px;
+      line-height: 1.5;
     }
 
     .checker {
       display: inline-block;
+      margin-top: 20px;
       padding: 10px;
 
       background-image:
@@ -65,6 +64,12 @@
         10px -10px,
         -10px 0;
     }
+
+    #result {
+      display: block;
+      max-width: 100%;
+      max-height: 600px;
+    }
   </style>
 </head>
 
@@ -74,7 +79,7 @@
 
   <h1>✂️ Cardly AI</h1>
 
-  <p>Тест удаления фона</p>
+  <p>Тест автоматического удаления фона</p>
 
   <input
     id="imageInput"
@@ -101,8 +106,11 @@
 
 <script type="module">
 
-import { pipeline } from
-  "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+import {
+  AutoModel,
+  AutoProcessor,
+  RawImage
+} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
 const MODEL =
@@ -122,242 +130,339 @@ const result =
   document.getElementById("result");
 
 
-let imageFile = null;
-let remover = null;
+let selectedFile = null;
+
+let model = null;
+
+let processor = null;
 
 
-// ----------------------------------
+// ------------------------------------
 // Выбор фотографии
-// ----------------------------------
+// ------------------------------------
 
-imageInput.addEventListener("change", (event) => {
+imageInput.addEventListener(
+  "change",
+  (event) => {
 
-  imageFile =
-    event.target.files[0];
+    selectedFile =
+      event.target.files[0];
 
-  if (!imageFile) return;
+    if (!selectedFile) {
+      return;
+    }
 
-  result.src =
-    URL.createObjectURL(imageFile);
-
-  status.textContent =
-    "Фото выбрано. Нажми «Убрать фон».";
-
-});
-
-
-// ----------------------------------
-// Удаление фона
-// ----------------------------------
-
-removeBtn.addEventListener("click", async () => {
-
-  if (!imageFile) {
+    result.src =
+      URL.createObjectURL(selectedFile);
 
     status.textContent =
-      "Сначала выбери фотографию.";
+      "Фото выбрано. Нажми «Убрать фон».";
 
+  }
+);
+
+
+// ------------------------------------
+// Загрузка модели
+// ------------------------------------
+
+async function loadModel() {
+
+  if (model && processor) {
     return;
   }
 
+  status.textContent =
+    "⏳ Загружаю AI-модель... Первый запуск может занять несколько минут.";
 
   try {
 
-    removeBtn.disabled = true;
+    // Сначала пробуем WebGPU
 
-
-    // Загружаем модель только один раз
-
-    if (!remover) {
+    try {
 
       status.textContent =
-        "⏳ Загружаю AI-модель. Первый запуск может занять некоторое время...";
+        "⚡ Запускаю AI через WebGPU...";
 
-
-      remover =
-        await pipeline(
-          "image-segmentation",
+      model =
+        await AutoModel.from_pretrained(
           MODEL,
           {
+            dtype: "fp16",
             device: "webgpu"
+          }
+        );
+
+    } catch (webgpuError) {
+
+      console.warn(
+        "WebGPU недоступен. Переключаюсь на WASM.",
+        webgpuError
+      );
+
+      status.textContent =
+        "💻 WebGPU недоступен. Запускаю более совместимый режим...";
+
+      model =
+        await AutoModel.from_pretrained(
+          MODEL,
+          {
+            dtype: "fp32",
+            device: "wasm"
           }
         );
 
     }
 
 
-    status.textContent =
-      "✂️ AI удаляет фон...";
-
-
-    const output =
-      await remover(imageFile);
-
-
-    console.log("AI OUTPUT:", output);
-
-
-    if (!output || !output[0]) {
-
-      throw new Error(
-        "Модель не вернула результат"
+    processor =
+      await AutoProcessor.from_pretrained(
+        MODEL
       );
+
+  } catch (error) {
+
+    console.error(
+      "MODEL LOAD ERROR:",
+      error
+    );
+
+    throw new Error(
+      "Не удалось загрузить AI-модель: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+// ------------------------------------
+// Удаление фона
+// ------------------------------------
+
+removeBtn.addEventListener(
+  "click",
+  async () => {
+
+    if (!selectedFile) {
+
+      status.textContent =
+        "Сначала выбери фотографию.";
+
+      return;
 
     }
 
 
-    const mask =
-      output[0].mask;
+    try {
+
+      removeBtn.disabled = true;
 
 
-    // Загружаем исходное фото
-
-    const image =
-      await createImageBitmap(imageFile);
+      await loadModel();
 
 
-    const canvas =
-      document.createElement("canvas");
-
-    canvas.width =
-      image.width;
-
-    canvas.height =
-      image.height;
+      status.textContent =
+        "🔍 Анализирую фотографию...";
 
 
-    const ctx =
-      canvas.getContext("2d");
+      // Загружаем изображение
+      const imageURL =
+        URL.createObjectURL(selectedFile);
+
+      const image =
+        await RawImage.read(imageURL);
+
+      URL.revokeObjectURL(imageURL);
 
 
-    ctx.drawImage(
-      image,
-      0,
-      0
-    );
+      // Подготавливаем изображение
+      const {
+        pixel_values
+      } =
+        await processor(image);
 
 
-    const imageData =
-      ctx.getImageData(
+      status.textContent =
+        "✂️ AI удаляет фон...";
+
+
+      // Запускаем BiRefNet
+      const {
+        logits
+      } =
+        await model({
+          input_image: pixel_values
+        });
+
+
+      // --------------------------------
+      // Получаем маску
+      // --------------------------------
+
+      const mask =
+        logits
+          .sigmoid()
+          .mul(255)
+          .to("cpu");
+
+
+      // --------------------------------
+      // Canvas исходного изображения
+      // --------------------------------
+
+      const canvas =
+        document.createElement("canvas");
+
+      canvas.width =
+        image.width;
+
+      canvas.height =
+        image.height;
+
+
+      const ctx =
+        canvas.getContext("2d");
+
+
+      const imageData =
+        await image.toImageData();
+
+
+      // --------------------------------
+      // Маска 512 × 512
+      // превращается в ImageData
+      // --------------------------------
+
+      const maskCanvas =
+        document.createElement("canvas");
+
+      maskCanvas.width =
+        mask.dims[1];
+
+      maskCanvas.height =
+        mask.dims[0];
+
+
+      const maskCtx =
+        maskCanvas.getContext("2d");
+
+
+      const maskPixels =
+        new Uint8ClampedArray(
+          mask.data
+        );
+
+
+      const maskImageData =
+        new ImageData(
+          maskPixels,
+          maskCanvas.width,
+          maskCanvas.height
+        );
+
+
+      maskCtx.putImageData(
+        maskImageData,
         0,
-        0,
-        canvas.width,
-        canvas.height
+        0
       );
 
 
-    // Маска модели
+      // --------------------------------
+      // Растягиваем маску
+      // до размера фотографии
+      // --------------------------------
 
-    const maskCanvas =
-      document.createElement("canvas");
+      const resizedMask =
+        document.createElement("canvas");
 
-    maskCanvas.width =
-      mask.width;
+      resizedMask.width =
+        image.width;
 
-    maskCanvas.height =
-      mask.height;
-
-
-    const maskCtx =
-      maskCanvas.getContext("2d");
+      resizedMask.height =
+        image.height;
 
 
-    const maskImageData =
-      new ImageData(
-        new Uint8ClampedArray(mask.data),
-        mask.width,
-        mask.height
+      const resizedMaskCtx =
+        resizedMask.getContext("2d");
+
+
+      resizedMaskCtx.drawImage(
+        maskCanvas,
+        0,
+        0,
+        image.width,
+        image.height
       );
 
 
-    maskCtx.putImageData(
-      maskImageData,
-      0,
-      0
-    );
+      const resizedMaskData =
+        resizedMaskCtx.getImageData(
+          0,
+          0,
+          image.width,
+          image.height
+        ).data;
 
 
-    // Растягиваем маску до размера фотографии
+      // --------------------------------
+      // Добавляем прозрачность
+      // --------------------------------
 
-    const resizedMask =
-      document.createElement("canvas");
+      for (
+        let i = 0;
+        i < imageData.data.length;
+        i += 4
+      ) {
 
-    resizedMask.width =
-      canvas.width;
+        imageData.data[i + 3] =
+          resizedMaskData[i];
 
-    resizedMask.height =
-      canvas.height;
-
-
-    const resizedCtx =
-      resizedMask.getContext("2d");
-
-    resizedCtx.drawImage(
-      maskCanvas,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
+      }
 
 
-    const resizedMaskData =
-      resizedCtx.getImageData(
+      ctx.putImageData(
+        imageData,
         0,
-        0,
-        canvas.width,
-        canvas.height
-      ).data;
+        0
+      );
 
 
-    // Применяем прозрачность
+      // --------------------------------
+      // Показываем PNG
+      // --------------------------------
 
-    for (
-      let i = 0;
-      i < imageData.data.length;
-      i += 4
-    ) {
+      result.src =
+        canvas.toDataURL(
+          "image/png"
+        );
 
-      imageData.data[i + 3] =
-        resizedMaskData[i];
+
+      status.textContent =
+        "✅ Готово! Фон удалён.";
+
+    } catch (error) {
+
+      console.error(
+        "BACKGROUND REMOVAL ERROR:",
+        error
+      );
+
+      status.textContent =
+        "❌ Ошибка: " +
+        error.message;
+
+    } finally {
+
+      removeBtn.disabled =
+        false;
 
     }
 
-
-    ctx.putImageData(
-      imageData,
-      0,
-      0
-    );
-
-
-    // Показываем результат
-
-    result.src =
-      canvas.toDataURL("image/png");
-
-
-    status.textContent =
-      "✅ Готово! Фон удалён.";
-
   }
-
-  catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      "❌ Ошибка: " + error.message;
-
-  }
-
-  finally {
-
-    removeBtn.disabled = false;
-
-  }
-
-});
+);
 
 </script>
 
