@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Cardly AI — диагностика</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardly AI — ONNX тест</title>
 
 <style>
 body {
@@ -29,18 +30,22 @@ button {
     margin: 5px;
 }
 
-pre {
-    background: #111;
-    color: #0f0;
-    padding: 20px;
-    border-radius: 10px;
-    white-space: pre-wrap;
-    word-break: break-word;
+button:disabled {
+    opacity: .5;
 }
 
 #status {
     margin: 20px 0;
     font-weight: bold;
+}
+
+pre {
+    background: #111;
+    color: #00ff66;
+    padding: 20px;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 </style>
 </head>
@@ -51,22 +56,14 @@ pre {
 
 <h1>✂️ Cardly AI</h1>
 
-<h3>Диагностика загрузки AI</h3>
+<p>Проверяем загрузку ONNX-модели напрямую</p>
 
-<button id="testFetch">
-Проверить Hugging Face
-</button>
-
-<button id="testTransformers">
-Проверить Transformers.js
-</button>
-
-<button id="testModel">
-Загрузить модель
+<button id="test">
+🚀 Проверить модель
 </button>
 
 <div id="status">
-Готово к проверке
+Нажми кнопку
 </div>
 
 <pre id="log"></pre>
@@ -83,163 +80,101 @@ const log =
 document.getElementById("log");
 
 
-function write(text) {
+function write(message) {
 
     log.textContent +=
-        "\n" + text;
+        message + "\n";
 
-    console.log(text);
+    console.log(message);
+
 }
 
 
-function clearLog() {
+// ========================================
+// Проверяем WebGPU
+// ========================================
+
+write("Проверка браузера...");
+
+if (navigator.gpu) {
+
+    write("✅ navigator.gpu найден");
+
+} else {
+
+    write("❌ WebGPU НЕ найден");
+
+}
+
+
+// ========================================
+// Кнопка
+// ========================================
+
+document
+.getElementById("test")
+.addEventListener("click", async () => {
 
     log.textContent = "";
 
-}
-
-
-// --------------------------------
-// 1. Проверяем Hugging Face
-// --------------------------------
-
-document
-.getElementById("testFetch")
-.addEventListener("click", async () => {
-
-    clearLog();
-
-    status.textContent =
-        "⏳ Проверяю Hugging Face...";
-
     try {
 
-        const url =
-        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json";
-
-        write("URL:");
-        write(url);
-
-        const response =
-        await fetch(url);
-
-        write(
-            "HTTP статус: " +
-            response.status
-        );
-
-        write(
-            "OK: " +
-            response.ok
-        );
-
-        const text =
-        await response.text();
-
-        write(
-            "Ответ:\n" +
-            text
-        );
+        // --------------------------------
+        // 1. WebGPU
+        // --------------------------------
 
         status.textContent =
-            "✅ Hugging Face доступен";
+            "⏳ Проверяю WebGPU...";
 
-    }
+        write("1. Проверка WebGPU");
 
-    catch (error) {
+
+        if (!navigator.gpu) {
+
+            throw new Error(
+                "Этот браузер не предоставляет WebGPU"
+            );
+
+        }
+
+
+        const adapter =
+            await navigator.gpu.requestAdapter();
+
+
+        if (!adapter) {
+
+            throw new Error(
+                "WebGPU найден, но GPU adapter недоступен"
+            );
+
+        }
+
 
         write(
-            "ОШИБКА:\n" +
-            error.stack
+            "✅ GPU adapter найден"
         );
+
+
+        write(
+            "GPU: " +
+            (adapter.name || "unknown")
+        );
+
+
+        // --------------------------------
+        // 2. Transformers.js
+        // --------------------------------
 
         status.textContent =
-            "❌ Hugging Face недоступен";
+            "⏳ Загружаю Transformers.js...";
 
-    }
+        write("");
+        write("2. Загрузка Transformers.js");
 
-});
-
-
-// --------------------------------
-// 2. Проверяем Transformers.js
-// --------------------------------
-
-document
-.getElementById("testTransformers")
-.addEventListener("click", async () => {
-
-    clearLog();
-
-    status.textContent =
-        "⏳ Загружаю Transformers.js...";
-
-    try {
-
-        const transformers =
-        await import(
-            "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1"
-        );
-
-        write(
-            "Transformers.js загружен."
-        );
-
-        write(
-            "AutoModel: " +
-            !!transformers.AutoModel
-        );
-
-        write(
-            "AutoProcessor: " +
-            !!transformers.AutoProcessor
-        );
-
-        write(
-            "RawImage: " +
-            !!transformers.RawImage
-        );
-
-        status.textContent =
-            "✅ Transformers.js работает";
-
-    }
-
-    catch (error) {
-
-        write(
-            "ОШИБКА:\n" +
-            error.stack
-        );
-
-        status.textContent =
-            "❌ Transformers.js не загрузился";
-
-    }
-
-});
-
-
-// --------------------------------
-// 3. Загружаем модель
-// --------------------------------
-
-document
-.getElementById("testModel")
-.addEventListener("click", async () => {
-
-    clearLog();
-
-    status.textContent =
-        "⏳ Начинаю загрузку модели...";
-
-    try {
 
         const {
-
-            AutoModel,
-            AutoProcessor
-
+            env
         } =
         await import(
             "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1"
@@ -247,65 +182,181 @@ document
 
 
         write(
-            "Transformers.js OK"
+            "✅ Transformers.js загружен"
         );
 
 
-        const MODEL =
-        "studioludens/birefnet-lite-512";
-
-
-        write(
-            "Модель: " +
-            MODEL
-        );
-
-
-        write(
-            "Пробую загрузить модель..."
-        );
-
-
-        const model =
-        await AutoModel.from_pretrained(
-            MODEL,
-            {
-                dtype: "fp16",
-                device: "webgpu"
-            }
-        );
-
-
-        write(
-            "МОДЕЛЬ ЗАГРУЖЕНА!"
-        );
-
-
-        write(
-            "Теперь загружаю processor..."
-        );
-
-
-        const processor =
-        await AutoProcessor.from_pretrained(
-            MODEL
-        );
-
-
-        write(
-            "PROCESSOR ЗАГРУЖЕН!"
-        );
-
+        // --------------------------------
+        // 3. Проверяем прямой файл
+        // --------------------------------
 
         status.textContent =
-            "🎉 AI-модель полностью загрузилась";
+            "⏳ Проверяю ONNX-файл...";
 
-    }
+        write("");
+        write("3. Проверка ONNX-файла");
 
-    catch (error) {
+
+        const modelURL =
+        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/onnx/model_fp16.onnx";
+
 
         write(
-            "\n========== ОШИБКА ==========\n"
+            "URL:"
+        );
+
+        write(
+            modelURL
+        );
+
+
+        const response =
+            await fetch(modelURL);
+
+
+        write(
+            "HTTP: " +
+            response.status
+        );
+
+
+        write(
+            "OK: " +
+            response.ok
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "ONNX HTTP ошибка: " +
+                response.status
+            );
+
+        }
+
+
+        const contentLength =
+            response.headers.get(
+                "content-length"
+            );
+
+
+        write(
+            "Размер: " +
+            (
+                contentLength
+                    ? Math.round(
+                        Number(contentLength) /
+                        1024 /
+                        1024
+                      ) + " MB"
+                    : "не указан"
+            )
+        );
+
+
+        // --------------------------------
+        // 4. Загружаем начало файла
+        // --------------------------------
+
+        status.textContent =
+            "⏳ Проверяю содержимое ONNX...";
+
+        write("");
+        write("4. Читаю файл...");
+
+
+        const buffer =
+            await response.arrayBuffer();
+
+
+        write(
+            "Получено байт: " +
+            buffer.byteLength
+        );
+
+
+        if (buffer.byteLength === 0) {
+
+            throw new Error(
+                "ONNX-файл пустой"
+            );
+
+        }
+
+
+        // --------------------------------
+        // 5. Проверяем ONNX header
+        // --------------------------------
+
+        const bytes =
+            new Uint8Array(
+                buffer.slice(0, 20)
+            );
+
+
+        write("");
+        write(
+            "Первые байты файла:"
+        );
+
+
+        write(
+            Array.from(bytes).join(" ")
+        );
+
+
+        // --------------------------------
+        // УСПЕХ
+        // --------------------------------
+
+        status.textContent =
+            "🎉 ONNX-файл успешно загружен!";
+
+
+        write("");
+        write(
+            "================================"
+        );
+
+        write(
+            "✅ ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ"
+        );
+
+        write(
+            "================================"
+        );
+
+        write(
+            "WebGPU работает."
+        );
+
+        write(
+            "Hugging Face доступен."
+        );
+
+        write(
+            "ONNX-файл доступен."
+        );
+
+
+    } catch (error) {
+
+        status.textContent =
+            "❌ Ошибка";
+
+        write("");
+        write(
+            "================================"
+        );
+
+        write(
+            "ОШИБКА"
+        );
+
+        write(
+            "================================"
         );
 
         write(
@@ -319,12 +370,12 @@ document
         );
 
         write(
-            "\nStack:\n" +
-            error.stack
+            "Stack:"
         );
 
-        status.textContent =
-            "❌ Ошибка загрузки";
+        write(
+            error.stack || "нет"
+        );
 
     }
 
