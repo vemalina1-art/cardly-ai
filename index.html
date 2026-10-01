@@ -1,2863 +1,1046 @@
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Cardly AI — AI-инфографика для маркетплейсов</title>
 
 <style>
-
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-:root {
-  --blue: #536dff;
-  --purple: #7659ff;
-  --dark: #111318;
-  --muted: #737987;
-  --border: #e6e8ee;
-  --bg: #f6f7f9;
 }
 
 body {
-  font-family: Inter, Arial, Helvetica, sans-serif;
-  background: var(--bg);
-  color: var(--dark);
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #f5f7fb;
+  color: #101828;
 }
 
+button,
+input,
+textarea {
+  font: inherit;
+}
 
-/* =========================
-   HEADER
-========================= */
+button {
+  cursor: pointer;
+}
 
-header {
-  height: 74px;
-
-  background: rgba(255,255,255,.88);
-
-  border-bottom: 1px solid var(--border);
-
+.header {
+  height: 72px;
+  background: rgba(255,255,255,.92);
+  border-bottom: 1px solid #e8ebf0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  padding: 0 5%;
-
+  padding: 0 6%;
   position: sticky;
   top: 0;
-
-  z-index: 100;
-
-  backdrop-filter: blur(18px);
+  z-index: 20;
+  backdrop-filter: blur(12px);
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: -1.5px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
 .logo span {
-  color: var(--blue);
+  color: #3867ff;
 }
 
 .nav {
   display: flex;
-  align-items: center;
   gap: 28px;
+  font-size: 14px;
+  color: #667085;
 }
 
 .nav a {
   text-decoration: none;
-  color: #686f7d;
-  font-size: 13px;
-  font-weight: 700;
+  color: inherit;
 }
-
-.nav a:hover {
-  color: var(--dark);
-}
-
-.header-button {
-  border: 0;
-  background: var(--dark);
-  color: white;
-
-  padding: 11px 18px;
-
-  border-radius: 11px;
-
-  font-weight: 800;
-
-  cursor: pointer;
-}
-
-
-/* =========================
-   HERO
-========================= */
 
 .hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 75px 24px 40px;
   text-align: center;
-
-  padding: 70px 20px 45px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 8px 13px;
-
-  border-radius: 30px;
-
-  background: #edf0ff;
-
-  color: var(--blue);
-
-  font-size: 11px;
-
-  font-weight: 900;
-
-  letter-spacing: .5px;
-
-  margin-bottom: 20px;
-}
-
-.badge-dot {
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: var(--blue);
 }
 
 .hero h1 {
+  max-width: 850px;
+  margin: auto;
   font-size: clamp(42px, 6vw, 72px);
-
-  line-height: .96;
-
+  line-height: .98;
   letter-spacing: -4px;
-
-  font-weight: 950;
 }
 
-.gradient {
-  background: linear-gradient(
-    100deg,
-    #536dff,
-    #7659ff
-  );
-
-  -webkit-background-clip: text;
-
-  color: transparent;
+.hero h1 span {
+  color: #3867ff;
 }
 
 .hero p {
-  max-width: 670px;
-
-  margin: 20px auto 0;
-
-  color: var(--muted);
-
-  font-size: 16px;
-
-  line-height: 1.55;
+  max-width: 650px;
+  margin: 24px auto 0;
+  color: #667085;
+  font-size: 18px;
+  line-height: 1.6;
 }
 
-
-/* =========================
-   MAIN WORKSPACE
-========================= */
-
 .workspace {
-  width: 92%;
-  max-width: 1320px;
+  max-width: 1200px;
+  margin: 30px auto 100px;
+  padding: 0 24px;
+}
 
-  margin: 0 auto 80px;
-
+.generator {
   display: grid;
-
-  grid-template-columns: 400px 1fr;
-
-  gap: 25px;
+  grid-template-columns: 390px 1fr;
+  gap: 28px;
 }
 
 .panel {
   background: white;
-
-  border: 1px solid var(--border);
-
+  border: 1px solid #e8ebf0;
   border-radius: 24px;
-
-  padding: 25px;
-
-  box-shadow:
-    0 20px 60px rgba(25,35,60,.06);
+  padding: 28px;
+  box-shadow: 0 15px 50px rgba(16,24,40,.06);
 }
 
-.panel-title {
-  font-size: 20px;
-  font-weight: 900;
-
-  margin-bottom: 23px;
-}
-
-
-/* =========================
-   STEPS
-========================= */
-
-.step {
-  margin-bottom: 21px;
-}
-
-.step-title {
-  display: flex;
-  justify-content: space-between;
-
-  margin-bottom: 9px;
-
-  font-size: 11px;
-
-  font-weight: 900;
-
-  text-transform: uppercase;
-
-  letter-spacing: .5px;
-
-  color: #454b58;
-}
-
-.optional {
-  color: #a0a6b1;
-  font-weight: 700;
-}
-
-
-/* =========================
-   UPLOAD
-========================= */
-
-.upload {
-  height: 145px;
-
-  border: 1.5px dashed #cbd1dc;
-
-  border-radius: 17px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  text-align: center;
-
-  cursor: pointer;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      #f0f3ff,
-      transparent 60%
-    ),
-    #fafbfc;
-
-  transition: .2s;
-}
-
-.upload:hover {
-  border-color: var(--blue);
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      #e8ecff,
-      transparent 60%
-    ),
-    #fafbfc;
-}
-
-.upload-content {
-  color: #747b88;
-}
-
-.upload-icon {
-  width: 44px;
-  height: 44px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  margin: 0 auto 9px;
-
-  border-radius: 13px;
-
-  background: #e9edff;
-
-  color: var(--blue);
-
+.panel h2 {
+  margin: 0 0 8px;
   font-size: 22px;
-
-  font-weight: 900;
 }
 
-.upload-content strong {
+.panel-description {
+  color: #667085;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+label {
   display: block;
-
-  color: #272b34;
-
   font-size: 13px;
-
-  margin-bottom: 4px;
+  font-weight: 700;
+  margin: 18px 0 8px;
 }
-
-.upload-content span {
-  font-size: 11px;
-}
-
-#fileInput {
-  display: none;
-}
-
-#uploadedImage {
-  width: 100%;
-  height: 100%;
-
-  object-fit: contain;
-
-  display: none;
-}
-
-
-/* =========================
-   INPUTS
-========================= */
 
 input,
 textarea {
   width: 100%;
-
   border: 1px solid #dfe3ea;
-
   border-radius: 12px;
-
   padding: 13px 14px;
-
-  font-family: inherit;
-
-  font-size: 14px;
-
   outline: none;
-
   transition: .2s;
-}
-
-textarea {
-  min-height: 110px;
-
-  resize: vertical;
-
-  line-height: 1.5;
+  background: #fff;
 }
 
 input:focus,
 textarea:focus {
-  border-color: var(--blue);
-
-  box-shadow:
-    0 0 0 3px rgba(83,109,255,.08);
+  border-color: #3867ff;
+  box-shadow: 0 0 0 4px rgba(56,103,255,.1);
 }
 
-
-/* =========================
-   STYLE BUTTONS
-========================= */
-
-.styles {
-  display: grid;
-
-  grid-template-columns:
-    repeat(3,1fr);
-
-  gap: 8px;
+textarea {
+  min-height: 125px;
+  resize: vertical;
 }
-
-.style-button {
-  border: 1px solid #dfe3ea;
-
-  background: white;
-
-  padding: 12px 5px;
-
-  border-radius: 11px;
-
-  cursor: pointer;
-
-  font-size: 11px;
-
-  font-weight: 800;
-
-  transition: .2s;
-}
-
-.style-button.active {
-  border: 2px solid var(--blue);
-
-  color: var(--blue);
-
-  background: #f0f2ff;
-}
-
-
-/* =========================
-   GENERATE BUTTON
-========================= */
 
 .generate {
   width: 100%;
-
   border: 0;
-
-  background:
-    linear-gradient(
-      110deg,
-      var(--blue),
-      var(--purple)
-    );
-
+  background: #3867ff;
   color: white;
-
-  padding: 16px;
-
-  border-radius: 12px;
-
-  font-size: 14px;
-
-  font-weight: 900;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 12px 25px rgba(83,109,255,.22);
-
+  border-radius: 13px;
+  padding: 15px;
+  margin-top: 22px;
+  font-weight: 800;
   transition: .2s;
 }
 
 .generate:hover {
   transform: translateY(-2px);
-
-  box-shadow:
-    0 16px 30px rgba(83,109,255,.28);
+  background: #2856ed;
 }
 
-
-/* =========================
-   PREVIEW
-========================= */
+.generate:disabled {
+  opacity: .6;
+  cursor: wait;
+  transform: none;
+}
 
 .preview-panel {
-  min-height: 700px;
+  min-height: 650px;
 }
 
-.preview-header {
+.preview-top {
   display: flex;
-
-  align-items: center;
-
   justify-content: space-between;
-
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.preview-title {
-  font-size: 20px;
-
-  font-weight: 900;
+.preview-top strong {
+  font-size: 18px;
 }
 
-.preview-info {
+.counter {
+  font-size: 12px;
+  color: #667085;
+  background: #f2f4f7;
+  padding: 7px 11px;
+  border-radius: 20px;
+}
+
+.card-area {
+  min-height: 560px;
+  background: #eef1f6;
+  border-radius: 20px;
   display: flex;
-  gap: 8px;
-}
-
-.preview-pill {
-  background: #f2f3f6;
-
-  color: #858b96;
-
-  padding: 6px 9px;
-
-  border-radius: 7px;
-
-  font-size: 10px;
-
-  font-weight: 800;
-}
-
-.preview-wrapper {
-  min-height: 620px;
-
-  border-radius: 19px;
-
-  background:
-    radial-gradient(
-      circle at 20% 20%,
-      rgba(83,109,255,.08),
-      transparent 30%
-    ),
-    #eceef2;
-
-  display: flex;
-
   align-items: center;
-
   justify-content: center;
-
-  padding: 25px;
-}
-
-#card {
-  width: 450px;
-  height: 600px;
-
-  position: relative;
-
+  padding: 35px;
   overflow: hidden;
+}
 
+.product-card {
+  width: min(100%, 430px);
+  aspect-ratio: 3 / 4;
   background: white;
-
-  box-shadow:
-    0 30px 70px rgba(0,0,0,.18);
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(16,24,40,.18);
 }
 
-.placeholder {
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  flex-direction: column;
-
-  gap: 13px;
-
-  color: #9ba1ac;
-
-  font-size: 15px;
-
-  text-align: center;
-}
-
-.placeholder-icon {
-  width: 58px;
-  height: 58px;
-
-  border-radius: 17px;
-
-  background: #f1f3f7;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  font-size: 25px;
-
-  color: var(--blue);
-}
-
-
-/* =========================
-   CARD ELEMENTS
-========================= */
-
-.card-brand {
+.card-inner {
   position: absolute;
+  inset: 0;
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+}
 
-  z-index: 20;
-
-  font-size: 9px;
-
-  font-weight: 900;
-
-  letter-spacing: 2px;
+.card-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: .65;
 }
 
 .card-title {
-  position: absolute;
-
-  z-index: 20;
-
-  font-weight: 950;
-
-  line-height: .98;
-
-  letter-spacing: -1.8px;
+  font-size: 37px;
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: -1.7px;
+  max-width: 90%;
 }
 
 .card-subtitle {
-  position: absolute;
-
-  z-index: 20;
-
+  font-size: 15px;
   line-height: 1.45;
+  opacity: .68;
+  max-width: 90%;
 }
 
-.product-photo {
+.product-placeholder {
   position: absolute;
-
-  object-fit: contain;
-
-  z-index: 10;
-}
-
-.card-feature {
-  position: absolute;
-
-  z-index: 30;
-
+  width: 58%;
+  height: 42%;
+  left: 21%;
+  top: 30%;
+  border-radius: 30px;
+  background: linear-gradient(145deg,#eef2f7,#dce3ec);
   display: flex;
-
-  align-items: center;
-
-  gap: 9px;
-}
-
-.feature-number {
-  flex: 0 0 29px;
-
-  width: 29px;
-  height: 29px;
-
-  border-radius: 9px;
-
-  display: flex;
-
   align-items: center;
   justify-content: center;
-
-  font-size: 11px;
-
-  font-weight: 900;
-}
-
-.feature-text {
-  font-size: 10px;
-
-  line-height: 1.2;
-
-  font-weight: 800;
-}
-
-
-/* =========================
-   DOWNLOAD
-========================= */
-
-.download {
-  width: 100%;
-
-  margin-top: 15px;
-
-  padding: 14px;
-
-  border-radius: 11px;
-
-  border: 1px solid #dfe3ea;
-
-  background: white;
-
-  font-weight: 900;
-
-  cursor: pointer;
-
-  display: none;
-}
-
-.download:hover {
-  background: #f6f7f9;
-}
-
-
-/* =========================
-   PRICING
-========================= */
-
-.pricing-section {
-  width: 92%;
-
-  max-width: 1180px;
-
-  margin: 0 auto 100px;
-
   text-align: center;
+  padding: 25px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #667085;
 }
 
-.pricing-section h2 {
-  font-size: 42px;
-
-  letter-spacing: -2px;
-
-  font-weight: 950;
-}
-
-.pricing-section > p {
-  color: var(--muted);
-
-  margin-top: 10px;
-
-  margin-bottom: 35px;
-}
-
-.pricing {
+.features {
   display: grid;
-
-  grid-template-columns:
-    repeat(3,1fr);
-
-  gap: 18px;
-
-  text-align: left;
+  gap: 10px;
 }
 
-.price-card {
-  background: white;
-
-  border: 1px solid var(--border);
-
-  border-radius: 22px;
-
-  padding: 27px;
-
-  position: relative;
-
-  box-shadow:
-    0 15px 45px rgba(20,30,50,.05);
+.feature {
+  padding: 12px 14px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255,255,255,.72);
 }
 
-.price-card.featured {
-  border: 2px solid var(--blue);
-
-  transform: translateY(-7px);
-}
-
-.popular {
+.watermark {
   position: absolute;
-
-  right: 18px;
-  top: 18px;
-
-  padding: 6px 9px;
-
-  border-radius: 8px;
-
-  background: #edf0ff;
-
-  color: var(--blue);
-
-  font-size: 9px;
-
-  font-weight: 900;
+  right: 20px;
+  bottom: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: .35;
+  letter-spacing: 1px;
 }
 
-.price-name {
-  font-size: 13px;
-
-  font-weight: 900;
-
-  text-transform: uppercase;
-
-  letter-spacing: .8px;
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.price {
-  font-size: 42px;
-
-  font-weight: 950;
-
-  letter-spacing: -2px;
-
-  margin-top: 13px;
-}
-
-.price span {
-  font-size: 13px;
-
-  color: #858b96;
-
+.secondary {
+  flex: 1;
+  border: 1px solid #dfe3ea;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
   font-weight: 700;
 }
 
-.price-description {
-  color: var(--muted);
-
-  font-size: 12px;
-
-  line-height: 1.5;
-
-  margin: 9px 0 22px;
+.primary-small {
+  flex: 1;
+  border: 0;
+  background: #101828;
+  color: white;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 700;
 }
 
-.price-list {
-  list-style: none;
+/* HERO */
 
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 12px;
-
-  margin-bottom: 23px;
+.layout-hero {
+  background: #f8fbff;
 }
 
-.price-list li {
-  font-size: 12px;
-
-  color: #444a56;
-
-  display: flex;
-
-  gap: 8px;
+.layout-hero .accent {
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  background: #dce7ff;
+  right: -100px;
+  top: -80px;
 }
 
-.check {
-  color: var(--blue);
-
-  font-weight: 900;
+.layout-hero .card-title {
+  margin-top: 20px;
 }
 
-.price-button {
-  width: 100%;
-
-  padding: 13px;
-
-  border-radius: 10px;
-
-  border: 1px solid #dfe3ea;
-
+.layout-hero .product-placeholder {
+  top: 34%;
   background: white;
-
-  font-weight: 900;
-
-  cursor: pointer;
+  border: 1px solid #e5e9f0;
 }
 
-.price-card.featured .price-button {
-  background: var(--blue);
+/* SPLIT */
 
-  border-color: var(--blue);
-
+.layout-split {
+  background: #101828;
   color: white;
 }
 
+.layout-split .product-placeholder {
+  left: 7%;
+  top: 13%;
+  width: 86%;
+  height: 48%;
+  background: #202b3d;
+  color: #d0d5dd;
+}
 
-/* =========================
-   FOOTER
-========================= */
+.layout-split .text-zone {
+  margin-top: auto;
+}
 
-footer {
-  border-top: 1px solid var(--border);
+.layout-split .feature {
+  background: #1d2939;
+}
 
+/* EDITORIAL */
+
+.layout-editorial {
+  background: #f5f0e8;
+  color: #202020;
+}
+
+.layout-editorial .product-placeholder {
+  top: 11%;
+  left: 10%;
+  width: 80%;
+  height: 46%;
+  background: #ded5c7;
+}
+
+.layout-editorial .text-zone {
+  margin-top: auto;
+}
+
+.layout-editorial .card-title {
+  font-family: Georgia, serif;
+  font-size: 40px;
+}
+
+/* MINIMAL */
+
+.layout-minimal {
   background: white;
-
-  padding: 30px 5%;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  color: #8b919c;
-
-  font-size: 11px;
 }
 
-
-/* =========================
-   SPINNER
-========================= */
-
-.spinner {
-  width: 42px;
-  height: 42px;
-
-  border: 4px solid #e5e8ed;
-
-  border-top-color: var(--blue);
-
+.layout-minimal .product-placeholder {
+  top: 13%;
+  left: 15%;
+  width: 70%;
+  height: 48%;
+  background: #f3f4f6;
   border-radius: 50%;
-
-  animation: spin .8s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.layout-minimal .text-zone {
+  margin-top: auto;
 }
 
+/* PRODUCT FOCUS */
 
-/* =========================
-   RESPONSIVE
-========================= */
+.layout-product-focus {
+  background: #eef6f2;
+}
 
-@media(max-width: 950px) {
+.layout-product-focus .product-placeholder {
+  top: 7%;
+  left: 7%;
+  width: 86%;
+  height: 61%;
+  background: white;
+  border: 1px solid #d7e4dd;
+  border-radius: 24px;
+}
 
-  .workspace {
+.layout-product-focus .text-zone {
+  margin-top: auto;
+}
+
+.layout-product-focus .card-title {
+  font-size: 30px;
+}
+
+/* BADGE */
+
+.layout-badge {
+  background: #fff7ef;
+}
+
+.layout-badge .product-placeholder {
+  top: 23%;
+  left: 13%;
+  width: 74%;
+  height: 43%;
+  background: #f1dfcb;
+}
+
+.layout-badge .badge {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  background: #ff7a00;
+  color: white;
+  padding: 12px 15px;
+  border-radius: 50%;
+  width: 65px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.layout-badge .text-zone {
+  margin-top: auto;
+}
+
+.pricing {
+  max-width: 1200px;
+  margin: 0 auto 100px;
+  padding: 0 24px;
+}
+
+.pricing-title {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.pricing-title h2 {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+
+.pricing-title p {
+  color: #667085;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 18px;
+}
+
+.plan {
+  background: white;
+  border: 1px solid #e8ebf0;
+  border-radius: 20px;
+  padding: 25px;
+}
+
+.plan.featured {
+  border: 2px solid #3867ff;
+  transform: translateY(-8px);
+}
+
+.plan h3 {
+  margin-top: 0;
+}
+
+.price {
+  font-size: 34px;
+  font-weight: 900;
+  margin: 20px 0;
+}
+
+.plan ul {
+  padding-left: 18px;
+  color: #667085;
+  line-height: 2;
+  font-size: 14px;
+}
+
+.plan button {
+  width: 100%;
+  border: 0;
+  background: #101828;
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.footer {
+  text-align: center;
+  padding: 50px;
+  color: #98a2b3;
+  font-size: 13px;
+}
+
+@media(max-width:900px) {
+
+  .generator {
     grid-template-columns: 1fr;
   }
 
-  .pricing {
-    grid-template-columns: 1fr;
-  }
-
-  .price-card.featured {
-    transform: none;
+  .plans {
+    grid-template-columns: repeat(2,1fr);
   }
 
   .nav {
     display: none;
   }
-
 }
 
-@media(max-width: 520px) {
+@media(max-width:600px) {
 
   .hero {
     padding-top: 45px;
   }
 
   .hero h1 {
-    font-size: 39px;
-    letter-spacing: -2.5px;
+    letter-spacing: -2px;
   }
 
-  .workspace {
-    width: 94%;
+  .plans {
+    grid-template-columns: 1fr;
   }
 
-  .preview-wrapper {
-    padding: 10px;
-
-    overflow: hidden;
+  .card-area {
+    padding: 15px;
   }
 
-  #card {
-    width: 360px;
-    height: 480px;
+  .preview-panel {
+    padding: 15px;
   }
-
-  footer {
-    flex-direction: column;
-
-    gap: 10px;
-  }
-
 }
-
 </style>
 </head>
 
-
 <body>
 
-
-<header>
-
-  <div class="logo">
-    Cardly<span>AI</span>
-  </div>
+<header class="header">
+  <div class="logo">Cardly<span>AI</span></div>
 
   <nav class="nav">
-
-    <a href="#generator">
-      Генератор
-    </a>
-
-    <a href="#pricing">
-      Тарифы
-    </a>
-
+    <a href="#generator">Генератор</a>
+    <a href="#pricing">Тарифы</a>
   </nav>
-
-  <button
-    class="header-button"
-    onclick="scrollToPricing()"
-  >
-    Тарифы
-  </button>
-
 </header>
 
 
 <section class="hero">
 
-  <div class="badge">
-    <span class="badge-dot"></span>
-    AI-ДИЗАЙН ДЛЯ МАРКЕТПЛЕЙСОВ
-  </div>
-
   <h1>
-
-    Создавай карточки<br>
-
-    <span class="gradient">
-      которые продают
-    </span>
-
+    Карточки товаров,<br>
+    которые <span>продают</span>
   </h1>
 
   <p>
-
-    Загрузи фотографию товара.
-    Добавь характеристики.
-    Cardly AI создаст структуру и современную
-    инфографику для Wildberries и Ozon.
-
+    Загрузи данные о товаре — Cardly AI создаст
+    структуру текста и профессиональную композицию
+    для Wildberries и Ozon.
   </p>
 
 </section>
 
 
-<main
-  class="workspace"
-  id="generator"
->
+<section class="workspace" id="generator">
 
+  <div class="generator">
 
-<!-- =========================
-     SETTINGS
-========================= -->
+    <div class="panel">
 
-<section class="panel">
+      <h2>Создать карточку</h2>
 
-  <div class="panel-title">
-    Создание карточки
-  </div>
-
-
-  <div class="step">
-
-    <div class="step-title">
-
-      <span>
-        01 — Фото товара
-      </span>
-
-      <span class="optional">
-        JPG / PNG / WEBP
-      </span>
-
-    </div>
-
-
-    <label
-      class="upload"
-      for="fileInput"
-    >
-
-      <div
-        class="upload-content"
-        id="uploadContent"
-      >
-
-        <div class="upload-icon">
-          ↑
-        </div>
-
-        <strong>
-          Загрузить фотографию
-        </strong>
-
-        <span>
-          Перетащи файл или нажми сюда
-        </span>
-
+      <div class="panel-description">
+        Заполни информацию о товаре. AI сам подготовит текст.
       </div>
 
 
-      <img
-        id="uploadedImage"
-      >
-
+      <label>Название товара</label>
 
       <input
-        id="fileInput"
-        type="file"
-        accept="image/*"
+        id="productName"
+        placeholder="Например: Смеситель для кухни"
       >
 
-    </label>
 
-  </div>
+      <label>Характеристики</label>
 
-
-  <div class="step">
-
-    <div class="step-title">
-
-      <span>
-        02 — Название товара
-      </span>
-
-    </div>
-
-
-    <input
-      id="productName"
-      placeholder="Например: Смеситель для кухни"
-    >
-
-  </div>
-
-
-  <div class="step">
-
-    <div class="step-title">
-
-      <span>
-        03 — Характеристики
-      </span>
-
-    </div>
-
-
-    <textarea
-      id="features"
-      placeholder="Нержавеющая сталь
-Керамический картридж
+      <textarea
+        id="features"
+        placeholder="Например:
+Материал — нержавеющая сталь
+Высота — 32 см
 Поворотный излив
-Гарантия 5 лет"
-    ></textarea>
+Цвет — хром"
+      ></textarea>
 
-  </div>
-
-
-  <div class="step">
-
-    <div class="step-title">
-
-      <span>
-        04 — Визуальный стиль
-      </span>
-
-    </div>
-
-
-    <div class="styles">
 
       <button
-        class="style-button active"
-        data-style="minimal"
+        class="generate"
+        id="generateBtn"
+        onclick="generateCard()"
       >
-        Minimal
-      </button>
-
-      <button
-        class="style-button"
-        data-style="accent"
-      >
-        Accent
-      </button>
-
-      <button
-        class="style-button"
-        data-style="dark"
-      >
-        Dark
+        ✨ Создать карточку
       </button>
 
     </div>
 
-  </div>
 
+    <div class="panel preview-panel">
 
-  <button
-    class="generate"
-    onclick="generateCard()"
-  >
-    ✦ Создать карточку
-  </button>
+      <div class="preview-top">
 
-</section>
+        <strong>Предпросмотр</strong>
 
-
-<!-- =========================
-     PREVIEW
-========================= -->
-
-<section class="panel preview-panel">
-
-  <div class="preview-header">
-
-    <div class="preview-title">
-      Предпросмотр
-    </div>
-
-    <div class="preview-info">
-
-      <div class="preview-pill">
-        AI DESIGN
-      </div>
-
-      <div class="preview-pill">
-        900 × 1200
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <div class="preview-wrapper">
-
-    <div id="card">
-
-      <div class="placeholder">
-
-        <div class="placeholder-icon">
-          ✦
-        </div>
-
-        <div>
-          Здесь появится<br>
-          готовая инфографика
+        <div class="counter" id="layoutName">
+          HERO
         </div>
 
       </div>
 
+
+      <div class="card-area">
+
+        <div
+          class="product-card layout-hero"
+          id="productCard"
+        >
+
+          <div class="accent"></div>
+
+          <div class="card-inner">
+
+            <div class="card-label">
+              CARDLY AI
+            </div>
+
+            <div class="card-title" id="cardTitle">
+              Ваша карточка товара
+            </div>
+
+            <div class="card-subtitle" id="cardSubtitle">
+              Здесь появится готовая структура инфографики
+            </div>
+
+
+            <div class="product-placeholder" id="productPlaceholder">
+              Фото товара
+            </div>
+
+
+            <div
+              class="text-zone"
+              id="textZone"
+            >
+
+              <div
+                class="features"
+                id="cardFeatures"
+              >
+
+                <div class="feature">
+                  Добавьте характеристики товара
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="watermark">
+            CARDLY AI
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="actions">
+
+        <button
+          class="secondary"
+          onclick="generateCard()"
+        >
+          🔄 Другой вариант
+        </button>
+
+        <button
+          class="primary-small"
+          onclick="downloadCard()"
+        >
+          ↓ Скачать PNG
+        </button>
+
+      </div>
+
     </div>
 
   </div>
 
-
-  <button
-    class="download"
-    id="downloadBtn"
-    onclick="downloadCard()"
-  >
-    ↓ Скачать PNG
-  </button>
-
 </section>
 
-</main>
+
+<section class="pricing" id="pricing">
+
+  <div class="pricing-title">
+
+    <h2>Выбери свой тариф</h2>
+
+    <p>
+      Начни с бесплатной карточки и переходи на тариф,
+      когда понадобится больше генераций.
+    </p>
+
+  </div>
 
 
-<!-- =========================
-     PRICING
-========================= -->
+  <div class="plans">
 
-<section
-  class="pricing-section"
-  id="pricing"
->
+    <div class="plan">
 
-  <h2>
-    Выбери свой тариф
-  </h2>
+      <h3>Free</h3>
 
-  <p>
-    Начни с бесплатной генерации и переходи на нужный объём.
-  </p>
+      <div class="price">$0</div>
 
-
-  <div class="pricing">
-
-
-    <!-- FREE -->
-
-    <div class="price-card">
-
-      <div class="price-name">
-        Free
-      </div>
-
-      <div class="price">
-        $0
-      </div>
-
-      <div class="price-description">
-        Чтобы попробовать Cardly AI
-        и создать первую карточку.
-      </div>
-
-
-      <ul class="price-list">
-
-        <li>
-          <span class="check">✓</span>
-          1 карточка
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          AI-тексты
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          3 стиля
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          Watermark Cardly AI
-        </li>
-
+      <ul>
+        <li>1 карточка</li>
+        <li>AI-текст</li>
+        <li>6 дизайнов</li>
+        <li>Водяной знак</li>
       </ul>
 
-
-      <button
-        class="price-button"
-        onclick="scrollToGenerator()"
-      >
-        Попробовать бесплатно
+      <button onclick="choosePlan('Free')">
+        Попробовать
       </button>
 
     </div>
 
 
-    <!-- START -->
+    <div class="plan">
 
-    <div class="price-card">
+      <h3>Start</h3>
 
-      <div class="price-name">
-        Start
-      </div>
+      <div class="price">$4.99</div>
 
-      <div class="price">
-        $4.99
-        <span>/мес</span>
-      </div>
-
-      <div class="price-description">
-        Для продавцов, которым нужно
-        создавать карточки регулярно.
-      </div>
-
-
-      <ul class="price-list">
-
-        <li>
-          <span class="check">✓</span>
-          20 карточек в месяц
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          Без watermark
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          Все стили
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          PNG 900 × 1200
-        </li>
-
+      <ul>
+        <li>20 карточек</li>
+        <li>Без водяного знака</li>
+        <li>Все дизайны</li>
+        <li>PNG</li>
       </ul>
 
-
-      <button
-        class="price-button"
-        onclick="choosePlan('Start')"
-      >
-        Выбрать Start
+      <button onclick="choosePlan('Start')">
+        Выбрать
       </button>
 
     </div>
 
 
-    <!-- PRO -->
+    <div class="plan featured">
 
-    <div
-      class="price-card featured"
-    >
+      <h3>Pro</h3>
 
-      <div class="popular">
-        ПОПУЛЯРНЫЙ
-      </div>
+      <div class="price">$9.99</div>
 
-      <div class="price-name">
-        Pro
-      </div>
-
-      <div class="price">
-        $9.99
-        <span>/мес</span>
-      </div>
-
-      <div class="price-description">
-        Для активных продавцов
-        и небольших магазинов.
-      </div>
-
-
-      <ul class="price-list">
-
-        <li>
-          <span class="check">✓</span>
-          60 карточек в месяц
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          Без watermark
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          Приоритетная генерация
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          Все дизайны Cardly AI
-        </li>
-
-        <li>
-          <span class="check">✓</span>
-          PNG 900 × 1200
-        </li>
-
+      <ul>
+        <li>60 карточек</li>
+        <li>Без водяного знака</li>
+        <li>Все дизайны</li>
+        <li>Приоритетные функции</li>
       </ul>
 
-
-      <button
-        class="price-button"
-        onclick="choosePlan('Pro')"
-      >
+      <button onclick="choosePlan('Pro')">
         Выбрать Pro
       </button>
 
     </div>
 
 
+    <div class="plan">
+
+      <h3>Business</h3>
+
+      <div class="price">$19.99</div>
+
+      <ul>
+        <li>200 карточек</li>
+        <li>Без водяного знака</li>
+        <li>Для магазина</li>
+        <li>Большой объём</li>
+      </ul>
+
+      <button onclick="choosePlan('Business')">
+        Выбрать
+      </button>
+
+    </div>
+
   </div>
 
 </section>
 
 
-<footer>
-
-  <div>
-    © 2026 Cardly AI
-  </div>
-
-  <div>
-    AI-инфографика для маркетплейсов
-  </div>
-
+<footer class="footer">
+  Cardly AI — AI-инфографика для маркетплейсов
 </footer>
 
 
 <script>
 
-
-/* =========================
-   VARIABLES
-========================= */
-
-let selectedImage = null;
-
-let selectedStyle = "minimal";
-
-let currentCardData = {
-  title: "",
-  subtitle: "",
-  features: []
+let currentData = {
+  title: "Ваша карточка товара",
+  subtitle: "Здесь появится готовая структура инфографики",
+  features: ["Добавьте характеристики товара"],
+  layout: "hero"
 };
 
 
-/* =========================
-   IMAGE UPLOAD
-========================= */
-
-const fileInput =
-  document.getElementById(
-    "fileInput"
-  );
-
-const uploadedImage =
-  document.getElementById(
-    "uploadedImage"
-  );
-
-const uploadContent =
-  document.getElementById(
-    "uploadContent"
-  );
+const layouts = [
+  "hero",
+  "split",
+  "editorial",
+  "minimal",
+  "product-focus",
+  "badge"
+];
 
 
-fileInput.addEventListener(
-  "change",
-  function() {
+function randomLayout() {
 
-    const file =
-      this.files[0];
+  return layouts[
+    Math.floor(Math.random() * layouts.length)
+  ];
 
-    if (!file) return;
-
-
-    const reader =
-      new FileReader();
+}
 
 
-    reader.onload =
-      function(e) {
+function layoutTitle(layout) {
 
-        selectedImage =
-          e.target.result;
+  const names = {
+    hero: "HERO",
+    split: "SPLIT",
+    editorial: "EDITORIAL",
+    minimal: "MINIMAL",
+    "product-focus": "PRODUCT FOCUS",
+    badge: "BADGE"
+  };
 
-        uploadedImage.src =
-          selectedImage;
+  return names[layout] || "HERO";
 
-        uploadedImage.style.display =
-          "block";
-
-        uploadContent.style.display =
-          "none";
-
-      };
+}
 
 
-    reader.readAsDataURL(file);
+function renderCard(data) {
 
-  }
-);
+  currentData = data;
+
+  const card = document.getElementById("productCard");
+
+  const layout = data.layout || randomLayout();
+
+  card.className = "product-card layout-" + layout;
+
+  document.getElementById("layoutName").textContent =
+    layoutTitle(layout);
 
 
-/* =========================
-   STYLE
-========================= */
+  document.getElementById("cardTitle").textContent =
+    data.title || "Ваш товар";
 
-document
-  .querySelectorAll(
-    ".style-button"
-  )
-  .forEach(button => {
 
-    button.addEventListener(
-      "click",
-      function() {
+  document.getElementById("cardSubtitle").textContent =
+    data.subtitle || "";
 
-        document
-          .querySelectorAll(
-            ".style-button"
-          )
-          .forEach(b =>
-            b.classList.remove(
-              "active"
-            )
-          );
 
-        this.classList.add(
-          "active"
-        );
+  const features = document.getElementById("cardFeatures");
 
-        selectedStyle =
-          this.dataset.style;
+  features.innerHTML = "";
 
-      }
-    );
+
+  (data.features || []).slice(0,4).forEach(function(feature) {
+
+    const div = document.createElement("div");
+
+    div.className = "feature";
+
+    div.textContent = feature;
+
+    features.appendChild(div);
 
   });
 
 
-/* =========================
-   GENERATE
-========================= */
+  document.getElementById("productPlaceholder").textContent =
+    document.getElementById("productName").value ||
+    "Фото товара";
+
+}
+
 
 async function generateCard() {
 
-  const name =
-    document
-      .getElementById(
-        "productName"
-      )
-      .value
-      .trim() ||
-    "Современный товар";
+  const productName =
+    document.getElementById("productName").value.trim();
+
+  const features =
+    document.getElementById("features").value.trim();
 
 
-  const rawFeatures =
-    document
-      .getElementById(
-        "features"
-      )
-      .value
-      .trim();
+  if (!productName) {
+
+    alert("Введите название товара.");
+
+    return;
+
+  }
 
 
-  const card =
-    document.getElementById(
-      "card"
-    );
+  const button =
+    document.getElementById("generateBtn");
 
+  button.disabled = true;
 
-  card.innerHTML = `
-
-    <div style="
-      width:100%;
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
-      gap:15px;
-      background:#fff;
-      font-family:Arial,sans-serif;
-    ">
-
-      <div class="spinner"></div>
-
-      <div style="
-        font-size:18px;
-        font-weight:900;
-      ">
-        AI создаёт дизайн
-      </div>
-
-      <div style="
-        font-size:12px;
-        color:#7c8390;
-      ">
-        Анализируем товар и собираем композицию
-      </div>
-
-    </div>
-
-  `;
+  button.textContent = "Создаём карточку...";
 
 
   try {
 
-    const response =
-      await fetch(
-        "/api/generate",
-        {
-          method: "POST",
+    const response = await fetch("/api/generate", {
 
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
+      method: "POST",
 
-          body:
-            JSON.stringify({
-              productName: name,
-              features: rawFeatures
-            })
-        }
-      );
+      headers: {
+        "Content-Type": "application/json"
+      },
 
+      body: JSON.stringify({
+        productName: productName,
+        features: features
+      })
 
-    const ai =
-      await response.json();
+    });
 
 
     if (!response.ok) {
 
-      throw new Error(
-        ai.error ||
-        "Ошибка AI"
-      );
+      throw new Error("Ошибка сервера");
 
     }
 
 
-    const title =
-      ai.title ||
-      name;
+    const data = await response.json();
 
 
-    const subtitle =
-      ai.subtitle ||
-      "";
+    if (!data.layout) {
+
+      data.layout = randomLayout();
+
+    }
 
 
-    const features =
-      Array.isArray(
-        ai.features
-      )
-        ? ai.features
-            .filter(Boolean)
-            .slice(0,4)
-        : rawFeatures
-            .split("\n")
-            .map(x => x.trim())
-            .filter(Boolean)
-            .slice(0,4);
-
-
-    currentCardData = {
-
-      title,
-
-      subtitle,
-
-      features
-
-    };
-
-
-    renderCard(
-      title,
-      subtitle,
-      features
-    );
-
-
-    document
-      .getElementById(
-        "downloadBtn"
-      )
-      .style.display =
-      "block";
+    renderCard(data);
 
 
   } catch(error) {
 
-    card.innerHTML = `
+    console.error(error);
 
-      <div style="
-        height:100%;
-        padding:40px;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        font-family:Arial;
-      ">
-
-        <div style="
-          font-size:35px;
-          color:#536dff;
-          margin-bottom:15px;
-        ">
-          !
-        </div>
-
-        <h2 style="
-          margin-bottom:10px;
-        ">
-          Ошибка генерации
-        </h2>
-
-        <p style="
-          color:#737987;
-          line-height:1.5;
-        ">
-          ${escapeHTML(
-            error.message
-          )}
-        </p>
-
-      </div>
-
-    `;
-
-  }
-
-}
-
-
-/* =========================
-   CARD RENDER
-========================= */
-
-function renderCard(
-  title,
-  subtitle,
-  features
-) {
-
-  const card =
-    document.getElementById(
-      "card"
-    );
-
-
-  let bg;
-  let text;
-  let muted;
-  let accent;
-  let soft;
-
-
-  if (
-    selectedStyle ===
-    "dark"
-  ) {
-
-    bg = "#13151a";
-
-    text = "#ffffff";
-
-    muted = "#a7aeb9";
-
-    accent = "#6fe1d0";
-
-    soft = "#20242c";
-
-  }
-
-  else if (
-    selectedStyle ===
-    "accent"
-  ) {
-
-    bg = "#edf1ff";
-
-    text = "#111318";
-
-    muted = "#626b7e";
-
-    accent = "#536dff";
-
-    soft = "#ffffff";
-
-  }
-
-  else {
-
-    bg = "#ffffff";
-
-    text = "#111318";
-
-    muted = "#727987";
-
-    accent = "#536dff";
-
-    soft = "#f4f5f8";
-
-  }
-
-
-  /*
-     Каждый запуск получает
-     случайную композицию.
-  */
-
-  const layouts = [
-    "hero",
-    "split",
-    "editorial"
-  ];
-
-
-  const layout =
-    layouts[
-      Math.floor(
-        Math.random() *
-        layouts.length
-      )
-    ];
-
-
-  card.style.background =
-    bg;
-
-
-  /* =====================
-     DECOR
-  ===================== */
-
-  let decor = `
-
-    <div style="
-      position:absolute;
-      z-index:1;
-      width:230px;
-      height:230px;
-      right:-100px;
-      top:-90px;
-      border-radius:50%;
-      background:${accent};
-      opacity:.12;
-    "></div>
-
-    <div style="
-      position:absolute;
-      z-index:1;
-      width:90px;
-      height:90px;
-      left:-40px;
-      bottom:100px;
-      border-radius:50%;
-      background:${accent};
-      opacity:.09;
-    "></div>
-
-  `;
-
-
-  /* =====================
-     IMAGE
-  ===================== */
-
-  let imageHTML = "";
-
-
-  if (selectedImage) {
-
-    if (layout === "hero") {
-
-      imageHTML = `
-
-        <div style="
-          position:absolute;
-          z-index:2;
-          left:6%;
-          top:29%;
-          width:88%;
-          height:39%;
-          border-radius:30px;
-          background:${soft};
-        "></div>
-
-        <img
-          class="product-photo"
-          src="${selectedImage}"
-          style="
-            left:10%;
-            top:25%;
-            width:80%;
-            height:43%;
-          "
-        >
-
-      `;
-
-    }
-
-
-    if (layout === "split") {
-
-      imageHTML = `
-
-        <div style="
-          position:absolute;
-          z-index:2;
-          left:52%;
-          top:20%;
-          width:43%;
-          height:52%;
-          border-radius:35px;
-          background:${soft};
-        "></div>
-
-        <img
-          class="product-photo"
-          src="${selectedImage}"
-          style="
-            left:51%;
-            top:24%;
-            width:44%;
-            height:44%;
-          "
-        >
-
-      `;
-
-    }
-
-
-    if (layout === "editorial") {
-
-      imageHTML = `
-
-        <div style="
-          position:absolute;
-          z-index:2;
-          left:5%;
-          top:28%;
-          width:90%;
-          height:42%;
-          border-radius:0;
-          background:${soft};
-        "></div>
-
-        <img
-          class="product-photo"
-          src="${selectedImage}"
-          style="
-            left:10%;
-            top:24%;
-            width:80%;
-            height:49%;
-          "
-        >
-
-      `;
-
-    }
-
-  }
-
-
-  /* =====================
-     TITLE
-  ===================== */
-
-  const titleSize =
-    title.length > 28
-      ? 27
-      : title.length > 18
-        ? 31
-        : 36;
-
-
-  /* =====================
-     FEATURES
-  ===================== */
-
-  let featureHTML = "";
-
-
-  const positions = [
-
-    {x:8, y:75},
-
-    {x:54, y:75},
-
-    {x:8, y:85},
-
-    {x:54, y:85}
-
-  ];
-
-
-  features.forEach(
-    (feature,index) => {
-
-      const p =
-        positions[index];
-
-
-      if (!p) return;
-
-
-      featureHTML += `
-
-        <div
-          class="card-feature"
-          style="
-            left:${p.x}%;
-            top:${p.y}%;
-            width:38%;
-          "
-        >
-
-          <div
-            class="feature-number"
-            style="
-              background:${accent};
-              color:${
-                selectedStyle ===
-                "dark"
-                  ? "#111318"
-                  : "#fff"
-              };
-            "
-          >
-            ${index + 1}
-          </div>
-
-          <div
-            class="feature-text"
-            style="
-              color:${text};
-            "
-          >
-            ${escapeHTML(
-              feature
-            )}
-          </div>
-
-        </div>
-
-      `;
-
-    }
-  );
-
-
-  /* =====================
-     FINAL CARD
-  ===================== */
-
-  card.innerHTML = `
-
-    ${decor}
-
-    ${imageHTML}
-
-
-    <div
-      class="card-brand"
-      style="
-        top:6%;
-        left:8%;
-        color:${accent};
-      "
-    >
-      CARDLY AI
-    </div>
-
-
-    <div
-      class="card-title"
-      style="
-        top:11%;
-        left:8%;
-        width:84%;
-        color:${text};
-        font-size:${titleSize}px;
-      "
-    >
-      ${escapeHTML(
-        title
-      )}
-    </div>
-
-
-    <div
-      class="card-subtitle"
-      style="
-        top:19%;
-        left:8%;
-        width:76%;
-        color:${muted};
-        font-size:12px;
-      "
-    >
-      ${escapeHTML(
-        subtitle
-      )}
-    </div>
-
-
-    <div style="
-      position:absolute;
-      z-index:5;
-      left:8%;
-      top:71%;
-      width:84%;
-      height:1px;
-      background:${
-        selectedStyle ===
-        "dark"
-          ? "#30343c"
-          : "#dfe2e8"
-      };
-    "></div>
-
-
-    ${featureHTML}
-
-
-    <div style="
-      position:absolute;
-      z-index:20;
-      left:8%;
-      bottom:4%;
-      color:${muted};
-      font-size:7px;
-      letter-spacing:1.4px;
-      font-weight:800;
-    ">
-      CARDLY AI · MARKETPLACE DESIGN
-    </div>
-
-  `;
-
-}
-
-
-/* =========================
-   DOWNLOAD
-========================= */
-
-async function downloadCard() {
-
-  const width = 900;
-  const height = 1200;
-
-
-  const canvas =
-    document.createElement(
-      "canvas"
-    );
-
-
-  canvas.width = width;
-
-  canvas.height = height;
-
-
-  const ctx =
-    canvas.getContext(
-      "2d"
-    );
-
-
-  let bg;
-  let text;
-  let muted;
-  let accent;
-  let soft;
-
-
-  if (
-    selectedStyle ===
-    "dark"
-  ) {
-
-    bg = "#13151a";
-    text = "#ffffff";
-    muted = "#a7aeb9";
-    accent = "#6fe1d0";
-    soft = "#20242c";
-
-  }
-
-  else if (
-    selectedStyle ===
-    "accent"
-  ) {
-
-    bg = "#edf1ff";
-    text = "#111318";
-    muted = "#626b7e";
-    accent = "#536dff";
-    soft = "#ffffff";
-
-  }
-
-  else {
-
-    bg = "#ffffff";
-    text = "#111318";
-    muted = "#727987";
-    accent = "#536dff";
-    soft = "#f4f5f8";
-
-  }
-
-
-  ctx.fillStyle =
-    bg;
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  /* DECOR */
-
-  ctx.globalAlpha = .12;
-
-  ctx.fillStyle =
-    accent;
-
-  ctx.beginPath();
-
-  ctx.arc(
-    875,
-    70,
-    190,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.fill();
-
-
-  ctx.globalAlpha = .08;
-
-  ctx.beginPath();
-
-  ctx.arc(
-    0,
-    1050,
-    90,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.fill();
-
-  ctx.globalAlpha = 1;
-
-
-  /* BRAND */
-
-  ctx.fillStyle =
-    accent;
-
-  ctx.font =
-    "900 18px Arial";
-
-  ctx.fillText(
-    "CARDLY AI",
-    72,
-    88
-  );
-
-
-  /* TITLE */
-
-  const title =
-    currentCardData.title ||
-    "Современный товар";
-
-
-  ctx.fillStyle =
-    text;
-
-  ctx.font =
-    title.length > 28
-      ? "900 54px Arial"
-      : "900 68px Arial";
-
-
-  wrapText(
-    ctx,
-    title,
-    72,
-    155,
-    750,
-    65
-  );
-
-
-  /* SUBTITLE */
-
-  ctx.fillStyle =
-    muted;
-
-  ctx.font =
-    "400 24px Arial";
-
-
-  wrapText(
-    ctx,
-    currentCardData.subtitle ||
-      "",
-    72,
-    245,
-    700,
-    33
-  );
-
-
-  /* PRODUCT AREA */
-
-  ctx.fillStyle =
-    soft;
-
-
-  roundRect(
-    ctx,
-    63,
-    315,
-    774,
-    430,
-    40
-  );
-
-
-  if (selectedImage) {
-
-    const img =
-      new Image();
-
-
-    img.onload =
-      function() {
-
-        drawImageContain(
-          ctx,
-          img,
-          140,
-          340,
-          620,
-          380
-        );
-
-
-        drawDownloadFeatures(
-          ctx,
-          text,
-          muted,
-          accent
-        );
-
-      };
-
-
-    img.src =
-      selectedImage;
-
-  }
-
-  else {
-
-    drawDownloadFeatures(
-      ctx,
-      text,
-      muted,
-      accent
+    alert(
+      "Не удалось создать карточку. Проверь подключение AI."
     );
 
   }
 
-}
 
+  button.disabled = false;
 
-/* =========================
-   DOWNLOAD FEATURES
-========================= */
-
-function drawDownloadFeatures(
-  ctx,
-  text,
-  muted,
-  accent
-) {
-
-  ctx.fillStyle =
-    selectedStyle ===
-    "dark"
-      ? "#30343c"
-      : "#dfe2e8";
-
-
-  ctx.fillRect(
-    72,
-    785,
-    756,
-    2
-  );
-
-
-  const features =
-    currentCardData.features ||
-    [];
-
-
-  features.forEach(
-    (feature,index) => {
-
-      if (index > 3) return;
-
-
-      const col =
-        index % 2;
-
-      const row =
-        Math.floor(
-          index / 2
-        );
-
-
-      const x =
-        col === 0
-          ? 72
-          : 480;
-
-
-      const y =
-        845 +
-        row * 105;
-
-
-      ctx.fillStyle =
-        accent;
-
-
-      roundRect(
-        ctx,
-        x,
-        y - 27,
-        54,
-        54,
-        15
-      );
-
-
-      ctx.fillStyle =
-        selectedStyle ===
-        "dark"
-          ? "#111318"
-          : "#fff";
-
-
-      ctx.font =
-        "900 20px Arial";
-
-
-      ctx.textAlign =
-        "center";
-
-
-      ctx.fillText(
-        String(index + 1),
-        x + 27,
-        y + 8
-      );
-
-
-      ctx.textAlign =
-        "left";
-
-
-      ctx.fillStyle =
-        text;
-
-
-      ctx.font =
-        "700 21px Arial";
-
-
-      wrapText(
-        ctx,
-        feature,
-        x + 72,
-        y + 5,
-        300,
-        26
-      );
-
-    }
-  );
-
-
-  ctx.fillStyle =
-    muted;
-
-  ctx.font =
-    "700 10px Arial";
-
-
-  ctx.fillText(
-    "CARDLY AI · MARKETPLACE DESIGN",
-    72,
-    1150
-  );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  link.download =
-    "cardly-ai-card.png";
-
-
-  link.href =
-    ctx.canvas.toDataURL(
-      "image/png"
-    );
-
-
-  link.click();
+  button.textContent = "✨ Создать карточку";
 
 }
 
 
-/* =========================
-   HELPERS
-========================= */
-
-function roundRect(
-  ctx,
-  x,
-  y,
-  width,
-  height,
-  radius
-) {
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    x + radius,
-    y
-  );
-
-  ctx.lineTo(
-    x + width - radius,
-    y
-  );
-
-  ctx.quadraticCurveTo(
-    x + width,
-    y,
-    x + width,
-    y + radius
-  );
-
-  ctx.lineTo(
-    x + width,
-    y + height - radius
-  );
-
-  ctx.quadraticCurveTo(
-    x + width,
-    y + height,
-    x + width - radius,
-    y + height
-  );
-
-  ctx.lineTo(
-    x + radius,
-    y + height
-  );
-
-  ctx.quadraticCurveTo(
-    x,
-    y + height,
-    x,
-    y + height - radius
-  );
-
-  ctx.lineTo(
-    x,
-    y + radius
-  );
-
-  ctx.quadraticCurveTo(
-    x,
-    y,
-    x + radius,
-    y
-  );
-
-  ctx.closePath();
-
-  ctx.fill();
-
-}
-
-
-function drawImageContain(
-  ctx,
-  img,
-  x,
-  y,
-  width,
-  height
-) {
-
-  const ratio =
-    Math.min(
-      width / img.width,
-      height / img.height
-    );
-
-
-  const w =
-    img.width * ratio;
-
-  const h =
-    img.height * ratio;
-
-
-  const dx =
-    x +
-    (width - w) / 2;
-
-
-  const dy =
-    y +
-    (height - h) / 2;
-
-
-  ctx.drawImage(
-    img,
-    dx,
-    dy,
-    w,
-    h
-  );
-
-}
-
-
-function wrapText(
-  ctx,
-  text,
-  x,
-  y,
-  maxWidth,
-  lineHeight
-) {
-
-  const words =
-    String(text)
-      .split(" ");
-
-
-  let line = "";
-
-  let currentY =
-    y;
-
-
-  for (
-    let i = 0;
-    i < words.length;
-    i++
-  ) {
-
-    const test =
-      line +
-      words[i] +
-      " ";
-
-
-    const width =
-      ctx.measureText(
-        test
-      ).width;
-
-
-    if (
-      width > maxWidth &&
-      i > 0
-    ) {
-
-      ctx.fillText(
-        line,
-        x,
-        currentY
-      );
-
-
-      line =
-        words[i] + " ";
-
-
-      currentY +=
-        lineHeight;
-
-    }
-
-    else {
-
-      line =
-        test;
-
-    }
-
-  }
-
-
-  ctx.fillText(
-    line,
-    x,
-    currentY
-  );
-
-}
-
-
-function escapeHTML(
-  text
-) {
-
-  return String(text)
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =========================
-   NAVIGATION
-========================= */
-
-function scrollToPricing() {
-
-  document
-    .getElementById(
-      "pricing"
-    )
-    .scrollIntoView({
-      behavior: "smooth"
-    });
-
-}
-
-
-function scrollToGenerator() {
-
-  document
-    .getElementById(
-      "generator"
-    )
-    .scrollIntoView({
-      behavior: "smooth"
-    });
-
-}
-
-
-function choosePlan(
-  plan
-) {
+function choosePlan(plan) {
 
   alert(
     "Тариф " +
     plan +
-    " будет доступен после подключения оплаты."
+    " выбран. Подключение оплаты добавим следующим этапом."
+  );
+
+}
+
+
+function downloadCard() {
+
+  alert(
+    "Скачивание PNG подключим следующим этапом вместе с настоящим рендером карточки."
   );
 
 }
@@ -2866,4 +1049,3 @@ function choosePlan(
 
 </body>
 </html>
-```
