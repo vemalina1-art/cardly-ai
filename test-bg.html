@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Cardly AI — Background Removal Test</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -13,7 +15,11 @@
         body {
             margin: 0;
             padding: 30px 20px;
-            font-family: Arial, sans-serif;
+
+            font-family:
+                Arial,
+                sans-serif;
+
             background: #f4f6f8;
             color: #111;
         }
@@ -34,22 +40,36 @@
 
         .panel {
             background: white;
+
             padding: 25px;
+
             border-radius: 18px;
+
             margin-bottom: 20px;
-            box-shadow: 0 5px 25px rgba(0,0,0,.06);
+
+            box-shadow:
+                0 5px 25px rgba(0,0,0,.06);
         }
 
         button {
             padding: 12px 18px;
+
             border: 0;
             border-radius: 10px;
+
             background: #111;
             color: white;
+
             font-size: 15px;
             font-weight: 600;
+
             cursor: pointer;
-            margin: 5px 5px 5px 0;
+
+            margin:
+                5px
+                5px
+                5px
+                0;
         }
 
         button:disabled {
@@ -58,45 +78,110 @@
         }
 
         input[type="file"] {
-            margin: 10px 0 15px;
+            margin:
+                10px
+                0
+                15px;
         }
 
         #status {
             margin-top: 20px;
+
             padding: 16px;
+
             border-radius: 12px;
+
             background: #f1f3f5;
+
             white-space: pre-wrap;
+
             line-height: 1.5;
+
             font-size: 14px;
+
             overflow-wrap: anywhere;
+        }
+
+        #debug {
+            margin-top: 15px;
+
+            padding: 16px;
+
+            border-radius: 12px;
+
+            background: #111;
+            color: #eee;
+
+            white-space: pre-wrap;
+
+            line-height: 1.45;
+
+            font-family:
+                Consolas,
+                monospace;
+
+            font-size: 12px;
+
+            max-height: 500px;
+
+            overflow: auto;
         }
 
         .images {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+
+            grid-template-columns:
+                1fr 1fr;
+
             gap: 20px;
         }
 
         .image-box {
             min-height: 350px;
+
             border-radius: 15px;
+
             overflow: hidden;
+
             position: relative;
+
             display: flex;
+
             align-items: center;
             justify-content: center;
+
             background: #eee;
         }
 
         .checker {
+
             background-color: #eee;
+
             background-image:
-                linear-gradient(45deg, #ddd 25%, transparent 25%),
-                linear-gradient(-45deg, #ddd 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #ddd 75%),
-                linear-gradient(-45deg, transparent 75%, #ddd 75%);
-            background-size: 30px 30px;
+                linear-gradient(
+                    45deg,
+                    #ddd 25%,
+                    transparent 25%
+                ),
+                linear-gradient(
+                    -45deg,
+                    #ddd 25%,
+                    transparent 25%
+                ),
+                linear-gradient(
+                    45deg,
+                    transparent 75%,
+                    #ddd 75%
+                ),
+                linear-gradient(
+                    -45deg,
+                    transparent 75%,
+                    #ddd 75%
+                );
+
+            background-size:
+                30px 30px;
+
             background-position:
                 0 0,
                 0 15px,
@@ -107,56 +192,108 @@
         .image-box img {
             max-width: 100%;
             max-height: 600px;
+
             display: block;
         }
 
         .label {
             position: absolute;
+
             top: 10px;
             left: 10px;
+
             z-index: 5;
-            padding: 6px 10px;
+
+            padding:
+                6px
+                10px;
+
             border-radius: 8px;
-            background: rgba(0,0,0,.75);
+
+            background:
+                rgba(0,0,0,.75);
+
             color: white;
+
             font-size: 12px;
         }
 
         @media (max-width: 700px) {
+
             .images {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
 <div class="container">
 
-    <h1>Cardly AI — Background Removal</h1>
+
+    <h1>
+        Cardly AI — Background Removal
+    </h1>
+
 
     <div class="subtitle">
+
         Тест BiRefNet через Cloudflare Worker
+
     </div>
+
+
+    <!-- =========================================
+         ДИАГНОСТИКА
+    ========================================== -->
 
     <div class="panel">
 
-        <button id="diagnosticButton">
+
+        <button
+            id="diagnosticButton"
+        >
             🔎 Проверить подключение
         </button>
 
-        <button id="loadButton">
+
+        <button
+            id="loadButton"
+        >
             🤖 Загрузить AI-модель
         </button>
 
+
         <div id="status">
+
             Готово к проверке.
+
         </div>
+
+
+        <div id="debug">
+
+            Отладочная информация появится здесь.
+
+        </div>
+
 
     </div>
 
+
+    <!-- =========================================
+         ФОТО
+    ========================================== -->
+
     <div class="panel">
+
 
         <input
             id="fileInput"
@@ -164,203 +301,369 @@
             accept="image/*"
         >
 
+
         <br>
+
 
         <button
             id="removeButton"
             disabled
         >
+
             ✂️ Удалить фон
+
         </button>
+
 
     </div>
 
+
+    <!-- =========================================
+         ПРЕВЬЮ
+    ========================================== -->
+
     <div class="panel">
+
 
         <div class="images">
 
+
             <div class="image-box">
 
+
                 <div class="label">
+
                     Исходное изображение
+
                 </div>
+
 
                 <img
                     id="originalImage"
                     alt=""
                 >
 
+
             </div>
 
-            <div class="image-box checker">
+
+
+            <div
+                class="image-box checker"
+            >
+
 
                 <div class="label">
+
                     Результат
+
                 </div>
+
 
                 <img
                     id="resultImage"
                     alt=""
                 >
 
+
             </div>
+
 
         </div>
 
+
     </div>
+
 
 </div>
 
 
+
 <script type="module">
 
+
+/* =========================================
+   TRANSFORMERS.JS
+========================================= */
+
+
 import {
+
     AutoModel,
+
     AutoProcessor,
+
     RawImage,
+
     env
-} from
+
+}
+from
 "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
-/* ==========================================
-   TRANSFORMERS.JS
-========================================== */
+
+/* =========================================
+   CLOUDFLARE PROXY
+========================================= */
+
 
 env.allowRemoteModels = true;
 
+
 env.remoteHost =
-    window.location.origin + "/api/model/";
+    window.location.origin +
+    "/api/model/";
+
 
 env.remotePathTemplate =
     "{model}/resolve/{revision}";
 
 
-/* ==========================================
+
+/* =========================================
    ELEMENTS
-========================================== */
+========================================= */
+
 
 const status =
-    document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
+
+
+const debug =
+    document.getElementById(
+        "debug"
+    );
+
 
 const diagnosticButton =
-    document.getElementById("diagnosticButton");
+    document.getElementById(
+        "diagnosticButton"
+    );
+
 
 const loadButton =
-    document.getElementById("loadButton");
+    document.getElementById(
+        "loadButton"
+    );
+
 
 const removeButton =
-    document.getElementById("removeButton");
+    document.getElementById(
+        "removeButton"
+    );
+
 
 const fileInput =
-    document.getElementById("fileInput");
+    document.getElementById(
+        "fileInput"
+    );
+
 
 const originalImage =
-    document.getElementById("originalImage");
+    document.getElementById(
+        "originalImage"
+    );
+
 
 const resultImage =
-    document.getElementById("resultImage");
+    document.getElementById(
+        "resultImage"
+    );
 
 
-/* ==========================================
+
+/* =========================================
    VARIABLES
-========================================== */
+========================================= */
+
 
 let model = null;
+
 let processor = null;
+
 let selectedFile = null;
 
 
-/* ==========================================
+
+/* =========================================
    STATUS
-========================================== */
+========================================= */
 
-function setStatus(message) {
 
-    status.textContent = message;
+function setStatus(
+    message
+) {
+
+    status.textContent =
+        message;
 
 }
 
 
-/* ==========================================
+function setDebug(
+    message
+) {
+
+    debug.textContent =
+        message;
+
+}
+
+
+
+/* =========================================
    FILE
-========================================== */
+========================================= */
+
 
 fileInput.addEventListener(
     "change",
     event => {
 
         const file =
-            event.target.files[0];
+            event
+                .target
+                .files[0];
+
 
         if (!file) {
+
             return;
+
         }
 
-        selectedFile = file;
+
+        selectedFile =
+            file;
+
 
         originalImage.src =
-            URL.createObjectURL(file);
+            URL.createObjectURL(
+                file
+            );
 
-        resultImage.src = "";
+
+        resultImage.src =
+            "";
+
 
         setStatus(
+
             "✅ Изображение выбрано.\n\n" +
-            "Теперь можно удалить фон."
+
+            "Теперь можно загрузить модель " +
+
+            "и удалить фон."
+
+        );
+
+
+        setDebug(
+
+            "Файл:\n" +
+
+            file.name +
+
+            "\n\nТип:\n" +
+
+            file.type +
+
+            "\n\nРазмер:\n" +
+
+            (
+                file.size /
+                1024 /
+                1024
+            ).toFixed(2) +
+
+            " MB"
+
         );
 
     }
 );
 
 
-/* ==========================================
-   DIAGNOSTIC
-========================================== */
+
+/* =========================================
+   ДИАГНОСТИКА
+========================================= */
+
 
 diagnosticButton.addEventListener(
     "click",
     async () => {
 
-        diagnosticButton.disabled = true;
+
+        diagnosticButton.disabled =
+            true;
+
 
         let report = "";
 
 
         try {
 
+
+            /* WEBGPU */
+
             report +=
                 "1. Проверка WebGPU\n";
 
 
-            if ("gpu" in navigator) {
+            if (
+                "gpu"
+                in
+                navigator
+            ) {
+
 
                 try {
 
+
                     const adapter =
-                        await navigator.gpu.requestAdapter();
+                        await navigator
+                            .gpu
+                            .requestAdapter();
+
 
                     if (adapter) {
+
 
                         report +=
                             "✅ GPU adapter найден\n";
 
+
                         report +=
                             "GPU: " +
                             (
-                                adapter.info?.device ||
-                                adapter.info?.description ||
+                                adapter
+                                    .info
+                                    ?.device ||
+
+                                adapter
+                                    .info
+                                    ?.description ||
+
                                 "unknown"
                             ) +
                             "\n\n";
 
+
                     } else {
+
 
                         report +=
                             "⚠️ GPU adapter не найден\n\n";
 
                     }
 
+
                 } catch (error) {
+
 
                     report +=
                         "⚠️ WebGPU ошибка: " +
@@ -369,7 +672,9 @@ diagnosticButton.addEventListener(
 
                 }
 
+
             } else {
+
 
                 report +=
                     "⚠️ WebGPU отсутствует\n\n";
@@ -377,27 +682,37 @@ diagnosticButton.addEventListener(
             }
 
 
+
+            /* TRANSFORMERS */
+
             report +=
                 "2. Проверка Transformers.js\n";
+
 
             report +=
                 "✅ Transformers.js загружен\n";
 
+
             report +=
                 "AutoModel: " +
-                (!!AutoModel) +
+                !!AutoModel +
                 "\n";
+
 
             report +=
                 "AutoProcessor: " +
-                (!!AutoProcessor) +
+                !!AutoProcessor +
                 "\n";
+
 
             report +=
                 "RawImage: " +
-                (!!RawImage) +
+                !!RawImage +
                 "\n\n";
 
+
+
+            /* CONFIG */
 
             report +=
                 "3. Проверка Cloudflare Proxy\n";
@@ -424,7 +739,10 @@ diagnosticButton.addEventListener(
                 );
 
 
-            if (!configResponse.ok) {
+            if (
+                !configResponse.ok
+            ) {
+
 
                 throw new Error(
                     "Proxy config HTTP " +
@@ -451,6 +769,9 @@ diagnosticButton.addEventListener(
                 "\n\n";
 
 
+
+            /* PREPROCESSOR */
+
             report +=
                 "4. Проверка preprocessor_config.json\n";
 
@@ -470,7 +791,10 @@ diagnosticButton.addEventListener(
                 );
 
 
-            if (!preprocessorResponse.ok) {
+            if (
+                !preprocessorResponse.ok
+            ) {
+
 
                 throw new Error(
                     "Preprocessor HTTP " +
@@ -483,6 +807,9 @@ diagnosticButton.addEventListener(
             report +=
                 "✅ preprocessor_config.json доступен\n\n";
 
+
+
+            /* ONNX */
 
             report +=
                 "5. Проверка ONNX через Worker\n";
@@ -503,7 +830,10 @@ diagnosticButton.addEventListener(
                 );
 
 
-            if (!onnxResponse.ok) {
+            if (
+                !onnxResponse.ok
+            ) {
+
 
                 throw new Error(
                     "ONNX HTTP " +
@@ -517,108 +847,156 @@ diagnosticButton.addEventListener(
                 "✅ ONNX-файл доступен через Worker\n\n";
 
 
+
             report +=
                 "================================\n";
+
 
             report +=
                 "🎉 ПРОВЕРКА ПРОЙДЕНА\n";
 
+
             report +=
                 "================================\n\n";
 
+
             report +=
                 "Браузер → Cloudflare → Hugging Face работает.\n\n";
+
 
             report +=
                 "Теперь нажми «Загрузить AI-модель».";
 
 
-            setStatus(report);
+            setStatus(
+                report
+            );
 
 
         } catch (error) {
 
+
             report +=
                 "\n================================\n";
+
 
             report +=
                 "❌ ОШИБКА\n";
 
+
             report +=
                 "================================\n\n";
+
 
             report +=
                 "Тип: " +
                 error.name +
                 "\n\n";
 
+
             report +=
                 "Сообщение:\n" +
                 error.message;
 
 
-            setStatus(report);
+            setStatus(
+                report
+            );
 
-            console.error(error);
+
+            console.error(
+                error
+            );
 
         }
 
 
-        diagnosticButton.disabled = false;
+        diagnosticButton.disabled =
+            false;
 
     }
 );
 
 
-/* ==========================================
+
+/* =========================================
    LOAD MODEL
-========================================== */
+========================================= */
+
 
 loadButton.addEventListener(
     "click",
     async () => {
 
-        loadButton.disabled = true;
+
+        loadButton.disabled =
+            true;
 
 
         try {
 
+
+            /* PROCESSOR */
+
             setStatus(
+
                 "⏳ Загружаю processor BiRefNet...\n\n" +
+
                 "Первый запуск может быть долгим."
+
             );
 
 
             processor =
-                await AutoProcessor.from_pretrained(
-                    "studioludens/birefnet-lite-512"
-                );
-
-
-            setStatus(
-                "✅ Processor загружен.\n\n" +
-                "⏳ Загружаю AI-модель BiRefNet..."
-            );
-
-
-            try {
-
-                model =
-                    await AutoModel.from_pretrained(
-                        "studioludens/birefnet-lite-512",
-                        {
-                            dtype: "fp16",
-                            device: "webgpu"
-                        }
+                await AutoProcessor
+                    .from_pretrained(
+                        "studioludens/birefnet-lite-512"
                     );
 
 
+            setStatus(
+
+                "✅ Processor загружен.\n\n" +
+
+                "⏳ Загружаю AI-модель BiRefNet..."
+
+            );
+
+
+
+            /* WEBGPU */
+
+            try {
+
+
+                model =
+                    await AutoModel
+                        .from_pretrained(
+
+                            "studioludens/birefnet-lite-512",
+
+                            {
+
+                                dtype: "fp16",
+
+                                device: "webgpu"
+
+                            }
+
+                        );
+
+
                 setStatus(
+
                     "🎉 BiRefNet успешно загружен через WebGPU!"
+
                 );
 
 
-            } catch (webgpuError) {
+            } catch (
+                webgpuError
+            ) {
+
 
                 console.warn(
                     "WebGPU error:",
@@ -627,32 +1005,46 @@ loadButton.addEventListener(
 
 
                 setStatus(
+
                     "⚠️ WebGPU не запустился.\n\n" +
+
                     "Пробую WASM..."
+
                 );
 
 
                 model =
-                    await AutoModel.from_pretrained(
-                        "studioludens/birefnet-lite-512",
-                        {
-                            dtype: "q8",
-                            device: "wasm"
-                        }
-                    );
+                    await AutoModel
+                        .from_pretrained(
+
+                            "studioludens/birefnet-lite-512",
+
+                            {
+
+                                dtype: "q8",
+
+                                device: "wasm"
+
+                            }
+
+                        );
 
 
                 setStatus(
+
                     "🎉 BiRefNet успешно загружен через WASM!"
+
                 );
 
             }
 
 
-            removeButton.disabled = false;
+            removeButton.disabled =
+                false;
 
 
         } catch (error) {
+
 
             console.error(
                 "MODEL ERROR:",
@@ -661,16 +1053,22 @@ loadButton.addEventListener(
 
 
             setStatus(
+
                 "❌ Ошибка загрузки AI-модели.\n\n" +
+
                 "Тип: " +
                 error.name +
+
                 "\n\n" +
+
                 "Сообщение:\n" +
                 error.message
+
             );
 
 
-            loadButton.disabled = false;
+            loadButton.disabled =
+                false;
 
         }
 
@@ -678,77 +1076,283 @@ loadButton.addEventListener(
 );
 
 
-/* ==========================================
-   GET MODEL TENSOR
-========================================== */
 
-function findMaskTensor(output) {
-
-    console.log(
-        "========== MODEL OUTPUT =========="
-    );
-
-    console.log(output);
-
-    console.log(
-        "OUTPUT KEYS:",
-        Object.keys(output || {})
-    );
+/* =========================================
+   OBJECT INSPECTOR
+========================================= */
 
 
-    /*
-     * 1. Самый вероятный вариант
-     */
+function inspectValue(
+    value,
+    name = "value",
+    depth = 0
+) {
 
-    if (output?.logits) {
-        return output.logits;
+
+    if (
+        depth > 3
+    ) {
+
+        return name +
+            ": [глубина > 3]";
+
+    }
+
+
+    if (
+        value === null
+    ) {
+
+        return name +
+            ": null";
+
+    }
+
+
+    if (
+        value === undefined
+    ) {
+
+        return name +
+            ": undefined";
+
+    }
+
+
+    const type =
+        typeof value;
+
+
+    if (
+        type !== "object"
+    ) {
+
+        return name +
+            ": " +
+            String(value);
+
+    }
+
+
+    let result =
+        name +
+        ":\n";
+
+
+    try {
+
+
+        result +=
+            "  constructor: " +
+            (
+                value
+                    .constructor
+                    ?.name ||
+                "unknown"
+            ) +
+            "\n";
+
+
+        result +=
+            "  keys: " +
+            Object.keys(
+                value
+            ).join(", ") +
+            "\n";
+
+
+        if (
+            value.dims
+        ) {
+
+            result +=
+                "  dims: " +
+                JSON.stringify(
+                    value.dims
+                ) +
+                "\n";
+
+        }
+
+
+        if (
+            value.type
+        ) {
+
+            result +=
+                "  type: " +
+                value.type +
+                "\n";
+
+        }
+
+
+        if (
+            value.data
+        ) {
+
+            result +=
+                "  data length: " +
+                value.data.length +
+                "\n";
+
+        }
+
+
+        if (
+            typeof value.sigmoid ===
+            "function"
+        ) {
+
+            result +=
+                "  sigmoid(): YES\n";
+
+        } else {
+
+            result +=
+                "  sigmoid(): NO\n";
+
+        }
+
+
+    } catch (error) {
+
+
+        result +=
+            "  inspect error: " +
+            error.message +
+            "\n";
+
+    }
+
+
+    return result;
+
+}
+
+
+
+/* =========================================
+   FIND POSSIBLE TENSOR
+========================================= */
+
+
+function findTensor(
+    output
+) {
+
+
+    if (!output) {
+
+        return null;
+
     }
 
 
     /*
-     * 2. Некоторые модели
-     * возвращают prediction
+     * Прямой Tensor
      */
 
-    if (output?.prediction) {
-        return output.prediction;
+    if (
+        typeof output.sigmoid ===
+        "function"
+    ) {
+
+        return output;
+
     }
 
 
     /*
-     * 3. Возможные варианты
+     * Известные названия
      */
 
-    if (output?.predictions) {
-        return output.predictions;
-    }
+    const names = [
+
+        "logits",
+
+        "prediction",
+
+        "predictions",
+
+        "output",
+
+        "outputs",
+
+        "masks",
+
+        "mask",
+
+        "alpha",
+
+        "segmentation",
+
+        "last_hidden_state"
+
+    ];
 
 
-    if (output?.output) {
-        return output.output;
-    }
+    for (
+        const name
+        of names
+    ) {
 
 
-    if (output?.masks) {
-        return output.masks;
+        if (
+            output[name] &&
+            typeof output[name].sigmoid ===
+            "function"
+        ) {
+
+            console.log(
+                "Tensor найден:",
+                name
+            );
+
+
+            return output[name];
+
+        }
+
     }
 
 
     /*
-     * 4. Если результат является массивом
+     * Ищем среди всех ключей
      */
 
-    if (Array.isArray(output)) {
+    if (
+        typeof output ===
+        "object"
+    ) {
 
-        for (const item of output) {
+
+        for (
+            const key
+            of Object.keys(output)
+        ) {
+
+
+            const value =
+                output[key];
+
 
             if (
-                item &&
-                typeof item === "object" &&
-                typeof item.sigmoid === "function"
+                value &&
+                typeof value ===
+                "object" &&
+                typeof value.sigmoid ===
+                "function"
             ) {
 
-                return item;
+
+                console.log(
+                    "Tensor найден по ключу:",
+                    key
+                );
+
+
+                return value;
 
             }
 
@@ -758,31 +1362,25 @@ function findMaskTensor(output) {
 
 
     /*
-     * 5. Ищем любой объект,
-     * который похож на Tensor
+     * Массив
      */
 
     if (
-        output &&
-        typeof output === "object"
+        Array.isArray(output)
     ) {
 
-        for (const key of Object.keys(output)) {
 
-            const value =
-                output[key];
+        for (
+            const value
+            of output
+        ) {
 
 
             if (
                 value &&
-                typeof value === "object" &&
-                typeof value.sigmoid === "function"
+                typeof value.sigmoid ===
+                "function"
             ) {
-
-                console.log(
-                    "Найден Tensor:",
-                    key
-                );
 
                 return value;
 
@@ -798,40 +1396,59 @@ function findMaskTensor(output) {
 }
 
 
-/* ==========================================
+
+/* =========================================
    REMOVE BACKGROUND
-========================================== */
+========================================= */
+
 
 removeButton.addEventListener(
     "click",
     async () => {
 
-        if (!model || !processor) {
+
+        if (
+            !model ||
+            !processor
+        ) {
+
 
             setStatus(
                 "❌ Сначала загрузите AI-модель."
             );
 
+
             return;
 
         }
 
 
-        if (!selectedFile) {
+        if (
+            !selectedFile
+        ) {
+
 
             setStatus(
                 "❌ Сначала выберите изображение."
             );
 
+
             return;
 
         }
 
 
-        removeButton.disabled = true;
+        removeButton.disabled =
+            true;
+
+
+        setDebug(
+            "Начинаю обработку..."
+        );
 
 
         try {
+
 
             /* IMAGE */
 
@@ -846,6 +1463,20 @@ removeButton.addEventListener(
                 );
 
 
+            setDebug(
+
+                "IMAGE\n\n" +
+
+                "width: " +
+                image.width +
+
+                "\nheight: " +
+                image.height
+
+            );
+
+
+
             /* PROCESSOR */
 
             setStatus(
@@ -853,10 +1484,41 @@ removeButton.addEventListener(
             );
 
 
-            const {
-                pixel_values
-            } =
-                await processor(image);
+            const processed =
+                await processor(
+                    image
+                );
+
+
+            setDebug(
+
+                "PROCESSOR RESULT\n\n" +
+
+                inspectValue(
+                    processed,
+                    "processed"
+                )
+
+            );
+
+
+            const pixel_values =
+                processed.pixel_values;
+
+
+            if (
+                !pixel_values
+            ) {
+
+
+                throw new Error(
+
+                    "Processor не вернул pixel_values."
+
+                );
+
+            }
+
 
 
             /* MODEL */
@@ -868,38 +1530,156 @@ removeButton.addEventListener(
 
             const output =
                 await model({
+
                     input_image:
                         pixel_values
+
                 });
 
 
+
+            /* =================================
+               ПОЛНАЯ ДИАГНОСТИКА OUTPUT
+            ================================= */
+
+
             console.log(
-                "Полный результат модели:",
+                "========== MODEL OUTPUT =========="
+            );
+
+
+            console.log(
                 output
             );
 
 
-            /* FIND MASK */
+            console.log(
+                "OUTPUT KEYS:",
+                Object.keys(
+                    output || {}
+                )
+            );
 
-            const maskTensor =
-                findMaskTensor(output);
+
+            console.log(
+                "LOGITS:",
+                output?.logits
+            );
 
 
-            if (!maskTensor) {
+            console.log(
+                "PREDICTION:",
+                output?.prediction
+            );
 
-                throw new Error(
-                    "Не найден выходной Tensor модели.\n\n" +
-                    "Откройте консоль браузера (F12) и пришлите мне блок:\n" +
-                    "\"MODEL OUTPUT\"."
+
+            console.log(
+                "OUTPUT:",
+                output?.output
+            );
+
+
+            console.log(
+                "MASK:",
+                output?.mask
+            );
+
+
+            console.log(
+                "MASKS:",
+                output?.masks
+            );
+
+
+            let debugText =
+                "========== MODEL OUTPUT ==========\n\n";
+
+
+            debugText +=
+                inspectValue(
+                    output,
+                    "output"
                 );
+
+
+            debugText +=
+                "\n\n========== CHILD VALUES ==========\n\n";
+
+
+            if (
+                output &&
+                typeof output ===
+                "object"
+            ) {
+
+
+                for (
+                    const key
+                    of Object.keys(output)
+                ) {
+
+
+                    debugText +=
+                        inspectValue(
+                            output[key],
+                            "output." +
+                            key
+                        ) +
+                        "\n\n";
+
+                }
 
             }
 
 
+            setDebug(
+                debugText
+            );
+
+
+
+            /* =================================
+               FIND TENSOR
+            ================================= */
+
+
+            const maskTensor =
+                findTensor(
+                    output
+                );
+
+
+            if (
+                !maskTensor
+            ) {
+
+
+                setStatus(
+
+                    "⚠️ Модель отработала, но выходной Tensor не найден.\n\n" +
+
+                    "Я вывела структуру результата в блоке «Отладочная информация».\n\n" +
+
+                    "Пришли мне этот блок."
+
+                );
+
+
+                return;
+
+            }
+
+
+            setStatus(
+                "⏳ Получаю маску объекта..."
+            );
+
+
             console.log(
-                "Найден mask tensor:",
+                "MASK TENSOR:",
                 maskTensor
             );
+
 
 
             /* SIGMOID */
@@ -908,9 +1688,8 @@ removeButton.addEventListener(
                 maskTensor.sigmoid();
 
 
-            /*
-             * TENSOR → IMAGE
-             */
+
+            /* TENSOR → IMAGE */
 
             mask =
                 await RawImage.fromTensor(
@@ -918,9 +1697,8 @@ removeButton.addEventListener(
                 );
 
 
-            /*
-             * RESIZE
-             */
+
+            /* RESIZE */
 
             mask =
                 await mask.resize(
@@ -929,9 +1707,8 @@ removeButton.addEventListener(
                 );
 
 
-            /*
-             * CANVAS
-             */
+
+            /* CANVAS */
 
             const canvas =
                 document.createElement(
@@ -941,6 +1718,7 @@ removeButton.addEventListener(
 
             canvas.width =
                 image.width;
+
 
             canvas.height =
                 image.height;
@@ -952,33 +1730,47 @@ removeButton.addEventListener(
                 );
 
 
-            /*
-             * ORIGINAL
-             */
+            if (!ctx) {
+
+                throw new Error(
+                    "Не удалось создать Canvas 2D."
+                );
+
+            }
+
+
+
+            /* ORIGINAL */
 
             const sourceCanvas =
                 image.toCanvas();
 
 
             ctx.drawImage(
+
                 sourceCanvas,
+
                 0,
                 0,
+
                 image.width,
                 image.height
+
             );
 
 
-            /*
-             * PIXELS
-             */
+
+            /* PIXELS */
 
             const imageData =
                 ctx.getImageData(
+
                     0,
                     0,
+
                     image.width,
                     image.height
+
                 );
 
 
@@ -990,15 +1782,27 @@ removeButton.addEventListener(
                 mask.data;
 
 
-            /*
-             * APPLY MASK
-             */
+
+            if (
+                !maskData
+            ) {
+
+                throw new Error(
+                    "У маски отсутствуют данные pixels."
+                );
+
+            }
+
+
+
+            /* APPLY MASK */
 
             for (
                 let i = 0;
                 i < pixels.length;
                 i += 4
             ) {
+
 
                 const index =
                     i / 4;
@@ -1008,12 +1812,9 @@ removeButton.addEventListener(
                     maskData[index];
 
 
-                /*
-                 * Если значение оказалось
-                 * 0–255, переводим в 0–1.
-                 */
-
-                if (alpha > 1) {
+                if (
+                    alpha > 1
+                ) {
 
                     alpha =
                         alpha / 255;
@@ -1031,10 +1832,6 @@ removeButton.addEventListener(
                     );
 
 
-                /*
-                 * Немного смягчаем края.
-                 */
-
                 alpha =
                     Math.pow(
                         alpha,
@@ -1050,9 +1847,8 @@ removeButton.addEventListener(
             }
 
 
-            /*
-             * PUT PIXELS
-             */
+
+            /* PUT PIXELS */
 
             ctx.putImageData(
                 imageData,
@@ -1061,9 +1857,8 @@ removeButton.addEventListener(
             );
 
 
-            /*
-             * RESULT
-             */
+
+            /* RESULT */
 
             resultImage.src =
                 canvas.toDataURL(
@@ -1072,40 +1867,92 @@ removeButton.addEventListener(
 
 
             setStatus(
+
                 "🎉 Готово!\n\n" +
+
                 "Фон удалён.\n\n" +
+
                 "Справа показан результат " +
+
                 "с прозрачным фоном."
+
             );
 
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
+
 
             console.error(
+
                 "BACKGROUND REMOVAL ERROR:",
+
                 error
+
             );
 
 
             setStatus(
+
                 "❌ Ошибка удаления фона.\n\n" +
+
                 "Тип: " +
                 error.name +
+
                 "\n\n" +
+
                 "Сообщение:\n" +
                 error.message +
+
                 "\n\n" +
-                "Открой F12 → Console и, если ошибка повторится, пришли мне блок:\n" +
-                "MODEL OUTPUT"
+
+                "Структура результата модели " +
+                "выведена ниже."
+
             );
+
+
+            /*
+             * Даже при ошибке
+             * показываем максимум информации.
+             */
+
+            setDebug(
+
+                debug.textContent +
+
+                "\n\n================================\n" +
+
+                "ERROR\n" +
+
+                "================================\n\n" +
+
+                "Тип: " +
+                error.name +
+
+                "\n\n" +
+
+                "Сообщение:\n" +
+                error.message
+
+            );
+
+
+            console.error(
+                error
+            );
+
 
         }
 
 
-        removeButton.disabled = false;
+        removeButton.disabled =
+            false;
 
     }
 );
+
 
 </script>
 
