@@ -72,54 +72,6 @@ ${features}
   "layout": "hero"
 }
 
-В поле layout используй только одно из:
-hero
-split
-clean
-`;
-
-        const result = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          {
-            messages: [
-              {
-                role: "system",
-                content: "Ты создаёшь структурированные данные для дизайна карточек товаров."
-              },
-              {
-                role: "user",
-                content: prompt
-              }
-            ]
-          }
-        );
-
-        const raw = result.response || "";
-
-        let generated;
-
-        try {
-
-          const match = raw.match(/\{[\s\S]*\}/);
-
-          generated = JSON.parse(
-            match ? match[0] : raw
-          );
-
-        } catch {
-
-          generated = {
-            title: productName || "Ваш товар",
-            subtitle: "Основные преимущества товара",
-            features: features
-              .split("\n")
-              .filter(Boolean)
-              .slice(0, 4),
-            layout: "hero"
-          };
-
-        }
-
         return Response.json(generated);
 
       } catch (error) {
