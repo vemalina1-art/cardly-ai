@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Cardly AI — Background Removal Test</title>
 
     <style>
@@ -183,10 +184,7 @@
 
         <br>
 
-        <button
-            id="removeButton"
-            disabled
-        >
+        <button id="removeButton" disabled>
             ✂️ Удалить фон
         </button>
 
@@ -298,7 +296,7 @@ function setDebug(text) {
 
 
 /* =========================================
-   FILE SELECT
+   FILE
 ========================================= */
 
 fileInput.addEventListener("change", event => {
@@ -356,15 +354,11 @@ diagnosticButton.addEventListener("click", async () => {
                 await navigator.gpu.requestAdapter();
 
             if (adapter) {
-
                 report +=
                     "✅ GPU adapter найден\n\n";
-
             } else {
-
                 report +=
                     "⚠️ GPU adapter не найден\n\n";
-
             }
 
         } else {
@@ -591,9 +585,9 @@ removeButton.addEventListener("click", async () => {
 
     try {
 
-        /* ---------------------------------
-           READ IMAGE
-        --------------------------------- */
+        /* =================================
+           1. READ IMAGE
+        ================================= */
 
         setStatus(
             "⏳ Читаю изображение..."
@@ -605,9 +599,9 @@ removeButton.addEventListener("click", async () => {
             );
 
 
-        /* ---------------------------------
-           PROCESSOR
-        --------------------------------- */
+        /* =================================
+           2. PROCESSOR
+        ================================= */
 
         setStatus(
             "⏳ Подготавливаю изображение..."
@@ -620,18 +614,9 @@ removeButton.addEventListener("click", async () => {
             processed.pixel_values;
 
 
-        if (!pixel_values) {
-
-            throw new Error(
-                "Processor не вернул pixel_values."
-            );
-
-        }
-
-
-        /* ---------------------------------
-           MODEL
-        --------------------------------- */
+        /* =================================
+           3. MODEL
+        ================================= */
 
         setStatus(
             "⏳ BiRefNet удаляет фон..."
@@ -644,16 +629,9 @@ removeButton.addEventListener("click", async () => {
             });
 
 
-        console.log(
-            "========== MODEL OUTPUT =========="
-        );
-
-        console.log(output);
-
-
-        /* ---------------------------------
-           OUTPUT
-        --------------------------------- */
+        /* =================================
+           4. OUTPUT
+        ================================= */
 
         const outputImage =
             output.output_image;
@@ -673,25 +651,16 @@ removeButton.addEventListener("click", async () => {
 
 
         console.log(
-            "OUTPUT DIMS:",
+            "MODEL OUTPUT DIMS:",
             dims
         );
 
 
-        if (
-            !dims ||
-            dims.length !== 4 ||
-            dims[0] !== 1 ||
-            dims[1] !== 1
-        ) {
-
-            throw new Error(
-                "Неожиданная размерность: " +
-                JSON.stringify(dims)
-            );
-
-        }
-
+        /*
+         * Ожидаем:
+         *
+         * [1, 1, 512, 512]
+         */
 
         const maskHeight =
             dims[2];
@@ -700,10 +669,9 @@ removeButton.addEventListener("click", async () => {
             dims[3];
 
 
-        /* ---------------------------------
-           ВАЖНО:
-           Получаем ONNX Tensor
-        --------------------------------- */
+        /* =================================
+           5. ORT TENSOR
+        ================================= */
 
         const ortTensor =
             outputImage.ort_tensor;
@@ -712,22 +680,11 @@ removeButton.addEventListener("click", async () => {
         if (!ortTensor) {
 
             throw new Error(
-                "У output_image отсутствует ort_tensor."
+                "ort_tensor отсутствует."
             );
 
         }
 
-
-        console.log(
-            "ORT TENSOR:",
-            ortTensor
-        );
-
-
-        /*
-         * ONNX Runtime Tensor имеет
-         * собственное поле data.
-         */
 
         const rawData =
             ortTensor.data;
@@ -743,37 +700,14 @@ removeButton.addEventListener("click", async () => {
 
 
         console.log(
-            "RAW DATA:",
-            rawData
+            "RAW MASK DATA LENGTH:",
+            rawData.length
         );
 
 
-        if (
-            rawData.length !==
-            maskWidth * maskHeight
-        ) {
-
-            throw new Error(
-                "Неверный размер mask data: " +
-                rawData.length +
-                ", ожидалось: " +
-                (
-                    maskWidth *
-                    maskHeight
-                )
-            );
-
-        }
-
-
-        /* ---------------------------------
-           SIGMOID
-        --------------------------------- */
-
-        setStatus(
-            "⏳ Создаю маску объекта..."
-        );
-
+        /* =================================
+           6. SIGMOID
+        ================================= */
 
         const alphaMask =
             new Float32Array(
@@ -791,35 +725,38 @@ removeButton.addEventListener("click", async () => {
                 Number(rawData[i]);
 
 
-            const sigmoid =
+            alphaMask[i] =
                 1 /
                 (
                     1 +
                     Math.exp(-value)
                 );
 
-
-            alphaMask[i] =
-                sigmoid;
-
         }
 
 
-        /* ---------------------------------
-           SOURCE CANVAS
-        --------------------------------- */
+        /* =================================
+           7. CREATE NORMAL HTML CANVAS
+        ================================= */
 
         setStatus(
-            "⏳ Создаю прозрачный PNG..."
+            "⏳ Создаю прозрачное изображение..."
         );
 
 
-        const sourceCanvas =
-            image.toCanvas();
+        const canvas =
+            document.createElement("canvas");
+
+
+        canvas.width =
+            image.width;
+
+        canvas.height =
+            image.height;
 
 
         const ctx =
-            sourceCanvas.getContext("2d");
+            canvas.getContext("2d");
 
 
         if (!ctx) {
@@ -830,6 +767,37 @@ removeButton.addEventListener("click", async () => {
 
         }
 
+
+        /* =================================
+           8. LOAD ORIGINAL FILE
+        ================================= */
+
+        const bitmap =
+            await createImageBitmap(
+                selectedFile
+            );
+
+
+        /*
+         * Теперь это настоящий
+         * HTML Canvas.
+         */
+
+        ctx.drawImage(
+            bitmap,
+            0,
+            0,
+            image.width,
+            image.height
+        );
+
+
+        bitmap.close();
+
+
+        /* =================================
+           9. GET PIXELS
+        ================================= */
 
         const imageData =
             ctx.getImageData(
@@ -844,9 +812,9 @@ removeButton.addEventListener("click", async () => {
             imageData.data;
 
 
-        /* ---------------------------------
-           APPLY MASK
-        --------------------------------- */
+        /* =================================
+           10. APPLY MASK
+        ================================= */
 
         for (
             let y = 0;
@@ -878,8 +846,8 @@ removeButton.addEventListener("click", async () => {
                             x *
                             maskWidth /
                             image.width
-                        )
-                    );
+                    )
+                );
 
 
                 const maskIndex =
@@ -902,8 +870,7 @@ removeButton.addEventListener("click", async () => {
 
 
                 /*
-                 * Небольшое смягчение
-                 * краёв.
+                 * Смягчаем края.
                  */
 
                 alpha =
@@ -925,9 +892,9 @@ removeButton.addEventListener("click", async () => {
         }
 
 
-        /* ---------------------------------
-           PUT PIXELS
-        --------------------------------- */
+        /* =================================
+           11. APPLY PIXELS
+        ================================= */
 
         ctx.putImageData(
             imageData,
@@ -936,12 +903,12 @@ removeButton.addEventListener("click", async () => {
         );
 
 
-        /* ---------------------------------
-           RESULT
-        --------------------------------- */
+        /* =================================
+           12. EXPORT PNG
+        ================================= */
 
         const resultURL =
-            sourceCanvas.toDataURL(
+            canvas.toDataURL(
                 "image/png"
             );
 
@@ -950,13 +917,15 @@ removeButton.addEventListener("click", async () => {
             resultURL;
 
 
-        /* ---------------------------------
+        /* =================================
            SUCCESS
-        --------------------------------- */
+        ================================= */
 
         setStatus(
             "🎉 ГОТОВО!\n\n" +
-            "Фон успешно удалён."
+            "Фон успешно удалён.\n\n" +
+            "Справа находится PNG " +
+            "с прозрачным фоном."
         );
 
 
@@ -1005,7 +974,7 @@ removeButton.addEventListener("click", async () => {
 
         setDebug(
             "================================\n" +
-            "❌ ОШИБКА\n" +
+            "❌ ERROR\n" +
             "================================\n\n" +
 
             "Тип:\n" +
@@ -1022,7 +991,6 @@ removeButton.addEventListener("click", async () => {
     removeButton.disabled = false;
 
 });
-
 
 </script>
 
