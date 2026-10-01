@@ -1,471 +1,336 @@
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Cardly AI — диагностика</title>
 
-  <title>Cardly AI — тест удаления фона</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f5f8;
+    padding: 30px;
+}
 
-  <style>
-    body {
-      margin: 0;
-      padding: 40px;
-      font-family: Arial, sans-serif;
-      background: #f3f5f8;
-    }
+.box {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+}
 
-    .box {
-      max-width: 700px;
-      margin: auto;
-      padding: 30px;
-      background: white;
-      border-radius: 20px;
-      text-align: center;
-    }
+button {
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 10px;
+    background: #111;
+    color: white;
+    cursor: pointer;
+    margin: 5px;
+}
 
-    button {
-      margin-top: 15px;
-      padding: 12px 22px;
-      border: 0;
-      border-radius: 10px;
-      background: #111;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
+pre {
+    background: #111;
+    color: #0f0;
+    padding: 20px;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
 
-    button:disabled {
-      opacity: .5;
-      cursor: wait;
-    }
-
-    #status {
-      margin: 20px 0;
-      color: #555;
-      line-height: 1.5;
-    }
-
-    .checker {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px;
-
-      background-image:
-        linear-gradient(45deg, #ddd 25%, transparent 25%),
-        linear-gradient(-45deg, #ddd 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #ddd 75%),
-        linear-gradient(-45deg, transparent 75%, #ddd 75%);
-
-      background-size: 20px 20px;
-      background-position:
-        0 0,
-        0 10px,
-        10px -10px,
-        -10px 0;
-    }
-
-    #result {
-      display: block;
-      max-width: 100%;
-      max-height: 600px;
-    }
-  </style>
+#status {
+    margin: 20px 0;
+    font-weight: bold;
+}
+</style>
 </head>
 
 <body>
 
 <div class="box">
 
-  <h1>✂️ Cardly AI</h1>
+<h1>✂️ Cardly AI</h1>
 
-  <p>Тест автоматического удаления фона</p>
+<h3>Диагностика загрузки AI</h3>
 
-  <input
-    id="imageInput"
-    type="file"
-    accept="image/*"
-  >
+<button id="testFetch">
+Проверить Hugging Face
+</button>
 
-  <br>
+<button id="testTransformers">
+Проверить Transformers.js
+</button>
 
-  <button id="removeBtn">
-    ✂️ Убрать фон
-  </button>
+<button id="testModel">
+Загрузить модель
+</button>
 
-  <div id="status">
-    Выбери фотографию товара
-  </div>
+<div id="status">
+Готово к проверке
+</div>
 
-  <div class="checker">
-    <img id="result">
-  </div>
+<pre id="log"></pre>
 
 </div>
 
 
 <script type="module">
 
-import {
-  AutoModel,
-  AutoProcessor,
-  RawImage
-} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
-
-
-const MODEL =
-  "studioludens/birefnet-lite-512";
-
-
-const imageInput =
-  document.getElementById("imageInput");
-
-const removeBtn =
-  document.getElementById("removeBtn");
-
 const status =
-  document.getElementById("status");
+document.getElementById("status");
 
-const result =
-  document.getElementById("result");
-
-
-let selectedFile = null;
-
-let model = null;
-
-let processor = null;
+const log =
+document.getElementById("log");
 
 
-// ------------------------------------
-// Выбор фотографии
-// ------------------------------------
+function write(text) {
 
-imageInput.addEventListener(
-  "change",
-  (event) => {
+    log.textContent +=
+        "\n" + text;
 
-    selectedFile =
-      event.target.files[0];
-
-    if (!selectedFile) {
-      return;
-    }
-
-    result.src =
-      URL.createObjectURL(selectedFile);
-
-    status.textContent =
-      "Фото выбрано. Нажми «Убрать фон».";
-
-  }
-);
+    console.log(text);
+}
 
 
-// ------------------------------------
-// Загрузка модели
-// ------------------------------------
+function clearLog() {
 
-async function loadModel() {
-
-  if (model && processor) {
-    return;
-  }
-
-  status.textContent =
-    "⏳ Загружаю AI-модель... Первый запуск может занять несколько минут.";
-
-  try {
-
-    // Сначала пробуем WebGPU
-
-    try {
-
-      status.textContent =
-        "⚡ Запускаю AI через WebGPU...";
-
-      model =
-        await AutoModel.from_pretrained(
-          MODEL,
-          {
-            dtype: "fp16",
-            device: "webgpu"
-          }
-        );
-
-    } catch (webgpuError) {
-
-      console.warn(
-        "WebGPU недоступен. Переключаюсь на WASM.",
-        webgpuError
-      );
-
-      status.textContent =
-        "💻 WebGPU недоступен. Запускаю более совместимый режим...";
-
-      model =
-        await AutoModel.from_pretrained(
-          MODEL,
-          {
-            dtype: "fp32",
-            device: "wasm"
-          }
-        );
-
-    }
-
-
-    processor =
-      await AutoProcessor.from_pretrained(
-        MODEL
-      );
-
-  } catch (error) {
-
-    console.error(
-      "MODEL LOAD ERROR:",
-      error
-    );
-
-    throw new Error(
-      "Не удалось загрузить AI-модель: " +
-      error.message
-    );
-
-  }
+    log.textContent = "";
 
 }
 
 
-// ------------------------------------
-// Удаление фона
-// ------------------------------------
+// --------------------------------
+// 1. Проверяем Hugging Face
+// --------------------------------
 
-removeBtn.addEventListener(
-  "click",
-  async () => {
+document
+.getElementById("testFetch")
+.addEventListener("click", async () => {
 
-    if (!selectedFile) {
+    clearLog();
 
-      status.textContent =
-        "Сначала выбери фотографию.";
-
-      return;
-
-    }
-
+    status.textContent =
+        "⏳ Проверяю Hugging Face...";
 
     try {
 
-      removeBtn.disabled = true;
+        const url =
+        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json";
 
+        write("URL:");
+        write(url);
 
-      await loadModel();
+        const response =
+        await fetch(url);
 
-
-      status.textContent =
-        "🔍 Анализирую фотографию...";
-
-
-      // Загружаем изображение
-      const imageURL =
-        URL.createObjectURL(selectedFile);
-
-      const image =
-        await RawImage.read(imageURL);
-
-      URL.revokeObjectURL(imageURL);
-
-
-      // Подготавливаем изображение
-      const {
-        pixel_values
-      } =
-        await processor(image);
-
-
-      status.textContent =
-        "✂️ AI удаляет фон...";
-
-
-      // Запускаем BiRefNet
-      const {
-        logits
-      } =
-        await model({
-          input_image: pixel_values
-        });
-
-
-      // --------------------------------
-      // Получаем маску
-      // --------------------------------
-
-      const mask =
-        logits
-          .sigmoid()
-          .mul(255)
-          .to("cpu");
-
-
-      // --------------------------------
-      // Canvas исходного изображения
-      // --------------------------------
-
-      const canvas =
-        document.createElement("canvas");
-
-      canvas.width =
-        image.width;
-
-      canvas.height =
-        image.height;
-
-
-      const ctx =
-        canvas.getContext("2d");
-
-
-      const imageData =
-        await image.toImageData();
-
-
-      // --------------------------------
-      // Маска 512 × 512
-      // превращается в ImageData
-      // --------------------------------
-
-      const maskCanvas =
-        document.createElement("canvas");
-
-      maskCanvas.width =
-        mask.dims[1];
-
-      maskCanvas.height =
-        mask.dims[0];
-
-
-      const maskCtx =
-        maskCanvas.getContext("2d");
-
-
-      const maskPixels =
-        new Uint8ClampedArray(
-          mask.data
+        write(
+            "HTTP статус: " +
+            response.status
         );
 
-
-      const maskImageData =
-        new ImageData(
-          maskPixels,
-          maskCanvas.width,
-          maskCanvas.height
+        write(
+            "OK: " +
+            response.ok
         );
 
+        const text =
+        await response.text();
 
-      maskCtx.putImageData(
-        maskImageData,
-        0,
-        0
-      );
-
-
-      // --------------------------------
-      // Растягиваем маску
-      // до размера фотографии
-      // --------------------------------
-
-      const resizedMask =
-        document.createElement("canvas");
-
-      resizedMask.width =
-        image.width;
-
-      resizedMask.height =
-        image.height;
-
-
-      const resizedMaskCtx =
-        resizedMask.getContext("2d");
-
-
-      resizedMaskCtx.drawImage(
-        maskCanvas,
-        0,
-        0,
-        image.width,
-        image.height
-      );
-
-
-      const resizedMaskData =
-        resizedMaskCtx.getImageData(
-          0,
-          0,
-          image.width,
-          image.height
-        ).data;
-
-
-      // --------------------------------
-      // Добавляем прозрачность
-      // --------------------------------
-
-      for (
-        let i = 0;
-        i < imageData.data.length;
-        i += 4
-      ) {
-
-        imageData.data[i + 3] =
-          resizedMaskData[i];
-
-      }
-
-
-      ctx.putImageData(
-        imageData,
-        0,
-        0
-      );
-
-
-      // --------------------------------
-      // Показываем PNG
-      // --------------------------------
-
-      result.src =
-        canvas.toDataURL(
-          "image/png"
+        write(
+            "Ответ:\n" +
+            text
         );
 
-
-      status.textContent =
-        "✅ Готово! Фон удалён.";
-
-    } catch (error) {
-
-      console.error(
-        "BACKGROUND REMOVAL ERROR:",
-        error
-      );
-
-      status.textContent =
-        "❌ Ошибка: " +
-        error.message;
-
-    } finally {
-
-      removeBtn.disabled =
-        false;
+        status.textContent =
+            "✅ Hugging Face доступен";
 
     }
 
-  }
-);
+    catch (error) {
+
+        write(
+            "ОШИБКА:\n" +
+            error.stack
+        );
+
+        status.textContent =
+            "❌ Hugging Face недоступен";
+
+    }
+
+});
+
+
+// --------------------------------
+// 2. Проверяем Transformers.js
+// --------------------------------
+
+document
+.getElementById("testTransformers")
+.addEventListener("click", async () => {
+
+    clearLog();
+
+    status.textContent =
+        "⏳ Загружаю Transformers.js...";
+
+    try {
+
+        const transformers =
+        await import(
+            "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1"
+        );
+
+        write(
+            "Transformers.js загружен."
+        );
+
+        write(
+            "AutoModel: " +
+            !!transformers.AutoModel
+        );
+
+        write(
+            "AutoProcessor: " +
+            !!transformers.AutoProcessor
+        );
+
+        write(
+            "RawImage: " +
+            !!transformers.RawImage
+        );
+
+        status.textContent =
+            "✅ Transformers.js работает";
+
+    }
+
+    catch (error) {
+
+        write(
+            "ОШИБКА:\n" +
+            error.stack
+        );
+
+        status.textContent =
+            "❌ Transformers.js не загрузился";
+
+    }
+
+});
+
+
+// --------------------------------
+// 3. Загружаем модель
+// --------------------------------
+
+document
+.getElementById("testModel")
+.addEventListener("click", async () => {
+
+    clearLog();
+
+    status.textContent =
+        "⏳ Начинаю загрузку модели...";
+
+    try {
+
+        const {
+
+            AutoModel,
+            AutoProcessor
+
+        } =
+        await import(
+            "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1"
+        );
+
+
+        write(
+            "Transformers.js OK"
+        );
+
+
+        const MODEL =
+        "studioludens/birefnet-lite-512";
+
+
+        write(
+            "Модель: " +
+            MODEL
+        );
+
+
+        write(
+            "Пробую загрузить модель..."
+        );
+
+
+        const model =
+        await AutoModel.from_pretrained(
+            MODEL,
+            {
+                dtype: "fp16",
+                device: "webgpu"
+            }
+        );
+
+
+        write(
+            "МОДЕЛЬ ЗАГРУЖЕНА!"
+        );
+
+
+        write(
+            "Теперь загружаю processor..."
+        );
+
+
+        const processor =
+        await AutoProcessor.from_pretrained(
+            MODEL
+        );
+
+
+        write(
+            "PROCESSOR ЗАГРУЖЕН!"
+        );
+
+
+        status.textContent =
+            "🎉 AI-модель полностью загрузилась";
+
+    }
+
+    catch (error) {
+
+        write(
+            "\n========== ОШИБКА ==========\n"
+        );
+
+        write(
+            "Тип: " +
+            error.name
+        );
+
+        write(
+            "Сообщение: " +
+            error.message
+        );
+
+        write(
+            "\nStack:\n" +
+            error.stack
+        );
+
+        status.textContent =
+            "❌ Ошибка загрузки";
+
+    }
+
+});
 
 </script>
 
 </body>
 </html>
-```
