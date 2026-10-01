@@ -3,31 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cardly AI — Инфографика для маркетплейсов</title>
+
+<title>Cardly AI</title>
 
 <style>
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f6fa;
-  color: #111827;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  color: #101828;
 }
-
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-/* HEADER */
 
 .header {
   height: 70px;
@@ -42,617 +32,359 @@ button {
 .logo {
   font-size: 23px;
   font-weight: 800;
-  letter-spacing: -1px;
 }
 
 .logo span {
-  color: #3563ff;
-}
-
-.nav {
-  display: flex;
-  gap: 28px;
+  color: #3867ff;
 }
 
 .nav a {
+  margin-left: 25px;
   color: #667085;
   text-decoration: none;
   font-size: 14px;
 }
 
-/* HERO */
-
 .hero {
   text-align: center;
-  padding: 65px 20px 45px;
+  padding: 65px 20px 40px;
 }
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(40px, 6vw, 68px);
+  font-size: 55px;
   line-height: 1;
   letter-spacing: -3px;
 }
 
 .hero h1 span {
-  color: #3563ff;
+  color: #3867ff;
 }
 
 .hero p {
-  max-width: 650px;
-  margin: 22px auto 0;
   color: #667085;
-  font-size: 17px;
-  line-height: 1.6;
+  max-width: 600px;
+  margin: 20px auto;
+  line-height: 1.5;
 }
-
-/* WORKSPACE */
 
 .workspace {
-  max-width: 1180px;
-  margin: 0 auto 90px;
-  padding: 0 20px;
+  max-width: 1150px;
+  margin: auto;
+  padding: 20px;
 }
 
-.workspace-grid {
+.grid {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: 350px 1fr;
   gap: 25px;
-  align-items: start;
 }
 
 .panel {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 22px;
+  border-radius: 20px;
   padding: 25px;
-  box-shadow: 0 12px 40px rgba(16,24,40,.06);
 }
-
-/* LEFT PANEL */
 
 .panel h2 {
-  margin: 0;
-  font-size: 21px;
+  margin-top: 0;
 }
 
-.description {
-  color: #667085;
-  font-size: 13px;
-  line-height: 1.5;
-  margin: 8px 0 22px;
-}
-
-.field {
-  margin-bottom: 17px;
-}
-
-.field label {
+label {
   display: block;
-  font-size: 13px;
-  font-weight: 700;
+  margin-top: 18px;
   margin-bottom: 7px;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 input,
 textarea {
   width: 100%;
   border: 1px solid #d9dee7;
-  border-radius: 11px;
+  border-radius: 10px;
   padding: 12px;
-  outline: none;
-  background: white;
-}
-
-input:focus,
-textarea:focus {
-  border-color: #3563ff;
+  font-family: Arial;
 }
 
 textarea {
-  min-height: 120px;
+  min-height: 110px;
   resize: vertical;
 }
 
-/* UPLOAD */
+/* ЗАГРУЗКА */
 
-.upload {
-  border: 1.5px dashed #cbd3df;
+.upload-box {
+  border: 2px dashed #d5dae3;
   border-radius: 14px;
-  padding: 18px;
+  padding: 20px;
   text-align: center;
   background: #fafbfc;
 }
 
-.upload-icon {
-  font-size: 28px;
-  margin-bottom: 5px;
-}
-
-.upload-title {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.upload-subtitle {
-  font-size: 11px;
-  color: #98a2b3;
-  margin: 5px 0 12px;
-}
-
-.upload input {
+.upload-box input {
   display: none;
 }
 
 .upload-button {
   display: inline-block;
-  background: #eef2ff;
-  color: #3563ff;
-  padding: 9px 13px;
+  margin-top: 10px;
+  padding: 9px 15px;
   border-radius: 9px;
+  background: #eef2ff;
+  color: #3867ff;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.photo-name {
-  margin-top: 9px;
+#fileName {
+  margin-top: 8px;
   font-size: 11px;
   color: #667085;
-  word-break: break-word;
 }
 
-.generate-button {
+/* КНОПКА */
+
+.generate {
   width: 100%;
   border: 0;
-  background: #3563ff;
+  background: #3867ff;
   color: white;
-  border-radius: 11px;
   padding: 14px;
-  font-weight: 800;
-  margin-top: 5px;
+  border-radius: 10px;
+  margin-top: 22px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.generate-button:hover {
-  background: #244fd9;
-}
-
-.generate-button:disabled {
-  opacity: .6;
-  cursor: wait;
-}
-
-/* PREVIEW */
-
-.preview-panel {
-  min-width: 0;
-}
-
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 17px;
-}
+/* ПРЕДПРОСМОТР */
 
 .preview-title {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.layout-badge {
-  font-size: 10px;
-  font-weight: 800;
-  background: #f1f3f7;
-  color: #667085;
-  border-radius: 20px;
-  padding: 7px 10px;
-}
-
-.preview-area {
-  min-height: 600px;
-  background: #eef1f5;
-  border-radius: 17px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  overflow: hidden;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  font-weight: bold;
 }
 
-/* CARD */
+.preview {
+  min-height: 620px;
+  background: #edf0f5;
+  border-radius: 15px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 30px;
+}
+
+/* ГОТОВАЯ КАРТОЧКА */
 
 .card {
-  width: min(100%, 430px);
-  aspect-ratio: 3 / 4;
+  width: 390px;
+  height: 520px;
+
+  background: #f7faff;
+
+  border-radius: 16px;
+
   position: relative;
+
   overflow: hidden;
-  border-radius: 17px;
-  box-shadow: 0 20px 50px rgba(0,0,0,.17);
+
+  box-shadow: 0 20px 50px rgba(0,0,0,.18);
 }
 
 .card-content {
   position: absolute;
+
   inset: 0;
+
   padding: 30px;
-  display: flex;
-  flex-direction: column;
 }
 
-.card-small {
+.card-label {
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  opacity: .55;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #667085;
 }
 
 .card-title {
-  font-size: 34px;
-  line-height: 1.03;
+  margin-top: 18px;
+
+  font-size: 32px;
   font-weight: 900;
-  letter-spacing: -1.5px;
-  margin-top: 15px;
-  max-width: 90%;
+
+  line-height: 1.05;
+
+  max-width: 300px;
 }
 
 .card-subtitle {
-  font-size: 13px;
-  line-height: 1.4;
-  opacity: .68;
-  max-width: 90%;
   margin-top: 10px;
+
+  font-size: 13px;
+
+  color: #667085;
+
+  max-width: 290px;
+
+  line-height: 1.4;
 }
 
-.photo-box {
+/* ФОТО ТЕПЕРЬ НАХОДИТСЯ ВНУТРИ CARD */
+
+.product-image-box {
+
   position: absolute;
-  overflow: hidden;
+
+  left: 40px;
+  right: 40px;
+
+  top: 175px;
+
+  height: 220px;
+
+  background: white;
+
+  border-radius: 18px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
+  overflow: hidden;
+
+  border: 1px solid #e5e7eb;
 }
 
-.photo-box img {
+.product-image {
+
   width: 100%;
   height: 100%;
+
   object-fit: contain;
+
 }
 
-.photo-placeholder {
+.placeholder {
+
   color: #98a2b3;
+
   font-size: 13px;
-  font-weight: 700;
-  text-align: center;
+
+  font-weight: bold;
+
 }
 
-.card-features {
+/* ХАРАКТЕРИСТИКИ */
+
+.features {
+
+  position: absolute;
+
+  left: 30px;
+  right: 30px;
+
+  bottom: 25px;
+
   display: grid;
-  gap: 8px;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 7px;
 }
 
 .feature {
-  border-radius: 9px;
-  padding: 9px 11px;
-  font-size: 11px;
-  font-weight: 700;
+
+  background: white;
+
+  border-radius: 8px;
+
+  padding: 9px;
+
+  font-size: 10px;
+
+  font-weight: bold;
+
+  border: 1px solid #e5e7eb;
 }
 
-.card-watermark {
+.watermark {
+
   position: absolute;
-  right: 17px;
-  bottom: 13px;
+
+  right: 15px;
+
+  bottom: 10px;
+
   font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  opacity: .35;
+
+  color: #98a2b3;
 }
-
-/* HERO DESIGN */
-
-.design-hero {
-  background: #f7faff;
-}
-
-.design-hero .decor {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  background: #dce7ff;
-  border-radius: 50%;
-  right: -110px;
-  top: -100px;
-}
-
-.design-hero .photo-box {
-  left: 12%;
-  width: 76%;
-  height: 43%;
-  top: 35%;
-  background: white;
-  border-radius: 18px;
-  border: 1px solid #e4e8ef;
-}
-
-/* SPLIT */
-
-.design-split {
-  background: #101828;
-  color: white;
-}
-
-.design-split .photo-box {
-  left: 6%;
-  top: 7%;
-  width: 88%;
-  height: 52%;
-  background: #1d2939;
-  border-radius: 16px;
-}
-
-.design-split .text-block {
-  margin-top: auto;
-}
-
-.design-split .feature {
-  background: #1d2939;
-}
-
-/* EDITORIAL */
-
-.design-editorial {
-  background: #f4eee5;
-  color: #242424;
-}
-
-.design-editorial .photo-box {
-  left: 9%;
-  top: 9%;
-  width: 82%;
-  height: 47%;
-  background: #dfd4c4;
-  border-radius: 4px;
-}
-
-.design-editorial .text-block {
-  margin-top: auto;
-}
-
-.design-editorial .card-title {
-  font-family: Georgia, serif;
-}
-
-/* MINIMAL */
-
-.design-minimal {
-  background: white;
-}
-
-.design-minimal .photo-box {
-  left: 13%;
-  top: 10%;
-  width: 74%;
-  height: 48%;
-  background: #f4f5f7;
-  border-radius: 50%;
-}
-
-.design-minimal .text-block {
-  margin-top: auto;
-}
-
-/* PRODUCT FOCUS */
-
-.design-product-focus {
-  background: #eef7f3;
-}
-
-.design-product-focus .photo-box {
-  left: 6%;
-  top: 6%;
-  width: 88%;
-  height: 61%;
-  background: white;
-  border-radius: 18px;
-  border: 1px solid #d9e7e0;
-}
-
-.design-product-focus .text-block {
-  margin-top: auto;
-}
-
-.design-product-focus .card-title {
-  font-size: 27px;
-}
-
-/* BADGE */
-
-.design-badge {
-  background: #fff7ef;
-}
-
-.design-badge .photo-box {
-  left: 11%;
-  top: 19%;
-  width: 78%;
-  height: 45%;
-  background: #f0dfcc;
-  border-radius: 14px;
-}
-
-.design-badge .badge {
-  position: absolute;
-  top: 25px;
-  right: 24px;
-  width: 63px;
-  height: 63px;
-  border-radius: 50%;
-  background: #ff7a00;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 9px;
-  font-weight: 900;
-  padding: 8px;
-}
-
-.design-badge .text-block {
-  margin-top: auto;
-}
-
-/* ACTIONS */
 
 .actions {
+
   display: flex;
+
   gap: 10px;
+
   margin-top: 15px;
 }
 
-.action-button {
+.action {
+
   flex: 1;
-  border-radius: 10px;
-  padding: 12px;
-  font-size: 13px;
-  font-weight: 700;
-}
 
-.secondary {
-  background: white;
-  border: 1px solid #d9dee7;
-  color: #344054;
-}
-
-.primary {
-  background: #101828;
-  color: white;
-  border: 0;
-}
-
-/* PRICING */
-
-.pricing {
-  max-width: 1180px;
-  margin: 0 auto 90px;
-  padding: 0 20px;
-}
-
-.pricing-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.pricing-header h2 {
-  font-size: 40px;
-  margin: 0 0 10px;
-}
-
-.pricing-header p {
-  color: #667085;
-}
-
-.plans {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.plan {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 19px;
-  padding: 23px;
-}
-
-.plan.featured {
-  border: 2px solid #3563ff;
-  transform: translateY(-5px);
-}
-
-.plan h3 {
-  margin-top: 0;
-}
-
-.price {
-  font-size: 32px;
-  font-weight: 900;
-  margin: 18px 0;
-}
-
-.plan ul {
-  padding-left: 18px;
-  color: #667085;
-  font-size: 13px;
-  line-height: 1.9;
-  min-height: 120px;
-}
-
-.plan button {
-  width: 100%;
-  border: 0;
-  border-radius: 10px;
   padding: 11px;
+
+  border-radius: 9px;
+
+  border: 1px solid #d9dee7;
+
+  background: white;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.action.dark {
+
   background: #101828;
+
   color: white;
-  font-weight: 700;
+
+  border: 0;
 }
 
-.footer {
-  text-align: center;
-  padding: 45px 20px;
-  color: #98a2b3;
-  font-size: 12px;
-}
+@media(max-width:800px) {
 
-/* MOBILE */
+  .grid {
 
-@media(max-width: 900px) {
-
-  .workspace-grid {
     grid-template-columns: 1fr;
-  }
 
-  .plans {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-}
-
-@media(max-width: 600px) {
-
-  .header {
-    padding: 0 20px;
-  }
-
-  .nav {
-    display: none;
-  }
-
-  .hero {
-    padding-top: 45px;
   }
 
   .hero h1 {
-    letter-spacing: -2px;
-  }
 
-  .plans {
-    grid-template-columns: 1fr;
-  }
+    font-size: 42px;
 
-  .preview-area {
-    padding: 15px;
-  }
-
-  .preview-panel {
-    padding: 17px;
   }
 
 }
+
 </style>
 </head>
 
 
 <body>
+
 
 <header class="header">
 
@@ -660,7 +392,7 @@ textarea {
     Cardly<span>AI</span>
   </div>
 
-  <nav class="nav">
+  <nav>
     <a href="#generator">Генератор</a>
     <a href="#pricing">Тарифы</a>
   </nav>
@@ -671,13 +403,13 @@ textarea {
 <section class="hero">
 
   <h1>
-    Создавай карточки<br>
-    <span>быстрее с AI</span>
+    Карточки товаров<br>
+    <span>с помощью AI</span>
   </h1>
 
   <p>
-    Cardly AI превращает информацию о товаре
-    в готовую структуру инфографики для Wildberries и Ozon.
+    Загрузи товар и его характеристики —
+    Cardly AI создаст структуру инфографики.
   </p>
 
 </section>
@@ -685,372 +417,215 @@ textarea {
 
 <section class="workspace" id="generator">
 
-  <div class="workspace-grid">
+<div class="grid">
 
 
-    <!-- LEFT -->
+<!-- ЛЕВАЯ ПАНЕЛЬ -->
 
-    <div class="panel">
+<div class="panel">
 
-      <h2>Создать карточку</h2>
+  <h2>Создать карточку</h2>
 
-      <div class="description">
-        Добавь фото и информацию о товаре.
-        AI подготовит короткий продающий текст.
-      </div>
-
-
-      <div class="field">
-
-        <label>Фото товара</label>
-
-        <div class="upload">
-
-          <div class="upload-icon">
-            📷
-          </div>
-
-          <div class="upload-title">
-            Загрузите изображение
-          </div>
-
-          <div class="upload-subtitle">
-            PNG или JPG
-          </div>
-
-          <label class="upload-button">
-
-            Выбрать фото
-
-            <input
-              type="file"
-              id="photoInput"
-              accept="image/png,image/jpeg,image/webp"
-            >
-
-          </label>
-
-          <div
-            class="photo-name"
-            id="photoName"
-          ></div>
-
-        </div>
-
-      </div>
+  <p style="color:#667085;font-size:13px;">
+    Заполни информацию о товаре.
+    AI подготовит текст.
+  </p>
 
 
-      <div class="field">
+  <label>Фото товара</label>
 
-        <label for="productName">
-          Название товара
-        </label>
+  <div class="upload-box">
 
-        <input
-          id="productName"
-          placeholder="Например: Смеситель для кухни"
-        >
+    <div style="font-size:28px;">
+      📷
+    </div>
 
-      </div>
+    <div style="font-size:13px;font-weight:bold;">
+      Загрузите фото товара
+    </div>
+
+    <div style="font-size:11px;color:#98a2b3;margin-top:5px;">
+      PNG / JPG / WEBP
+    </div>
+
+    <label class="upload-button">
+
+      Выбрать фото
+
+      <input
+        type="file"
+        id="photoInput"
+        accept="image/*"
+      >
+
+    </label>
+
+    <div id="fileName"></div>
+
+  </div>
 
 
-      <div class="field">
+  <label>
+    Название товара
+  </label>
 
-        <label for="features">
-          Характеристики
-        </label>
+  <input
+    id="productName"
+    placeholder="Например: Смеситель для кухни"
+  >
 
-        <textarea
-          id="features"
-          placeholder="Материал — нержавеющая сталь
+
+  <label>
+    Характеристики
+  </label>
+
+  <textarea
+    id="featuresInput"
+    placeholder="Материал — нержавеющая сталь
 Цвет — хром
 Поворотный излив
 Для кухни"
-        ></textarea>
-
-      </div>
+  ></textarea>
 
 
-      <button
-        class="generate-button"
-        id="generateButton"
-        onclick="generateCard()"
-      >
-        ✨ Создать карточку
-      </button>
+  <button
+    class="generate"
+    onclick="generateCard()"
+  >
+    ✨ Создать карточку
+  </button>
 
-    </div>
+</div>
 
 
-    <!-- RIGHT -->
+<!-- ПРАВАЯ ПАНЕЛЬ -->
 
-    <div class="panel preview-panel">
+<div class="panel">
 
-      <div class="preview-header">
+  <div class="preview-title">
 
-        <div class="preview-title">
-          Предпросмотр
+    <span>
+      Предпросмотр
+    </span>
+
+    <span style="font-size:11px;color:#667085;">
+      900 × 1200
+    </span>
+
+  </div>
+
+
+  <div class="preview">
+
+
+    <!-- ВОТ ЗДЕСЬ НАХОДИТСЯ ГОТОВАЯ КАРТОЧКА -->
+
+    <div class="card">
+
+
+      <div class="card-content">
+
+        <div class="card-label">
+          CARDLY AI
         </div>
 
+
         <div
-          class="layout-badge"
-          id="layoutBadge"
+          class="card-title"
+          id="cardTitle"
         >
-          HERO
+          Ваш товар
         </div>
 
-      </div>
-
-
-      <div class="preview-area">
 
         <div
-          class="card design-hero"
-          id="card"
+          class="card-subtitle"
+          id="cardSubtitle"
         >
-
-          <div class="decor"></div>
-
-          <div class="badge" id="badge"></div>
-
-          <div class="card-content">
-
-            <div class="card-small">
-              CARDLY AI
-            </div>
-
-            <div
-              class="card-title"
-              id="cardTitle"
-            >
-              Ваша карточка товара
-            </div>
-
-            <div
-              class="card-subtitle"
-              id="cardSubtitle"
-            >
-              Здесь появится готовая инфографика
-            </div>
+          Здесь появится описание товара
+        </div>
 
 
-            <div
-              class="photo-box"
-              id="photoBox"
-            >
+        <!-- ФОТО СТРОГО ВНУТРИ КАРТОЧКИ -->
 
-              <div
-                class="photo-placeholder"
-                id="photoPlaceholder"
-              >
-                Фото товара
-              </div>
+        <div class="product-image-box">
 
-              <img
-                id="productImage"
-                style="display:none;"
-                alt="Товар"
-              >
-
-            </div>
-
-
-            <div
-              class="text-block"
-              id="textBlock"
-            >
-
-              <div
-                class="card-features"
-                id="cardFeatures"
-              >
-
-                <div class="feature">
-                  Характеристики товара
-                </div>
-
-              </div>
-
-            </div>
-
+          <div
+            class="placeholder"
+            id="placeholder"
+          >
+            Фото товара
           </div>
 
+          <img
+            id="productImage"
+            class="product-image"
+            style="display:none;"
+          >
 
-          <div class="card-watermark">
-            CARDLY AI
+        </div>
+
+
+        <div
+          class="features"
+          id="cardFeatures"
+        >
+
+          <div class="feature">
+            Характеристика 1
+          </div>
+
+          <div class="feature">
+            Характеристика 2
           </div>
 
         </div>
 
-      </div>
-
-
-      <div class="actions">
-
-        <button
-          class="action-button secondary"
-          onclick="generateCard()"
-        >
-          🔄 Другой вариант
-        </button>
-
-        <button
-          class="action-button primary"
-          onclick="downloadCard()"
-        >
-          ↓ Скачать
-        </button>
 
       </div>
 
+
+      <div class="watermark">
+        CARDLY AI
+      </div>
+
+
     </div>
 
   </div>
+
+
+  <div class="actions">
+
+    <button
+      class="action"
+      onclick="generateCard()"
+    >
+      🔄 Другой вариант
+    </button>
+
+    <button
+      class="action dark"
+      onclick="downloadCard()"
+    >
+      ↓ Скачать
+    </button>
+
+  </div>
+
+</div>
+
+</div>
 
 </section>
-
-
-<section
-  class="pricing"
-  id="pricing"
->
-
-  <div class="pricing-header">
-
-    <h2>Тарифы</h2>
-
-    <p>
-      Выбирай количество карточек под свой объём работы.
-    </p>
-
-  </div>
-
-
-  <div class="plans">
-
-
-    <div class="plan">
-
-      <h3>Free</h3>
-
-      <div class="price">$0</div>
-
-      <ul>
-        <li>1 карточка</li>
-        <li>AI-текст</li>
-        <li>6 дизайнов</li>
-        <li>Водяной знак</li>
-      </ul>
-
-      <button onclick="choosePlan('Free')">
-        Попробовать
-      </button>
-
-    </div>
-
-
-    <div class="plan">
-
-      <h3>Start</h3>
-
-      <div class="price">$4.99</div>
-
-      <ul>
-        <li>20 карточек</li>
-        <li>Без водяного знака</li>
-        <li>Все дизайны</li>
-        <li>PNG</li>
-      </ul>
-
-      <button onclick="choosePlan('Start')">
-        Выбрать
-      </button>
-
-    </div>
-
-
-    <div class="plan featured">
-
-      <h3>Pro</h3>
-
-      <div class="price">$9.99</div>
-
-      <ul>
-        <li>60 карточек</li>
-        <li>Без водяного знака</li>
-        <li>Все дизайны</li>
-        <li>PNG</li>
-      </ul>
-
-      <button onclick="choosePlan('Pro')">
-        Выбрать Pro
-      </button>
-
-    </div>
-
-
-    <div class="plan">
-
-      <h3>Business</h3>
-
-      <div class="price">$19.99</div>
-
-      <ul>
-        <li>200 карточек</li>
-        <li>Без водяного знака</li>
-        <li>Все дизайны</li>
-        <li>Для магазина</li>
-      </ul>
-
-      <button onclick="choosePlan('Business')">
-        Выбрать
-      </button>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<footer class="footer">
-  Cardly AI © 2026
-</footer>
 
 
 <script>
 
-let currentData = {
-  title: "Ваша карточка товара",
-  subtitle: "Здесь появится готовая инфографика",
-  features: ["Характеристики товара"],
-  layout: "hero"
-};
-
 let uploadedImage = null;
 
 
-const layouts = [
-  "hero",
-  "split",
-  "editorial",
-  "minimal",
-  "product-focus",
-  "badge"
-];
-
-
-const layoutNames = {
-  hero: "HERO",
-  split: "SPLIT",
-  editorial: "EDITORIAL",
-  minimal: "MINIMAL",
-  "product-focus": "PRODUCT FOCUS",
-  badge: "BADGE"
-};
-
-
-/* PHOTO UPLOAD */
+/* ЗАГРУЗКА ФОТО */
 
 document
   .getElementById("photoInput")
@@ -1060,139 +635,38 @@ document
 
     if (!file) return;
 
-    uploadedImage = URL.createObjectURL(file);
 
-    document.getElementById("photoName").textContent =
+    uploadedImage =
+      URL.createObjectURL(file);
+
+
+    document
+      .getElementById("fileName")
+      .textContent =
       file.name;
+
 
     const image =
       document.getElementById("productImage");
 
-    image.src = uploadedImage;
-    image.style.display = "block";
 
-    document.getElementById("photoPlaceholder")
-      .style.display = "none";
+    image.src =
+      uploadedImage;
+
+
+    image.style.display =
+      "block";
+
+
+    document
+      .getElementById("placeholder")
+      .style.display =
+      "none";
 
 });
 
 
-/* RENDER */
-
-function renderCard(data) {
-
-  currentData = data;
-
-  let layout = data.layout;
-
-  if (!layouts.includes(layout)) {
-    layout = layouts[
-      Math.floor(Math.random() * layouts.length)
-    ];
-  }
-
-  currentData.layout = layout;
-
-
-  const card =
-    document.getElementById("card");
-
-  card.className =
-    "card design-" + layout;
-
-
-  document.getElementById("layoutBadge")
-    .textContent =
-    layoutNames[layout];
-
-
-  document.getElementById("cardTitle")
-    .textContent =
-    data.title || "Ваш товар";
-
-
-  document.getElementById("cardSubtitle")
-    .textContent =
-    data.subtitle || "";
-
-
-  const features =
-    document.getElementById("cardFeatures");
-
-  features.innerHTML = "";
-
-
-  const featureList =
-    Array.isArray(data.features)
-      ? data.features
-      : [];
-
-
-  featureList
-    .slice(0, 4)
-    .forEach(function(item) {
-
-      const div =
-        document.createElement("div");
-
-      div.className = "feature";
-
-      div.textContent = item;
-
-      features.appendChild(div);
-
-    });
-
-
-  if (featureList.length === 0) {
-
-    const div =
-      document.createElement("div");
-
-    div.className = "feature";
-
-    div.textContent =
-      "Информация о товаре";
-
-    features.appendChild(div);
-
-  }
-
-
-  if (uploadedImage) {
-
-    const image =
-      document.getElementById("productImage");
-
-    image.src = uploadedImage;
-    image.style.display = "block";
-
-    document.getElementById("photoPlaceholder")
-      .style.display = "none";
-
-  }
-
-
-  const badge =
-    document.getElementById("badge");
-
-  if (layout === "badge") {
-
-    badge.textContent =
-      "SMART\nCHOICE";
-
-    badge.style.display = "flex";
-
-  } else {
-
-    badge.style.display = "none";
-
-  }
-
-}
-
-
-/* GENERATE */
+/* AI */
 
 async function generateCard() {
 
@@ -1205,79 +679,99 @@ async function generateCard() {
 
   const features =
     document
-      .getElementById("features")
+      .getElementById("featuresInput")
       .value
       .trim();
 
 
   if (!productName) {
 
-    alert("Введите название товара.");
+    alert(
+      "Сначала введи название товара."
+    );
 
     return;
 
   }
 
 
-  const button =
-    document.getElementById("generateButton");
-
-  button.disabled = true;
-
-  button.textContent =
-    "Создаём карточку...";
-
-
   try {
 
     const response =
-      await fetch("/api/generate", {
+      await fetch(
+        "/api/generate",
+        {
 
-        method: "POST",
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json"
-        },
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-        body: JSON.stringify({
+          body: JSON.stringify({
 
-          productName:
-            productName,
+            productName:
+              productName,
 
-          features:
-            features
+            features:
+              features
 
-        })
+          })
 
-      });
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "Ошибка сервера"
+        }
       );
-
-    }
 
 
     const data =
       await response.json();
 
 
-    if (!data.layout) {
-
-      data.layout =
-        layouts[
-          Math.floor(
-            Math.random() * layouts.length
-          )
-        ];
-
-    }
+    document
+      .getElementById("cardTitle")
+      .textContent =
+      data.title ||
+      productName;
 
 
-    renderCard(data);
+    document
+      .getElementById("cardSubtitle")
+      .textContent =
+      data.subtitle ||
+      "";
+
+
+    const container =
+      document.getElementById(
+        "cardFeatures"
+      );
+
+
+    container.innerHTML = "";
+
+
+    const list =
+      Array.isArray(data.features)
+        ? data.features
+        : [];
+
+
+    list
+      .slice(0,4)
+      .forEach(function(text) {
+
+        const div =
+          document.createElement("div");
+
+        div.className =
+          "feature";
+
+        div.textContent =
+          text;
+
+        container.appendChild(div);
+
+      });
 
 
   } catch(error) {
@@ -1285,39 +779,20 @@ async function generateCard() {
     console.error(error);
 
     alert(
-      "Не удалось создать карточку. Проверь AI."
+      "Ошибка соединения с AI."
     );
 
   }
 
-
-  button.disabled = false;
-
-  button.textContent =
-    "✨ Создать карточку";
-
 }
 
 
-/* DOWNLOAD */
+/* ПОКА ПРОСТО ЗАГЛУШКА */
 
 function downloadCard() {
 
   alert(
-    "PNG-скачивание подключим следующим этапом."
-  );
-
-}
-
-
-/* PLANS */
-
-function choosePlan(plan) {
-
-  alert(
-    "Тариф " +
-    plan +
-    " будет подключён после настройки оплаты."
+    "Скачивание PNG подключим следующим этапом."
   );
 
 }
