@@ -149,18 +149,14 @@
 
 <div class="container">
 
-    <h1>
-        Cardly AI — Background Removal
-    </h1>
+    <h1>Cardly AI — Background Removal</h1>
 
     <div class="subtitle">
         Тест BiRefNet через Cloudflare Worker
     </div>
 
 
-    <!-- =========================================
-         ДИАГНОСТИКА
-    ========================================== -->
+    <!-- ДИАГНОСТИКА -->
 
     <div class="panel">
 
@@ -183,9 +179,7 @@
     </div>
 
 
-    <!-- =========================================
-         ЗАГРУЗКА ФОТО
-    ========================================== -->
+    <!-- ЗАГРУЗКА -->
 
     <div class="panel">
 
@@ -207,9 +201,7 @@
     </div>
 
 
-    <!-- =========================================
-         ПРЕВЬЮ
-    ========================================== -->
+    <!-- РЕЗУЛЬТАТ -->
 
     <div class="panel">
 
@@ -251,18 +243,12 @@
 
 <script type="module">
 
-
-/* =========================================
-   TRANSFORMERS.JS
-========================================= */
-
 import {
     AutoModel,
     AutoProcessor,
     RawImage,
     env
-} from
-"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
 /* =========================================
@@ -284,44 +270,28 @@ env.remotePathTemplate =
 ========================================= */
 
 const status =
-    document.getElementById(
-        "status"
-    );
+    document.getElementById("status");
 
 const debug =
-    document.getElementById(
-        "debug"
-    );
+    document.getElementById("debug");
 
 const diagnosticButton =
-    document.getElementById(
-        "diagnosticButton"
-    );
+    document.getElementById("diagnosticButton");
 
 const loadButton =
-    document.getElementById(
-        "loadButton"
-    );
+    document.getElementById("loadButton");
 
 const removeButton =
-    document.getElementById(
-        "removeButton"
-    );
+    document.getElementById("removeButton");
 
 const fileInput =
-    document.getElementById(
-        "fileInput"
-    );
+    document.getElementById("fileInput");
 
 const originalImage =
-    document.getElementById(
-        "originalImage"
-    );
+    document.getElementById("originalImage");
 
 const resultImage =
-    document.getElementById(
-        "resultImage"
-    );
+    document.getElementById("resultImage");
 
 
 /* =========================================
@@ -341,635 +311,587 @@ function setStatus(message) {
     status.textContent = message;
 }
 
-
 function setDebug(message) {
     debug.textContent = message;
 }
 
 
 /* =========================================
-   ВЫБОР ИЗОБРАЖЕНИЯ
+   FILE
 ========================================= */
 
-fileInput.addEventListener(
-    "change",
-    event => {
+fileInput.addEventListener("change", event => {
 
-        const file =
-            event.target.files[0];
+    const file =
+        event.target.files[0];
 
-        if (!file) {
-            return;
-        }
-
-        selectedFile = file;
-
-        originalImage.src =
-            URL.createObjectURL(file);
-
-        resultImage.src = "";
-
-        setStatus(
-            "✅ Изображение выбрано.\n\n" +
-            "Теперь можно загрузить модель " +
-            "и удалить фон."
-        );
-
-        setDebug(
-            "Файл:\n" +
-            file.name +
-            "\n\n" +
-            "Тип:\n" +
-            file.type +
-            "\n\n" +
-            "Размер:\n" +
-            (
-                file.size /
-                1024 /
-                1024
-            ).toFixed(2) +
-            " MB"
-        );
-
+    if (!file) {
+        return;
     }
-);
+
+    selectedFile = file;
+
+    originalImage.src =
+        URL.createObjectURL(file);
+
+    resultImage.src = "";
+
+    setStatus(
+        "✅ Изображение выбрано.\n\n" +
+        "Теперь нажми «Загрузить AI-модель»."
+    );
+
+    setDebug(
+        "Файл:\n" +
+        file.name +
+        "\n\nТип:\n" +
+        file.type +
+        "\n\nРазмер:\n" +
+        (
+            file.size / 1024 / 1024
+        ).toFixed(2) +
+        " MB"
+    );
+
+});
 
 
 /* =========================================
-   ДИАГНОСТИКА
+   DIAGNOSTIC
 ========================================= */
 
-diagnosticButton.addEventListener(
-    "click",
-    async () => {
+diagnosticButton.addEventListener("click", async () => {
 
-        diagnosticButton.disabled = true;
+    diagnosticButton.disabled = true;
 
-        let report = "";
+    let report = "";
 
-        try {
+    try {
 
-            /* WEBGPU */
+        report += "1. Проверка WebGPU\n";
 
-            report +=
-                "1. Проверка WebGPU\n";
-
-            if ("gpu" in navigator) {
-
-                try {
-
-                    const adapter =
-                        await navigator.gpu.requestAdapter();
-
-                    if (adapter) {
-
-                        report +=
-                            "✅ GPU adapter найден\n";
-
-                        report +=
-                            "GPU: " +
-                            (
-                                adapter.info?.device ||
-                                adapter.info?.description ||
-                                "unknown"
-                            ) +
-                            "\n\n";
-
-                    } else {
-
-                        report +=
-                            "⚠️ GPU adapter не найден\n\n";
-
-                    }
-
-                } catch (error) {
-
-                    report +=
-                        "⚠️ WebGPU ошибка: " +
-                        error.message +
-                        "\n\n";
-
-                }
-
-            } else {
-
-                report +=
-                    "⚠️ WebGPU отсутствует\n\n";
-
-            }
-
-
-            /* TRANSFORMERS.JS */
-
-            report +=
-                "2. Проверка Transformers.js\n";
-
-            report +=
-                "✅ Transformers.js загружен\n";
-
-            report +=
-                "AutoModel: " +
-                (!!AutoModel) +
-                "\n";
-
-            report +=
-                "AutoProcessor: " +
-                (!!AutoProcessor) +
-                "\n";
-
-            report +=
-                "RawImage: " +
-                (!!RawImage) +
-                "\n\n";
-
-
-            /* CONFIG */
-
-            report +=
-                "3. Проверка Cloudflare Proxy\n";
-
-            const configURL =
-                window.location.origin +
-                "/api/model/config.json";
-
-            report +=
-                "URL:\n" +
-                configURL +
-                "\n";
-
-            const configResponse =
-                await fetch(
-                    configURL,
-                    {
-                        method: "GET",
-                        cache: "no-store"
-                    }
-                );
-
-            if (!configResponse.ok) {
-
-                throw new Error(
-                    "Proxy config HTTP " +
-                    configResponse.status
-                );
-
-            }
-
-            const config =
-                await configResponse.json();
-
-            report +=
-                "✅ config.json загружен через Worker\n";
-
-            report +=
-                "model_type: " +
-                (
-                    config.model_type ||
-                    "unknown"
-                ) +
-                "\n\n";
-
-
-            /* PREPROCESSOR */
-
-            report +=
-                "4. Проверка preprocessor_config.json\n";
-
-            const preprocessorURL =
-                window.location.origin +
-                "/api/model/preprocessor_config.json";
-
-            const preprocessorResponse =
-                await fetch(
-                    preprocessorURL,
-                    {
-                        method: "GET",
-                        cache: "no-store"
-                    }
-                );
-
-            if (!preprocessorResponse.ok) {
-
-                throw new Error(
-                    "Preprocessor HTTP " +
-                    preprocessorResponse.status
-                );
-
-            }
-
-            report +=
-                "✅ preprocessor_config.json доступен\n\n";
-
-
-            /* ONNX */
-
-            report +=
-                "5. Проверка ONNX через Worker\n";
-
-            const onnxURL =
-                window.location.origin +
-                "/api/model/onnx/model_fp16.onnx";
-
-            const onnxResponse =
-                await fetch(
-                    onnxURL,
-                    {
-                        method: "GET",
-                        cache: "no-store"
-                    }
-                );
-
-            if (!onnxResponse.ok) {
-
-                throw new Error(
-                    "ONNX HTTP " +
-                    onnxResponse.status
-                );
-
-            }
-
-            report +=
-                "✅ ONNX-файл доступен через Cloudflare Worker\n\n";
-
-
-            /* SUCCESS */
-
-            report +=
-                "================================\n";
-
-            report +=
-                "🎉 ПРОВЕРКА ПРОЙДЕНА\n";
-
-            report +=
-                "================================\n\n";
-
-            report +=
-                "Браузер → Cloudflare → Hugging Face работает.\n\n";
-
-            report +=
-                "Теперь загрузи модель.";
-
-            setStatus(report);
-
-        } catch (error) {
-
-            report +=
-                "\n================================\n";
-
-            report +=
-                "❌ ОШИБКА\n";
-
-            report +=
-                "================================\n\n";
-
-            report +=
-                "Тип: " +
-                error.name +
-                "\n\n";
-
-            report +=
-                "Сообщение:\n" +
-                error.message;
-
-            setStatus(report);
-
-            console.error(error);
-
-        }
-
-        diagnosticButton.disabled = false;
-
-    }
-);
-
-
-/* =========================================
-   ЗАГРУЗКА МОДЕЛИ
-========================================= */
-
-loadButton.addEventListener(
-    "click",
-    async () => {
-
-        loadButton.disabled = true;
-
-        try {
-
-            /* PROCESSOR */
-
-            setStatus(
-                "⏳ Загружаю processor BiRefNet...\n\n" +
-                "Первый запуск может быть долгим."
-            );
-
-            processor =
-                await AutoProcessor.from_pretrained(
-                    "studioludens/birefnet-lite-512"
-                );
-
-
-            setStatus(
-                "✅ Processor загружен.\n\n" +
-                "⏳ Загружаю AI-модель BiRefNet..."
-            );
-
-
-            /* WEBGPU */
+        if ("gpu" in navigator) {
 
             try {
 
-                model =
-                    await AutoModel.from_pretrained(
-                        "studioludens/birefnet-lite-512",
-                        {
-                            dtype: "fp16",
-                            device: "webgpu"
-                        }
-                    );
+                const adapter =
+                    await navigator.gpu.requestAdapter();
 
-                setStatus(
-                    "🎉 BiRefNet успешно загружен через WebGPU!"
-                );
+                if (adapter) {
 
-            } catch (webgpuError) {
+                    report +=
+                        "✅ GPU adapter найден\n";
 
-                console.warn(
-                    "WebGPU error:",
-                    webgpuError
-                );
+                    report +=
+                        "GPU: " +
+                        (
+                            adapter.info?.device ||
+                            adapter.info?.description ||
+                            "unknown"
+                        ) +
+                        "\n\n";
 
-                setStatus(
-                    "⚠️ WebGPU не запустился.\n\n" +
-                    "Пробую WASM..."
-                );
+                } else {
 
-                model =
-                    await AutoModel.from_pretrained(
-                        "studioludens/birefnet-lite-512",
-                        {
-                            dtype: "q8",
-                            device: "wasm"
-                        }
-                    );
+                    report +=
+                        "⚠️ GPU adapter не найден\n\n";
 
-                setStatus(
-                    "🎉 BiRefNet успешно загружен через WASM!"
-                );
+                }
+
+            } catch (error) {
+
+                report +=
+                    "⚠️ WebGPU ошибка: " +
+                    error.message +
+                    "\n\n";
 
             }
 
-            removeButton.disabled = false;
+        } else {
 
-        } catch (error) {
-
-            console.error(
-                "MODEL ERROR:",
-                error
-            );
-
-            setStatus(
-                "❌ Ошибка загрузки AI-модели.\n\n" +
-                "Тип: " +
-                error.name +
-                "\n\n" +
-                "Сообщение:\n" +
-                error.message
-            );
-
-            loadButton.disabled = false;
+            report +=
+                "⚠️ WebGPU отсутствует\n\n";
 
         }
 
+
+        report +=
+            "2. Проверка Transformers.js\n";
+
+        report +=
+            "✅ Transformers.js загружен\n";
+
+        report +=
+            "AutoModel: " +
+            !!AutoModel +
+            "\n";
+
+        report +=
+            "AutoProcessor: " +
+            !!AutoProcessor +
+            "\n";
+
+        report +=
+            "RawImage: " +
+            !!RawImage +
+            "\n\n";
+
+
+        report +=
+            "3. Проверка Cloudflare Proxy\n";
+
+        const configURL =
+            window.location.origin +
+            "/api/model/config.json";
+
+        report +=
+            "URL:\n" +
+            configURL +
+            "\n";
+
+        const response =
+            await fetch(configURL);
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Config HTTP " +
+                response.status
+            );
+
+        }
+
+        const config =
+            await response.json();
+
+        report +=
+            "✅ config.json загружен\n";
+
+        report +=
+            "model_type: " +
+            (
+                config.model_type ||
+                "unknown"
+            ) +
+            "\n\n";
+
+
+        report +=
+            "4. Проверка preprocessor\n";
+
+        const preprocessorURL =
+            window.location.origin +
+            "/api/model/preprocessor_config.json";
+
+        const preprocessorResponse =
+            await fetch(preprocessorURL);
+
+        if (!preprocessorResponse.ok) {
+
+            throw new Error(
+                "Preprocessor HTTP " +
+                preprocessorResponse.status
+            );
+
+        }
+
+        report +=
+            "✅ preprocessor_config.json доступен\n\n";
+
+
+        report +=
+            "5. Проверка ONNX\n";
+
+        const onnxURL =
+            window.location.origin +
+            "/api/model/onnx/model_fp16.onnx";
+
+        const onnxResponse =
+            await fetch(onnxURL);
+
+        if (!onnxResponse.ok) {
+
+            throw new Error(
+                "ONNX HTTP " +
+                onnxResponse.status
+            );
+
+        }
+
+        report +=
+            "✅ ONNX-файл доступен\n\n";
+
+
+        report +=
+            "================================\n" +
+            "🎉 ПРОВЕРКА ПРОЙДЕНА\n" +
+            "================================\n\n" +
+            "Cloudflare Proxy работает.";
+
+        setStatus(report);
+
+    } catch (error) {
+
+        setStatus(
+            "❌ Ошибка диагностики.\n\n" +
+            error.message
+        );
+
+        console.error(error);
+
     }
-);
+
+    diagnosticButton.disabled = false;
+
+});
 
 
 /* =========================================
-   УДАЛЕНИЕ ФОНА
+   LOAD MODEL
 ========================================= */
 
-removeButton.addEventListener(
-    "click",
-    async () => {
+loadButton.addEventListener("click", async () => {
 
-        if (!model || !processor) {
+    loadButton.disabled = true;
 
-            setStatus(
-                "❌ Сначала загрузите AI-модель."
+    try {
+
+        setStatus(
+            "⏳ Загружаю processor..."
+        );
+
+        processor =
+            await AutoProcessor.from_pretrained(
+                "studioludens/birefnet-lite-512"
             );
 
-            return;
 
-        }
+        setStatus(
+            "✅ Processor загружен.\n\n" +
+            "⏳ Загружаю BiRefNet..."
+        );
 
-        if (!selectedFile) {
-
-            setStatus(
-                "❌ Сначала выберите изображение."
-            );
-
-            return;
-
-        }
-
-        removeButton.disabled = true;
 
         try {
 
-            /* =================================
-               1. IMAGE
-            ================================= */
+            model =
+                await AutoModel.from_pretrained(
+                    "studioludens/birefnet-lite-512",
+                    {
+                        dtype: "fp16",
+                        device: "webgpu"
+                    }
+                );
 
             setStatus(
-                "⏳ Читаю изображение..."
+                "🎉 BiRefNet загружен через WebGPU!"
             );
 
-            const image =
-                await RawImage.read(
-                    selectedFile
-                );
+        } catch (webgpuError) {
 
-
-            /* =================================
-               2. PROCESSOR
-            ================================= */
+            console.warn(
+                "WebGPU error:",
+                webgpuError
+            );
 
             setStatus(
-                "⏳ Подготавливаю изображение..."
+                "⚠️ WebGPU не запустился.\n\n" +
+                "Пробую WASM..."
             );
 
-            const processed =
-                await processor(
-                    image
+            model =
+                await AutoModel.from_pretrained(
+                    "studioludens/birefnet-lite-512",
+                    {
+                        dtype: "q8",
+                        device: "wasm"
+                    }
                 );
-
-            const pixel_values =
-                processed.pixel_values;
-
-
-            if (!pixel_values) {
-
-                throw new Error(
-                    "Processor не вернул pixel_values."
-                );
-
-            }
-
-
-            /* =================================
-               3. MODEL
-            ================================= */
 
             setStatus(
-                "⏳ BiRefNet удаляет фон..."
+                "🎉 BiRefNet загружен через WASM!"
             );
 
-            const output =
-                await model({
-                    input_image:
-                        pixel_values
-                });
+        }
 
 
-            console.log(
-                "========== BIREFNET OUTPUT =========="
+        removeButton.disabled = false;
+
+    } catch (error) {
+
+        console.error(error);
+
+        setStatus(
+            "❌ Ошибка загрузки модели.\n\n" +
+            "Тип: " +
+            error.name +
+            "\n\n" +
+            error.message
+        );
+
+        loadButton.disabled = false;
+
+    }
+
+});
+
+
+/* =========================================
+   REMOVE BACKGROUND
+========================================= */
+
+removeButton.addEventListener("click", async () => {
+
+    if (!model || !processor) {
+
+        setStatus(
+            "❌ Сначала загрузите модель."
+        );
+
+        return;
+
+    }
+
+    if (!selectedFile) {
+
+        setStatus(
+            "❌ Сначала выберите изображение."
+        );
+
+        return;
+
+    }
+
+    removeButton.disabled = true;
+
+    try {
+
+        /* ---------------------------------
+           1. READ IMAGE
+        --------------------------------- */
+
+        setStatus(
+            "⏳ Читаю изображение..."
+        );
+
+        const image =
+            await RawImage.read(
+                selectedFile
             );
 
-            console.log(
-                output
+
+        /* ---------------------------------
+           2. PROCESS IMAGE
+        --------------------------------- */
+
+        setStatus(
+            "⏳ Подготавливаю изображение..."
+        );
+
+        const processed =
+            await processor(image);
+
+        const pixel_values =
+            processed.pixel_values;
+
+        if (!pixel_values) {
+
+            throw new Error(
+                "Processor не вернул pixel_values."
+            );
+
+        }
+
+
+        /* ---------------------------------
+           3. RUN MODEL
+        --------------------------------- */
+
+        setStatus(
+            "⏳ BiRefNet удаляет фон..."
+        );
+
+        const output =
+            await model({
+                input_image:
+                    pixel_values
+            });
+
+
+        console.log(
+            "========== MODEL OUTPUT =========="
+        );
+
+        console.log(output);
+
+
+        /* ---------------------------------
+           4. GET MASK
+        --------------------------------- */
+
+        const outputImage =
+            output.output_image;
+
+        if (!outputImage) {
+
+            throw new Error(
+                "Модель не вернула output_image."
+            );
+
+        }
+
+
+        const dims =
+            outputImage.dims;
+
+        console.log(
+            "OUTPUT DIMS:",
+            dims
+        );
+
+
+        /*
+         * Ожидаем:
+         *
+         * [1, 1, 512, 512]
+         */
+
+        if (
+            !dims ||
+            dims.length !== 4
+        ) {
+
+            throw new Error(
+                "Неожиданная размерность output_image: " +
+                JSON.stringify(dims)
+            );
+
+        }
+
+
+        const batch =
+            dims[0];
+
+        const channels =
+            dims[1];
+
+        const maskWidth =
+            dims[3];
+
+        const maskHeight =
+            dims[2];
+
+
+        if (
+            batch !== 1 ||
+            channels !== 1
+        ) {
+
+            throw new Error(
+                "Ожидался output [1,1,H,W], получено: " +
+                JSON.stringify(dims)
+            );
+
+        }
+
+
+        /* ---------------------------------
+           5. GET RAW DATA
+        --------------------------------- */
+
+        const rawData =
+            outputImage.data;
+
+        if (!rawData) {
+
+            throw new Error(
+                "У output_image отсутствует data."
+            );
+
+        }
+
+
+        console.log(
+            "MASK DATA LENGTH:",
+            rawData.length
+        );
+
+
+        /* ---------------------------------
+           6. CREATE ALPHA MASK
+        --------------------------------- */
+
+        setStatus(
+            "⏳ Создаю маску объекта..."
+        );
+
+
+        /*
+         * Сначала применяем sigmoid
+         * непосредственно к данным.
+         *
+         * sigmoid(x) =
+         * 1 / (1 + e^(-x))
+         */
+
+        const alphaMask =
+            new Float32Array(
+                maskWidth * maskHeight
             );
 
 
-            /* =================================
-               4. OUTPUT_IMAGE
-            ================================= */
+        for (
+            let i = 0;
+            i < rawData.length;
+            i++
+        ) {
 
-            const outputImage =
-                output.output_image;
+            const value =
+                rawData[i];
 
-
-            if (!outputImage) {
-
-                throw new Error(
-                    "BiRefNet не вернул output_image."
+            const sigmoid =
+                1 /
+                (
+                    1 +
+                    Math.exp(-value)
                 );
 
-            }
+            alphaMask[i] =
+                sigmoid;
+
+        }
 
 
-            console.log(
-                "OUTPUT IMAGE DIMS:",
-                outputImage.dims
+        /* ---------------------------------
+           7. ORIGINAL IMAGE CANVAS
+        --------------------------------- */
+
+        setStatus(
+            "⏳ Создаю прозрачное изображение..."
+        );
+
+
+        const sourceCanvas =
+            image.toCanvas();
+
+
+        const sourceCtx =
+            sourceCanvas.getContext(
+                "2d"
             );
 
 
-            /*
-             * Реальный результат модели:
-             *
-             * [1, 1, 512, 512]
-             *
-             * 1 = batch
-             * 1 = channel
-             * 512 = height
-             * 512 = width
-             *
-             * RawImage.fromTensor()
-             * нужен 3D Tensor:
-             *
-             * [1, 512, 512]
-             *
-             * Поэтому убираем
-             * batch dimension.
-             */
+        if (!sourceCtx) {
 
-            let maskTensor =
-                outputImage.squeeze(0);
-
-
-            console.log(
-                "MASK DIMS AFTER SQUEEZE:",
-                maskTensor.dims
+            throw new Error(
+                "Не удалось получить Canvas context."
             );
 
-
-            /* =================================
-               5. SIGMOID
-            ================================= */
-
-            setStatus(
-                "⏳ Формирую маску объекта..."
-            );
-
-            let mask =
-                maskTensor.sigmoid();
+        }
 
 
-            /* =================================
-               6. TENSOR → IMAGE
-            ================================= */
-
-            mask =
-                await RawImage.fromTensor(
-                    mask
-                );
-
-
-            /* =================================
-               7. RESIZE
-            ================================= */
-
-            setStatus(
-                "⏳ Подгоняю маску под изображение..."
-            );
-
-            mask =
-                await mask.resize(
-                    image.width,
-                    image.height
-                );
-
-
-            /* =================================
-               8. CANVAS
-            ================================= */
-
-            const canvas =
-                document.createElement(
-                    "canvas"
-                );
-
-            canvas.width =
-                image.width;
-
-            canvas.height =
-                image.height;
-
-
-            const ctx =
-                canvas.getContext(
-                    "2d"
-                );
-
-
-            if (!ctx) {
-
-                throw new Error(
-                    "Не удалось создать Canvas 2D."
-                );
-
-            }
-
-
-            /* =================================
-               9. ORIGINAL IMAGE
-            ================================= */
-
-            const sourceCanvas =
-                image.toCanvas();
-
-
-            ctx.drawImage(
-                sourceCanvas,
+        const sourceData =
+            sourceCtx.getImageData(
                 0,
                 0,
                 image.width,
@@ -977,80 +899,81 @@ removeButton.addEventListener(
             );
 
 
-            /* =================================
-               10. PIXELS
-            ================================= */
+        const pixels =
+            sourceData.data;
 
-            const imageData =
-                ctx.getImageData(
-                    0,
-                    0,
-                    image.width,
-                    image.height
+
+        /* ---------------------------------
+           8. SCALE MASK TO ORIGINAL SIZE
+        --------------------------------- */
+
+        /*
+         * Маска 512×512.
+         *
+         * Исходное изображение может иметь
+         * совершенно другой размер.
+         *
+         * Поэтому для каждого пикселя
+         * исходной картинки определяем
+         * соответствующий пиксель маски.
+         */
+
+        for (
+            let y = 0;
+            y < image.height;
+            y++
+        ) {
+
+            const maskY =
+                Math.min(
+                    maskHeight - 1,
+                    Math.floor(
+                        y *
+                        maskHeight /
+                        image.height
+                    )
                 );
 
-
-            const pixels =
-                imageData.data;
-
-
-            const maskData =
-                mask.data;
-
-
-            if (!maskData) {
-
-                throw new Error(
-                    "У маски отсутствуют данные."
-                );
-
-            }
-
-
-            /* =================================
-               11. APPLY ALPHA
-            ================================= */
 
             for (
-                let i = 0;
-                i < pixels.length;
-                i += 4
+                let x = 0;
+                x < image.width;
+                x++
             ) {
 
-                const index =
-                    i / 4;
-
-
-                let alpha =
-                    maskData[index];
-
-
-                /*
-                 * Если значение
-                 * почему-то 0–255,
-                 * переводим его в 0–1.
-                 */
-
-                if (alpha > 1) {
-
-                    alpha =
-                        alpha / 255;
-
-                }
-
-
-                alpha =
-                    Math.max(
-                        0,
-                        Math.min(
-                            1,
-                            alpha
+                const maskX =
+                    Math.min(
+                        maskWidth - 1,
+                        Math.floor(
+                            x *
+                            maskWidth /
+                            image.width
                         )
                     );
 
 
+                const maskIndex =
+                    maskY *
+                    maskWidth +
+                    maskX;
+
+
+                const pixelIndex =
+                    (
+                        y *
+                        image.width +
+                        x
+                    ) *
+                    4;
+
+
+                let alpha =
+                    alphaMask[maskIndex];
+
+
                 /*
-                 * Смягчение края.
+                 * Немного смягчаем
+                 * края объекта.
                  */
 
                 alpha =
@@ -1060,135 +983,119 @@ removeButton.addEventListener(
                     );
 
 
-                pixels[i + 3] =
+                pixels[
+                    pixelIndex + 3
+                ] =
                     Math.round(
                         alpha * 255
                     );
 
             }
 
-
-            /* =================================
-               12. PUT PIXELS
-            ================================= */
-
-            ctx.putImageData(
-                imageData,
-                0,
-                0
-            );
-
-
-            /* =================================
-               13. PNG
-            ================================= */
-
-            resultImage.src =
-                canvas.toDataURL(
-                    "image/png"
-                );
-
-
-            /* =================================
-               SUCCESS
-            ================================= */
-
-            setStatus(
-
-                "🎉 Готово!\n\n" +
-
-                "Фон удалён.\n\n" +
-
-                "Справа показан результат " +
-
-                "с прозрачным фоном."
-
-            );
-
-
-            setDebug(
-
-                "✅ УСПЕШНО\n\n" +
-
-                "BiRefNet вернул:\n" +
-
-                "[1, 1, 512, 512]\n\n" +
-
-                "После squeeze:\n" +
-
-                JSON.stringify(
-                    maskTensor.dims
-                ) +
-
-                "\n\n" +
-
-                "Маска увеличена до:\n" +
-
-                image.width +
-                " × " +
-                image.height
-
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "BACKGROUND REMOVAL ERROR:",
-                error
-            );
-
-
-            setStatus(
-
-                "❌ Ошибка удаления фона.\n\n" +
-
-                "Тип: " +
-                error.name +
-
-                "\n\n" +
-
-                "Сообщение:\n" +
-                error.message
-
-            );
-
-
-            setDebug(
-
-                "================================\n" +
-
-                "ОШИБКА\n" +
-
-                "================================\n\n" +
-
-                "Тип:\n" +
-
-                error.name +
-
-                "\n\n" +
-
-                "Сообщение:\n" +
-
-                error.message +
-
-                "\n\n" +
-
-                "Полный объект ошибки:\n" +
-
-                String(error)
-
-            );
-
-
         }
 
 
-        removeButton.disabled =
-            false;
+        /* ---------------------------------
+           9. PUT TRANSPARENT PIXELS
+        --------------------------------- */
+
+        sourceCtx.putImageData(
+            sourceData,
+            0,
+            0
+        );
+
+
+        /* ---------------------------------
+           10. EXPORT PNG
+        --------------------------------- */
+
+        const resultURL =
+            sourceCanvas.toDataURL(
+                "image/png"
+            );
+
+
+        resultImage.src =
+            resultURL;
+
+
+        /* ---------------------------------
+           SUCCESS
+        --------------------------------- */
+
+        setStatus(
+            "🎉 ГОТОВО!\n\n" +
+            "Фон удалён.\n\n" +
+            "BiRefNet успешно обработал изображение."
+        );
+
+
+        setDebug(
+            "================================\n" +
+            "✅ УСПЕШНО\n" +
+            "================================\n\n" +
+
+            "Выход модели:\n" +
+            JSON.stringify(dims) +
+            "\n\n" +
+
+            "Тип данных:\n" +
+            outputImage.type +
+            "\n\n" +
+
+            "Количество значений:\n" +
+            rawData.length +
+            "\n\n" +
+
+            "Размер исходного изображения:\n" +
+            image.width +
+            " × " +
+            image.height +
+            "\n\n" +
+
+            "Размер маски:\n" +
+            maskWidth +
+            " × " +
+            maskHeight
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "BACKGROUND REMOVAL ERROR:",
+            error
+        );
+
+        setStatus(
+            "❌ Ошибка удаления фона.\n\n" +
+            "Тип: " +
+            error.name +
+            "\n\n" +
+            "Сообщение:\n" +
+            error.message
+        );
+
+
+        setDebug(
+            "================================\n" +
+            "❌ ERROR\n" +
+            "================================\n\n" +
+
+            "Тип:\n" +
+            error.name +
+            "\n\n" +
+
+            "Сообщение:\n" +
+            error.message
+        );
 
     }
-);
+
+    removeButton.disabled = false;
+
+});
 
 
 </script>
