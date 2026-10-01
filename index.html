@@ -4,9 +4,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cardly AI — генератор инфографики</title>
+
+<title>Cardly AI — AI-инфографика для маркетплейсов</title>
 
 <style>
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -14,128 +16,205 @@
 }
 
 :root {
-  --blue: #4967ff;
-  --blue-dark: #354ed6;
-  --text: #111318;
-  --muted: #747b88;
-  --border: #e4e7ed;
-  --bg: #f5f6f8;
+  --blue: #536dff;
+  --purple: #7659ff;
+  --dark: #111318;
+  --muted: #737987;
+  --border: #e6e8ee;
+  --bg: #f6f7f9;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, Arial, Helvetica, sans-serif;
   background: var(--bg);
-  color: var(--text);
+  color: var(--dark);
 }
 
-/* HEADER */
+
+/* =========================
+   HEADER
+========================= */
 
 header {
   height: 74px;
-  background: rgba(255,255,255,.92);
+
+  background: rgba(255,255,255,.88);
+
   border-bottom: 1px solid var(--border);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 0 5%;
+
   position: sticky;
   top: 0;
-  z-index: 20;
-  backdrop-filter: blur(15px);
+
+  z-index: 100;
+
+  backdrop-filter: blur(18px);
 }
 
 .logo {
   font-size: 24px;
   font-weight: 900;
-  letter-spacing: -1.2px;
+  letter-spacing: -1.5px;
 }
 
 .logo span {
   color: var(--blue);
 }
 
-.header-button {
-  border: 1px solid #dfe3e9;
-  background: white;
-  color: #20242c;
-  border-radius: 10px;
-  padding: 10px 17px;
-  cursor: pointer;
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #686f7d;
+  font-size: 13px;
   font-weight: 700;
 }
 
-/* HERO */
+.nav a:hover {
+  color: var(--dark);
+}
+
+.header-button {
+  border: 0;
+  background: var(--dark);
+  color: white;
+
+  padding: 11px 18px;
+
+  border-radius: 11px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   HERO
+========================= */
 
 .hero {
   text-align: center;
-  padding: 55px 20px 38px;
+
+  padding: 70px 20px 45px;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background: #edf0ff;
-  color: var(--blue);
-  padding: 7px 12px;
+  gap: 8px;
+
+  padding: 8px 13px;
+
   border-radius: 30px;
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 18px;
+
+  background: #edf0ff;
+
+  color: var(--blue);
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: .5px;
+
+  margin-bottom: 20px;
 }
 
 .badge-dot {
   width: 7px;
   height: 7px;
+
   border-radius: 50%;
+
   background: var(--blue);
 }
 
 .hero h1 {
-  font-size: clamp(38px, 5vw, 64px);
-  line-height: .98;
-  letter-spacing: -3px;
-  font-weight: 900;
+  font-size: clamp(42px, 6vw, 72px);
+
+  line-height: .96;
+
+  letter-spacing: -4px;
+
+  font-weight: 950;
 }
 
-.hero h1 span {
-  background: linear-gradient(100deg, #4967ff, #7b61ff);
+.gradient {
+  background: linear-gradient(
+    100deg,
+    #536dff,
+    #7659ff
+  );
+
   -webkit-background-clip: text;
+
   color: transparent;
 }
 
 .hero p {
-  max-width: 650px;
-  margin: 18px auto 0;
+  max-width: 670px;
+
+  margin: 20px auto 0;
+
   color: var(--muted);
+
   font-size: 16px;
+
   line-height: 1.55;
 }
 
-/* WORKSPACE */
+
+/* =========================
+   MAIN WORKSPACE
+========================= */
 
 .workspace {
   width: 92%;
-  max-width: 1280px;
-  margin: 0 auto 70px;
+  max-width: 1320px;
+
+  margin: 0 auto 80px;
+
   display: grid;
-  grid-template-columns: 410px 1fr;
-  gap: 24px;
+
+  grid-template-columns: 400px 1fr;
+
+  gap: 25px;
 }
 
 .panel {
-  background: #fff;
+  background: white;
+
   border: 1px solid var(--border);
-  border-radius: 22px;
+
+  border-radius: 24px;
+
   padding: 25px;
-  box-shadow: 0 15px 50px rgba(20,30,50,.055);
+
+  box-shadow:
+    0 20px 60px rgba(25,35,60,.06);
 }
 
 .panel-title {
-  font-size: 19px;
-  font-weight: 850;
-  margin-bottom: 22px;
+  font-size: 20px;
+  font-weight: 900;
+
+  margin-bottom: 23px;
 }
+
+
+/* =========================
+   STEPS
+========================= */
 
 .step {
   margin-bottom: 21px;
@@ -144,64 +223,110 @@ header {
 .step-title {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 800;
+
   margin-bottom: 9px;
-  color: #343945;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
   text-transform: uppercase;
-  letter-spacing: .4px;
+
+  letter-spacing: .5px;
+
+  color: #454b58;
 }
 
-/* UPLOAD */
+.optional {
+  color: #a0a6b1;
+  font-weight: 700;
+}
+
+
+/* =========================
+   UPLOAD
+========================= */
 
 .upload {
   height: 145px;
+
   border: 1.5px dashed #cbd1dc;
-  border-radius: 16px;
+
+  border-radius: 17px;
+
   display: flex;
-  justify-content: center;
+
   align-items: center;
+
+  justify-content: center;
+
   text-align: center;
+
   cursor: pointer;
+
   overflow: hidden;
+
   background:
-    radial-gradient(circle at 50% 0%, #f4f6ff, transparent 55%),
+    radial-gradient(
+      circle at 50% 0%,
+      #f0f3ff,
+      transparent 60%
+    ),
     #fafbfc;
+
   transition: .2s;
 }
 
 .upload:hover {
   border-color: var(--blue);
-  background: #f7f8ff;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      #e8ecff,
+      transparent 60%
+    ),
+    #fafbfc;
 }
 
 .upload-content {
-  color: #737a87;
+  color: #747b88;
 }
 
 .upload-icon {
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 8px;
-  border-radius: 12px;
-  background: #edf0ff;
-  color: var(--blue);
+  width: 44px;
+  height: 44px;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
+
+  margin: 0 auto 9px;
+
+  border-radius: 13px;
+
+  background: #e9edff;
+
+  color: var(--blue);
+
   font-size: 22px;
+
   font-weight: 900;
 }
 
 .upload-content strong {
   display: block;
-  color: #292d35;
+
+  color: #272b34;
+
+  font-size: 13px;
+
   margin-bottom: 4px;
 }
 
 .upload-content span {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 #fileInput {
@@ -211,253 +336,576 @@ header {
 #uploadedImage {
   width: 100%;
   height: 100%;
+
   object-fit: contain;
+
   display: none;
 }
 
-/* INPUTS */
+
+/* =========================
+   INPUTS
+========================= */
 
 input,
 textarea {
   width: 100%;
+
   border: 1px solid #dfe3ea;
+
   border-radius: 12px;
+
   padding: 13px 14px;
-  font-size: 14px;
+
   font-family: inherit;
+
+  font-size: 14px;
+
   outline: none;
+
   transition: .2s;
-  background: #fff;
 }
 
 textarea {
-  min-height: 105px;
+  min-height: 110px;
+
   resize: vertical;
+
   line-height: 1.5;
 }
 
 input:focus,
 textarea:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(73,103,255,.08);
+
+  box-shadow:
+    0 0 0 3px rgba(83,109,255,.08);
 }
 
-/* STYLES */
+
+/* =========================
+   STYLE BUTTONS
+========================= */
 
 .styles {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+
+  grid-template-columns:
+    repeat(3,1fr);
+
   gap: 8px;
 }
 
 .style-button {
   border: 1px solid #dfe3ea;
-  background: #fff;
-  padding: 12px 5px;
-  border-radius: 11px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  transition: .2s;
-}
 
-.style-button:hover {
-  border-color: #aeb7ca;
+  background: white;
+
+  padding: 12px 5px;
+
+  border-radius: 11px;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  transition: .2s;
 }
 
 .style-button.active {
   border: 2px solid var(--blue);
+
   color: var(--blue);
-  background: #f2f4ff;
+
+  background: #f0f2ff;
 }
 
-/* GENERATE */
+
+/* =========================
+   GENERATE BUTTON
+========================= */
 
 .generate {
   width: 100%;
+
   border: 0;
-  background: linear-gradient(110deg,#4967ff,#6759ee);
-  color: #fff;
+
+  background:
+    linear-gradient(
+      110deg,
+      var(--blue),
+      var(--purple)
+    );
+
+  color: white;
+
   padding: 16px;
+
   border-radius: 12px;
-  font-size: 15px;
-  font-weight: 800;
+
+  font-size: 14px;
+
+  font-weight: 900;
+
   cursor: pointer;
+
+  box-shadow:
+    0 12px 25px rgba(83,109,255,.22);
+
   transition: .2s;
-  box-shadow: 0 10px 22px rgba(73,103,255,.22);
 }
 
 .generate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(73,103,255,.27);
+
+  box-shadow:
+    0 16px 30px rgba(83,109,255,.28);
 }
 
-/* PREVIEW */
+
+/* =========================
+   PREVIEW
+========================= */
 
 .preview-panel {
   min-height: 700px;
 }
 
-.preview-title-row {
+.preview-header {
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
+
   margin-bottom: 20px;
 }
 
 .preview-title {
-  font-size: 19px;
-  font-weight: 850;
+  font-size: 20px;
+
+  font-weight: 900;
 }
 
-.preview-size {
-  font-size: 11px;
-  color: #89909d;
-  background: #f3f4f6;
+.preview-info {
+  display: flex;
+  gap: 8px;
+}
+
+.preview-pill {
+  background: #f2f3f6;
+
+  color: #858b96;
+
   padding: 6px 9px;
+
   border-radius: 7px;
-  font-weight: 700;
+
+  font-size: 10px;
+
+  font-weight: 800;
 }
 
 .preview-wrapper {
+  min-height: 620px;
+
+  border-radius: 19px;
+
   background:
-    radial-gradient(circle at 20% 20%, rgba(73,103,255,.08), transparent 35%),
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(83,109,255,.08),
+      transparent 30%
+    ),
     #eceef2;
-  border-radius: 18px;
-  min-height: 615px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   padding: 25px;
 }
 
 #card {
   width: 450px;
   height: 600px;
+
   position: relative;
+
   overflow: hidden;
+
   background: white;
-  box-shadow: 0 25px 65px rgba(0,0,0,.18);
-  border-radius: 2px;
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,.18);
 }
 
 .placeholder {
   width: 100%;
   height: 100%;
+
   display: flex;
-  flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
+
+  flex-direction: column;
+
+  gap: 13px;
+
+  color: #9ba1ac;
+
+  font-size: 15px;
+
   text-align: center;
-  color: #9aa0ab;
-  font-size: 16px;
-  gap: 10px;
 }
 
 .placeholder-icon {
-  width: 55px;
-  height: 55px;
-  border-radius: 16px;
+  width: 58px;
+  height: 58px;
+
+  border-radius: 17px;
+
   background: #f1f3f7;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
-  font-size: 24px;
+
+  font-size: 25px;
+
+  color: var(--blue);
 }
 
-/* CARD */
 
-.product-photo {
-  position: absolute;
-  object-fit: contain;
-  z-index: 3;
-}
+/* =========================
+   CARD ELEMENTS
+========================= */
 
 .card-brand {
   position: absolute;
-  z-index: 8;
+
+  z-index: 20;
+
   font-size: 9px;
+
   font-weight: 900;
-  letter-spacing: 2.5px;
+
+  letter-spacing: 2px;
 }
 
-.card-name {
+.card-title {
   position: absolute;
-  z-index: 8;
-  font-weight: 900;
+
+  z-index: 20;
+
+  font-weight: 950;
+
   line-height: .98;
-  letter-spacing: -1.6px;
+
+  letter-spacing: -1.8px;
 }
 
 .card-subtitle {
   position: absolute;
-  z-index: 8;
-  line-height: 1.4;
+
+  z-index: 20;
+
+  line-height: 1.45;
+}
+
+.product-photo {
+  position: absolute;
+
+  object-fit: contain;
+
+  z-index: 10;
 }
 
 .card-feature {
   position: absolute;
-  z-index: 9;
+
+  z-index: 30;
+
   display: flex;
+
   align-items: center;
-  gap: 8px;
+
+  gap: 9px;
 }
 
 .feature-number {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
+  flex: 0 0 29px;
+
+  width: 29px;
+  height: 29px;
+
   border-radius: 9px;
+
   display: flex;
-  justify-content: center;
+
   align-items: center;
-  font-weight: 900;
+  justify-content: center;
+
   font-size: 11px;
+
+  font-weight: 900;
 }
 
 .feature-text {
-  font-weight: 750;
-  line-height: 1.15;
+  font-size: 10px;
+
+  line-height: 1.2;
+
+  font-weight: 800;
 }
 
-.decor-circle {
-  position: absolute;
-  border-radius: 50%;
-  z-index: 1;
-}
 
-.decor-line {
-  position: absolute;
-  z-index: 1;
-}
-
-/* DOWNLOAD */
+/* =========================
+   DOWNLOAD
+========================= */
 
 .download {
   width: 100%;
-  border: 1px solid #dfe3ea;
-  background: #fff;
-  padding: 14px;
+
   margin-top: 15px;
+
+  padding: 14px;
+
   border-radius: 11px;
+
+  border: 1px solid #dfe3ea;
+
+  background: white;
+
+  font-weight: 900;
+
   cursor: pointer;
-  font-weight: 800;
-  transition: .2s;
+
   display: none;
 }
 
 .download:hover {
-  background: #f5f6f8;
+  background: #f6f7f9;
 }
 
-/* SPINNER */
+
+/* =========================
+   PRICING
+========================= */
+
+.pricing-section {
+  width: 92%;
+
+  max-width: 1180px;
+
+  margin: 0 auto 100px;
+
+  text-align: center;
+}
+
+.pricing-section h2 {
+  font-size: 42px;
+
+  letter-spacing: -2px;
+
+  font-weight: 950;
+}
+
+.pricing-section > p {
+  color: var(--muted);
+
+  margin-top: 10px;
+
+  margin-bottom: 35px;
+}
+
+.pricing {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3,1fr);
+
+  gap: 18px;
+
+  text-align: left;
+}
+
+.price-card {
+  background: white;
+
+  border: 1px solid var(--border);
+
+  border-radius: 22px;
+
+  padding: 27px;
+
+  position: relative;
+
+  box-shadow:
+    0 15px 45px rgba(20,30,50,.05);
+}
+
+.price-card.featured {
+  border: 2px solid var(--blue);
+
+  transform: translateY(-7px);
+}
+
+.popular {
+  position: absolute;
+
+  right: 18px;
+  top: 18px;
+
+  padding: 6px 9px;
+
+  border-radius: 8px;
+
+  background: #edf0ff;
+
+  color: var(--blue);
+
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+.price-name {
+  font-size: 13px;
+
+  font-weight: 900;
+
+  text-transform: uppercase;
+
+  letter-spacing: .8px;
+}
+
+.price {
+  font-size: 42px;
+
+  font-weight: 950;
+
+  letter-spacing: -2px;
+
+  margin-top: 13px;
+}
+
+.price span {
+  font-size: 13px;
+
+  color: #858b96;
+
+  font-weight: 700;
+}
+
+.price-description {
+  color: var(--muted);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+
+  margin: 9px 0 22px;
+}
+
+.price-list {
+  list-style: none;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  margin-bottom: 23px;
+}
+
+.price-list li {
+  font-size: 12px;
+
+  color: #444a56;
+
+  display: flex;
+
+  gap: 8px;
+}
+
+.check {
+  color: var(--blue);
+
+  font-weight: 900;
+}
+
+.price-button {
+  width: 100%;
+
+  padding: 13px;
+
+  border-radius: 10px;
+
+  border: 1px solid #dfe3ea;
+
+  background: white;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.price-card.featured .price-button {
+  background: var(--blue);
+
+  border-color: var(--blue);
+
+  color: white;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+  border-top: 1px solid var(--border);
+
+  background: white;
+
+  padding: 30px 5%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  color: #8b919c;
+
+  font-size: 11px;
+}
+
+
+/* =========================
+   SPINNER
+========================= */
 
 .spinner {
   width: 42px;
   height: 42px;
+
   border: 4px solid #e5e8ed;
+
   border-top-color: var(--blue);
+
   border-radius: 50%;
+
   animation: spin .8s linear infinite;
 }
 
@@ -467,30 +915,40 @@ textarea:focus {
   }
 }
 
-/* RESPONSIVE */
 
-@media(max-width: 900px) {
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width: 950px) {
+
   .workspace {
     grid-template-columns: 1fr;
   }
 
-  .preview-panel {
-    min-height: auto;
+  .pricing {
+    grid-template-columns: 1fr;
   }
 
-  .preview-wrapper {
-    min-height: 560px;
+  .price-card.featured {
+    transform: none;
   }
+
+  .nav {
+    display: none;
+  }
+
 }
 
 @media(max-width: 520px) {
+
   .hero {
-    padding-top: 40px;
+    padding-top: 45px;
   }
 
   .hero h1 {
-    font-size: 36px;
-    letter-spacing: -2px;
+    font-size: 39px;
+    letter-spacing: -2.5px;
   }
 
   .workspace {
@@ -499,6 +957,7 @@ textarea:focus {
 
   .preview-wrapper {
     padding: 10px;
+
     overflow: hidden;
   }
 
@@ -506,16 +965,49 @@ textarea:focus {
     width: 360px;
     height: 480px;
   }
+
+  footer {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
 }
+
 </style>
 </head>
 
+
 <body>
 
+
 <header>
-  <div class="logo">Cardly<span>AI</span></div>
-  <button class="header-button">Мои карточки</button>
+
+  <div class="logo">
+    Cardly<span>AI</span>
+  </div>
+
+  <nav class="nav">
+
+    <a href="#generator">
+      Генератор
+    </a>
+
+    <a href="#pricing">
+      Тарифы
+    </a>
+
+  </nav>
+
+  <button
+    class="header-button"
+    onclick="scrollToPricing()"
+  >
+    Тарифы
+  </button>
+
 </header>
+
 
 <section class="hero">
 
@@ -525,19 +1017,36 @@ textarea:focus {
   </div>
 
   <h1>
-    Карточка товара<br>
-    <span>за несколько секунд</span>
+
+    Создавай карточки<br>
+
+    <span class="gradient">
+      которые продают
+    </span>
+
   </h1>
 
   <p>
-    Загрузи товар — Cardly AI создаст структуру,
-    тексты и современную композицию для Wildberries и Ozon.
+
+    Загрузи фотографию товара.
+    Добавь характеристики.
+    Cardly AI создаст структуру и современную
+    инфографику для Wildberries и Ozon.
+
   </p>
 
 </section>
 
 
-<main class="workspace">
+<main
+  class="workspace"
+  id="generator"
+>
+
+
+<!-- =========================
+     SETTINGS
+========================= -->
 
 <section class="panel">
 
@@ -545,16 +1054,31 @@ textarea:focus {
     Создание карточки
   </div>
 
+
   <div class="step">
 
     <div class="step-title">
-      <span>01 — Фото товара</span>
-      <span>Обязательно</span>
+
+      <span>
+        01 — Фото товара
+      </span>
+
+      <span class="optional">
+        JPG / PNG / WEBP
+      </span>
+
     </div>
 
-    <label class="upload" for="fileInput">
 
-      <div class="upload-content" id="uploadContent">
+    <label
+      class="upload"
+      for="fileInput"
+    >
+
+      <div
+        class="upload-content"
+        id="uploadContent"
+      >
 
         <div class="upload-icon">
           ↑
@@ -565,12 +1089,16 @@ textarea:focus {
         </strong>
 
         <span>
-          PNG, JPG или WEBP
+          Перетащи файл или нажми сюда
         </span>
 
       </div>
 
-      <img id="uploadedImage">
+
+      <img
+        id="uploadedImage"
+      >
+
 
       <input
         id="fileInput"
@@ -586,8 +1114,13 @@ textarea:focus {
   <div class="step">
 
     <div class="step-title">
-      <span>02 — Название товара</span>
+
+      <span>
+        02 — Название товара
+      </span>
+
     </div>
+
 
     <input
       id="productName"
@@ -600,15 +1133,20 @@ textarea:focus {
   <div class="step">
 
     <div class="step-title">
-      <span>03 — Характеристики</span>
+
+      <span>
+        03 — Характеристики
+      </span>
+
     </div>
+
 
     <textarea
       id="features"
       placeholder="Нержавеющая сталь
 Керамический картридж
-Гарантия 5 лет
-Высокая износостойкость"
+Поворотный излив
+Гарантия 5 лет"
     ></textarea>
 
   </div>
@@ -617,20 +1155,34 @@ textarea:focus {
   <div class="step">
 
     <div class="step-title">
-      <span>04 — Стиль</span>
+
+      <span>
+        04 — Визуальный стиль
+      </span>
+
     </div>
+
 
     <div class="styles">
 
-      <button class="style-button active" data-style="minimal">
+      <button
+        class="style-button active"
+        data-style="minimal"
+      >
         Minimal
       </button>
 
-      <button class="style-button" data-style="accent">
+      <button
+        class="style-button"
+        data-style="accent"
+      >
         Accent
       </button>
 
-      <button class="style-button" data-style="dark">
+      <button
+        class="style-button"
+        data-style="dark"
+      >
         Dark
       </button>
 
@@ -649,16 +1201,28 @@ textarea:focus {
 </section>
 
 
+<!-- =========================
+     PREVIEW
+========================= -->
+
 <section class="panel preview-panel">
 
-  <div class="preview-title-row">
+  <div class="preview-header">
 
     <div class="preview-title">
       Предпросмотр
     </div>
 
-    <div class="preview-size">
-      900 × 1200 PX
+    <div class="preview-info">
+
+      <div class="preview-pill">
+        AI DESIGN
+      </div>
+
+      <div class="preview-pill">
+        900 × 1200
+      </div>
+
     </div>
 
   </div>
@@ -676,7 +1240,7 @@ textarea:focus {
 
         <div>
           Здесь появится<br>
-          готовая карточка
+          готовая инфографика
         </div>
 
       </div>
@@ -699,9 +1263,226 @@ textarea:focus {
 </main>
 
 
+<!-- =========================
+     PRICING
+========================= -->
+
+<section
+  class="pricing-section"
+  id="pricing"
+>
+
+  <h2>
+    Выбери свой тариф
+  </h2>
+
+  <p>
+    Начни с бесплатной генерации и переходи на нужный объём.
+  </p>
+
+
+  <div class="pricing">
+
+
+    <!-- FREE -->
+
+    <div class="price-card">
+
+      <div class="price-name">
+        Free
+      </div>
+
+      <div class="price">
+        $0
+      </div>
+
+      <div class="price-description">
+        Чтобы попробовать Cardly AI
+        и создать первую карточку.
+      </div>
+
+
+      <ul class="price-list">
+
+        <li>
+          <span class="check">✓</span>
+          1 карточка
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          AI-тексты
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          3 стиля
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          Watermark Cardly AI
+        </li>
+
+      </ul>
+
+
+      <button
+        class="price-button"
+        onclick="scrollToGenerator()"
+      >
+        Попробовать бесплатно
+      </button>
+
+    </div>
+
+
+    <!-- START -->
+
+    <div class="price-card">
+
+      <div class="price-name">
+        Start
+      </div>
+
+      <div class="price">
+        $4.99
+        <span>/мес</span>
+      </div>
+
+      <div class="price-description">
+        Для продавцов, которым нужно
+        создавать карточки регулярно.
+      </div>
+
+
+      <ul class="price-list">
+
+        <li>
+          <span class="check">✓</span>
+          20 карточек в месяц
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          Без watermark
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          Все стили
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          PNG 900 × 1200
+        </li>
+
+      </ul>
+
+
+      <button
+        class="price-button"
+        onclick="choosePlan('Start')"
+      >
+        Выбрать Start
+      </button>
+
+    </div>
+
+
+    <!-- PRO -->
+
+    <div
+      class="price-card featured"
+    >
+
+      <div class="popular">
+        ПОПУЛЯРНЫЙ
+      </div>
+
+      <div class="price-name">
+        Pro
+      </div>
+
+      <div class="price">
+        $9.99
+        <span>/мес</span>
+      </div>
+
+      <div class="price-description">
+        Для активных продавцов
+        и небольших магазинов.
+      </div>
+
+
+      <ul class="price-list">
+
+        <li>
+          <span class="check">✓</span>
+          60 карточек в месяц
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          Без watermark
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          Приоритетная генерация
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          Все дизайны Cardly AI
+        </li>
+
+        <li>
+          <span class="check">✓</span>
+          PNG 900 × 1200
+        </li>
+
+      </ul>
+
+
+      <button
+        class="price-button"
+        onclick="choosePlan('Pro')"
+      >
+        Выбрать Pro
+      </button>
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+<footer>
+
+  <div>
+    © 2026 Cardly AI
+  </div>
+
+  <div>
+    AI-инфографика для маркетплейсов
+  </div>
+
+</footer>
+
+
 <script>
 
+
+/* =========================
+   VARIABLES
+========================= */
+
 let selectedImage = null;
+
 let selectedStyle = "minimal";
 
 let currentCardData = {
@@ -711,120 +1492,160 @@ let currentCardData = {
 };
 
 
-/* ---------------------------
-   ЗАГРУЗКА ФОТО
---------------------------- */
+/* =========================
+   IMAGE UPLOAD
+========================= */
 
 const fileInput =
-  document.getElementById("fileInput");
+  document.getElementById(
+    "fileInput"
+  );
 
 const uploadedImage =
-  document.getElementById("uploadedImage");
+  document.getElementById(
+    "uploadedImage"
+  );
 
 const uploadContent =
-  document.getElementById("uploadContent");
+  document.getElementById(
+    "uploadContent"
+  );
 
 
-fileInput.addEventListener("change", function() {
+fileInput.addEventListener(
+  "change",
+  function() {
 
-  const file = this.files[0];
+    const file =
+      this.files[0];
 
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function(e) {
-
-    selectedImage = e.target.result;
-
-    uploadedImage.src = selectedImage;
-
-    uploadedImage.style.display = "block";
-
-    uploadContent.style.display = "none";
-
-  };
-
-  reader.readAsDataURL(file);
-
-});
+    if (!file) return;
 
 
-/* ---------------------------
-   ВЫБОР СТИЛЯ
---------------------------- */
+    const reader =
+      new FileReader();
+
+
+    reader.onload =
+      function(e) {
+
+        selectedImage =
+          e.target.result;
+
+        uploadedImage.src =
+          selectedImage;
+
+        uploadedImage.style.display =
+          "block";
+
+        uploadContent.style.display =
+          "none";
+
+      };
+
+
+    reader.readAsDataURL(file);
+
+  }
+);
+
+
+/* =========================
+   STYLE
+========================= */
 
 document
-  .querySelectorAll(".style-button")
+  .querySelectorAll(
+    ".style-button"
+  )
   .forEach(button => {
 
-    button.addEventListener("click", function() {
+    button.addEventListener(
+      "click",
+      function() {
 
-      document
-        .querySelectorAll(".style-button")
-        .forEach(b =>
-          b.classList.remove("active")
+        document
+          .querySelectorAll(
+            ".style-button"
+          )
+          .forEach(b =>
+            b.classList.remove(
+              "active"
+            )
+          );
+
+        this.classList.add(
+          "active"
         );
 
-      this.classList.add("active");
+        selectedStyle =
+          this.dataset.style;
 
-      selectedStyle =
-        this.dataset.style;
-
-    });
+      }
+    );
 
   });
 
 
-/* ---------------------------
-   СОЗДАНИЕ
---------------------------- */
+/* =========================
+   GENERATE
+========================= */
 
 async function generateCard() {
 
   const name =
     document
-      .getElementById("productName")
+      .getElementById(
+        "productName"
+      )
       .value
       .trim() ||
     "Современный товар";
 
+
   const rawFeatures =
     document
-      .getElementById("features")
+      .getElementById(
+        "features"
+      )
       .value
       .trim();
 
+
   const card =
-    document.getElementById("card");
+    document.getElementById(
+      "card"
+    );
+
 
   card.innerHTML = `
 
     <div style="
+      width:100%;
       height:100%;
       display:flex;
       align-items:center;
       justify-content:center;
       flex-direction:column;
-      gap:14px;
-      font-family:Arial,sans-serif;
+      gap:15px;
       background:#fff;
+      font-family:Arial,sans-serif;
     ">
 
       <div class="spinner"></div>
 
       <div style="
-        font-size:19px;
-        font-weight:800;
+        font-size:18px;
+        font-weight:900;
       ">
-        AI создаёт карточку
+        AI создаёт дизайн
       </div>
 
       <div style="
         font-size:12px;
-        color:#7b8290;
+        color:#7c8390;
       ">
-        Подбираем текст и композицию
+        Анализируем товар и собираем композицию
       </div>
 
     </div>
@@ -835,20 +1656,23 @@ async function generateCard() {
   try {
 
     const response =
-      await fetch("/api/generate", {
+      await fetch(
+        "/api/generate",
+        {
+          method: "POST",
 
-        method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          productName: name,
-          features: rawFeatures
-        })
-
-      });
+          body:
+            JSON.stringify({
+              productName: name,
+              features: rawFeatures
+            })
+        }
+      );
 
 
     const ai =
@@ -856,34 +1680,47 @@ async function generateCard() {
 
 
     if (!response.ok) {
+
       throw new Error(
-        ai.error || "Ошибка AI"
+        ai.error ||
+        "Ошибка AI"
       );
+
     }
 
 
     const title =
-      ai.title || name;
+      ai.title ||
+      name;
+
 
     const subtitle =
       ai.subtitle ||
-      "Продуманное решение для вашего дома";
+      "";
+
 
     const features =
-      Array.isArray(ai.features)
+      Array.isArray(
+        ai.features
+      )
         ? ai.features
             .filter(Boolean)
             .slice(0,4)
         : rawFeatures
             .split("\n")
+            .map(x => x.trim())
             .filter(Boolean)
             .slice(0,4);
 
 
     currentCardData = {
+
       title,
+
       subtitle,
+
       features
+
     };
 
 
@@ -895,8 +1732,11 @@ async function generateCard() {
 
 
     document
-      .getElementById("downloadBtn")
-      .style.display = "block";
+      .getElementById(
+        "downloadBtn"
+      )
+      .style.display =
+      "block";
 
 
   } catch(error) {
@@ -909,11 +1749,12 @@ async function generateCard() {
         display:flex;
         flex-direction:column;
         justify-content:center;
-        font-family:Arial,sans-serif;
+        font-family:Arial;
       ">
 
         <div style="
-          font-size:32px;
+          font-size:35px;
+          color:#536dff;
           margin-bottom:15px;
         ">
           !
@@ -922,30 +1763,30 @@ async function generateCard() {
         <h2 style="
           margin-bottom:10px;
         ">
-          Не удалось создать карточку
+          Ошибка генерации
         </h2>
 
         <p style="
-          color:#737a87;
+          color:#737987;
           line-height:1.5;
         ">
-          ${escapeHTML(error.message)}
+          ${escapeHTML(
+            error.message
+          )}
         </p>
 
       </div>
 
     `;
 
-    console.error(error);
-
   }
 
 }
 
 
-/* ---------------------------
-   РЕНДЕР КАРТОЧКИ
---------------------------- */
+/* =========================
+   CARD RENDER
+========================= */
 
 function renderCard(
   title,
@@ -954,7 +1795,9 @@ function renderCard(
 ) {
 
   const card =
-    document.getElementById("card");
+    document.getElementById(
+      "card"
+    );
 
 
   let bg;
@@ -964,96 +1807,210 @@ function renderCard(
   let soft;
 
 
-  if (selectedStyle === "dark") {
+  if (
+    selectedStyle ===
+    "dark"
+  ) {
 
-    bg = "#14161b";
+    bg = "#13151a";
+
     text = "#ffffff";
-    muted = "#aab0bb";
-    accent = "#6de0cf";
+
+    muted = "#a7aeb9";
+
+    accent = "#6fe1d0";
+
     soft = "#20242c";
 
-  } else if (selectedStyle === "accent") {
+  }
 
-    bg = "#eef2ff";
+  else if (
+    selectedStyle ===
+    "accent"
+  ) {
+
+    bg = "#edf1ff";
+
     text = "#111318";
-    muted = "#626b7d";
-    accent = "#4967ff";
+
+    muted = "#626b7e";
+
+    accent = "#536dff";
+
     soft = "#ffffff";
 
-  } else {
+  }
+
+  else {
 
     bg = "#ffffff";
+
     text = "#111318";
+
     muted = "#727987";
-    accent = "#4967ff";
+
+    accent = "#536dff";
+
     soft = "#f4f5f8";
 
   }
 
 
+  /*
+     Каждый запуск получает
+     случайную композицию.
+  */
+
+  const layouts = [
+    "hero",
+    "split",
+    "editorial"
+  ];
+
+
   const layout =
-    ["hero","split","clean"][
-      Math.floor(Math.random() * 3)
+    layouts[
+      Math.floor(
+        Math.random() *
+        layouts.length
+      )
     ];
 
 
-  card.style.background = bg;
+  card.style.background =
+    bg;
 
+
+  /* =====================
+     DECOR
+  ===================== */
+
+  let decor = `
+
+    <div style="
+      position:absolute;
+      z-index:1;
+      width:230px;
+      height:230px;
+      right:-100px;
+      top:-90px;
+      border-radius:50%;
+      background:${accent};
+      opacity:.12;
+    "></div>
+
+    <div style="
+      position:absolute;
+      z-index:1;
+      width:90px;
+      height:90px;
+      left:-40px;
+      bottom:100px;
+      border-radius:50%;
+      background:${accent};
+      opacity:.09;
+    "></div>
+
+  `;
+
+
+  /* =====================
+     IMAGE
+  ===================== */
 
   let imageHTML = "";
 
+
   if (selectedImage) {
 
-    if (layout === "split") {
+    if (layout === "hero") {
 
       imageHTML = `
+
         <div style="
           position:absolute;
           z-index:2;
           left:6%;
-          top:25%;
+          top:29%;
           width:88%;
-          height:42%;
+          height:39%;
+          border-radius:30px;
           background:${soft};
-          border-radius:28px;
         "></div>
 
         <img
-          src="${selectedImage}"
           class="product-photo"
+          src="${selectedImage}"
           style="
-            width:76%;
-            height:39%;
-            left:12%;
-            top:27%;
+            left:10%;
+            top:25%;
+            width:80%;
+            height:43%;
           "
         >
+
       `;
 
-    } else {
+    }
+
+
+    if (layout === "split") {
 
       imageHTML = `
+
         <div style="
           position:absolute;
           z-index:2;
-          left:7%;
-          top:27%;
-          width:86%;
-          height:38%;
+          left:52%;
+          top:20%;
+          width:43%;
+          height:52%;
+          border-radius:35px;
           background:${soft};
-          border-radius:30px;
         "></div>
 
         <img
-          src="${selectedImage}"
           class="product-photo"
+          src="${selectedImage}"
           style="
-            width:78%;
-            height:39%;
-            left:11%;
-            top:25%;
+            left:51%;
+            top:24%;
+            width:44%;
+            height:44%;
           "
         >
+
+      `;
+
+    }
+
+
+    if (layout === "editorial") {
+
+      imageHTML = `
+
+        <div style="
+          position:absolute;
+          z-index:2;
+          left:5%;
+          top:28%;
+          width:90%;
+          height:42%;
+          border-radius:0;
+          background:${soft};
+        "></div>
+
+        <img
+          class="product-photo"
+          src="${selectedImage}"
+          style="
+            left:10%;
+            top:24%;
+            width:80%;
+            height:49%;
+          "
+        >
+
       `;
 
     }
@@ -1061,105 +2018,100 @@ function renderCard(
   }
 
 
-  /* ДЕКОР */
-
-  let decoration = `
-
-    <div
-      class="decor-circle"
-      style="
-        width:190px;
-        height:190px;
-        right:-75px;
-        top:-70px;
-        background:${accent};
-        opacity:.12;
-      "
-    ></div>
-
-    <div
-      class="decor-circle"
-      style="
-        width:90px;
-        height:90px;
-        left:-38px;
-        bottom:115px;
-        background:${accent};
-        opacity:.08;
-      "
-    ></div>
-
-  `;
-
-
-  /* ЗАГОЛОВОК */
+  /* =====================
+     TITLE
+  ===================== */
 
   const titleSize =
-    title.length > 25 ? 27 : 34;
+    title.length > 28
+      ? 27
+      : title.length > 18
+        ? 31
+        : 36;
 
 
-  let featuresHTML = "";
+  /* =====================
+     FEATURES
+  ===================== */
+
+  let featureHTML = "";
 
 
-  features.forEach((feature,index) => {
+  const positions = [
 
-    const positions = [
-      {x:8,y:71},
-      {x:53,y:71},
-      {x:8,y:82},
-      {x:53,y:82}
-    ];
+    {x:8, y:75},
+
+    {x:54, y:75},
+
+    {x:8, y:85},
+
+    {x:54, y:85}
+
+  ];
 
 
-    const p =
-      positions[index];
+  features.forEach(
+    (feature,index) => {
+
+      const p =
+        positions[index];
 
 
-    featuresHTML += `
+      if (!p) return;
 
-      <div
-        class="card-feature"
-        style="
-          left:${p.x}%;
-          top:${p.y}%;
-          width:39%;
-        "
-      >
 
-        <div
-          class="feature-number"
-          style="
-            background:${accent};
-            color:${
-              selectedStyle === "dark"
-                ? "#111318"
-                : "#fff"
-            };
-          "
-        >
-          ${index + 1}
-        </div>
+      featureHTML += `
 
         <div
-          class="feature-text"
+          class="card-feature"
           style="
-            color:${text};
-            font-size:11px;
+            left:${p.x}%;
+            top:${p.y}%;
+            width:38%;
           "
         >
-          ${escapeHTML(feature)}
+
+          <div
+            class="feature-number"
+            style="
+              background:${accent};
+              color:${
+                selectedStyle ===
+                "dark"
+                  ? "#111318"
+                  : "#fff"
+              };
+            "
+          >
+            ${index + 1}
+          </div>
+
+          <div
+            class="feature-text"
+            style="
+              color:${text};
+            "
+          >
+            ${escapeHTML(
+              feature
+            )}
+          </div>
+
         </div>
 
-      </div>
+      `;
 
-    `;
+    }
+  );
 
-  });
 
+  /* =====================
+     FINAL CARD
+  ===================== */
 
   card.innerHTML = `
 
-    ${decoration}
+    ${decor}
 
     ${imageHTML}
 
@@ -1167,7 +2119,7 @@ function renderCard(
     <div
       class="card-brand"
       style="
-        top:7%;
+        top:6%;
         left:8%;
         color:${accent};
       "
@@ -1177,7 +2129,7 @@ function renderCard(
 
 
     <div
-      class="card-name"
+      class="card-title"
       style="
         top:11%;
         left:8%;
@@ -1186,7 +2138,9 @@ function renderCard(
         font-size:${titleSize}px;
       "
     >
-      ${escapeHTML(title)}
+      ${escapeHTML(
+        title
+      )}
     </div>
 
 
@@ -1200,43 +2154,42 @@ function renderCard(
         font-size:12px;
       "
     >
-      ${escapeHTML(subtitle)}
+      ${escapeHTML(
+        subtitle
+      )}
     </div>
 
 
-    <div
-      style="
-        position:absolute;
-        z-index:5;
-        left:8%;
-        top:67%;
-        width:84%;
-        height:1px;
-        background:${
-          selectedStyle === "dark"
-            ? "#30343d"
-            : "#dfe2e8"
-        };
-      "
-    ></div>
+    <div style="
+      position:absolute;
+      z-index:5;
+      left:8%;
+      top:71%;
+      width:84%;
+      height:1px;
+      background:${
+        selectedStyle ===
+        "dark"
+          ? "#30343c"
+          : "#dfe2e8"
+      };
+    "></div>
 
 
-    ${featuresHTML}
+    ${featureHTML}
 
 
-    <div
-      style="
-        position:absolute;
-        z-index:8;
-        left:8%;
-        bottom:4.5%;
-        color:${muted};
-        font-size:8px;
-        letter-spacing:1.2px;
-        font-weight:700;
-      "
-    >
-      СОЗДАНО С ПОМОЩЬЮ CARDLY AI
+    <div style="
+      position:absolute;
+      z-index:20;
+      left:8%;
+      bottom:4%;
+      color:${muted};
+      font-size:7px;
+      letter-spacing:1.4px;
+      font-weight:800;
+    ">
+      CARDLY AI · MARKETPLACE DESIGN
     </div>
 
   `;
@@ -1244,23 +2197,31 @@ function renderCard(
 }
 
 
-/* ---------------------------
-   СКАЧИВАНИЕ PNG
---------------------------- */
+/* =========================
+   DOWNLOAD
+========================= */
 
 async function downloadCard() {
 
   const width = 900;
   const height = 1200;
 
+
   const canvas =
-    document.createElement("canvas");
+    document.createElement(
+      "canvas"
+    );
+
 
   canvas.width = width;
+
   canvas.height = height;
 
+
   const ctx =
-    canvas.getContext("2d");
+    canvas.getContext(
+      "2d"
+    );
 
 
   let bg;
@@ -1270,63 +2231,99 @@ async function downloadCard() {
   let soft;
 
 
-  if (selectedStyle === "dark") {
+  if (
+    selectedStyle ===
+    "dark"
+  ) {
 
-    bg = "#14161b";
+    bg = "#13151a";
     text = "#ffffff";
-    muted = "#aab0bb";
-    accent = "#6de0cf";
+    muted = "#a7aeb9";
+    accent = "#6fe1d0";
     soft = "#20242c";
 
-  } else if (selectedStyle === "accent") {
+  }
 
-    bg = "#eef2ff";
+  else if (
+    selectedStyle ===
+    "accent"
+  ) {
+
+    bg = "#edf1ff";
     text = "#111318";
-    muted = "#626b7d";
-    accent = "#4967ff";
+    muted = "#626b7e";
+    accent = "#536dff";
     soft = "#ffffff";
 
-  } else {
+  }
+
+  else {
 
     bg = "#ffffff";
     text = "#111318";
     muted = "#727987";
-    accent = "#4967ff";
+    accent = "#536dff";
     soft = "#f4f5f8";
 
   }
 
 
-  /* ФОН */
+  ctx.fillStyle =
+    bg;
 
-  ctx.fillStyle = bg;
-  ctx.fillRect(0,0,width,height);
+  ctx.fillRect(
+    0,
+    0,
+    width,
+    height
+  );
 
 
-  /* ДЕКОР */
+  /* DECOR */
 
   ctx.globalAlpha = .12;
 
-  ctx.fillStyle = accent;
+  ctx.fillStyle =
+    accent;
 
   ctx.beginPath();
-  ctx.arc(875,70,190,0,Math.PI*2);
+
+  ctx.arc(
+    875,
+    70,
+    190,
+    0,
+    Math.PI * 2
+  );
+
   ctx.fill();
+
 
   ctx.globalAlpha = .08;
 
   ctx.beginPath();
-  ctx.arc(0,1030,90,0,Math.PI*2);
+
+  ctx.arc(
+    0,
+    1050,
+    90,
+    0,
+    Math.PI * 2
+  );
+
   ctx.fill();
 
   ctx.globalAlpha = 1;
 
 
-  /* БРЕНД */
+  /* BRAND */
 
-  ctx.fillStyle = accent;
-  ctx.font = "900 18px Arial";
-  ctx.letterSpacing = "4px";
+  ctx.fillStyle =
+    accent;
+
+  ctx.font =
+    "900 18px Arial";
+
   ctx.fillText(
     "CARDLY AI",
     72,
@@ -1336,61 +2333,55 @@ async function downloadCard() {
 
   /* TITLE */
 
-  ctx.fillStyle = text;
-
   const title =
     currentCardData.title ||
-    document
-      .getElementById("productName")
-      .value
-      .trim() ||
     "Современный товар";
 
 
-  let titleFont =
-    title.length > 25
-      ? 54
-      : 68;
-
+  ctx.fillStyle =
+    text;
 
   ctx.font =
-    `900 ${titleFont}px Arial`;
+    title.length > 28
+      ? "900 54px Arial"
+      : "900 68px Arial";
 
 
   wrapText(
     ctx,
     title,
     72,
-    150,
-    756,
-    68
+    155,
+    750,
+    65
   );
 
 
   /* SUBTITLE */
 
-  const subtitle =
-    currentCardData.subtitle ||
-    "";
+  ctx.fillStyle =
+    muted;
 
-
-  ctx.fillStyle = muted;
-  ctx.font = "400 25px Arial";
+  ctx.font =
+    "400 24px Arial";
 
 
   wrapText(
     ctx,
-    subtitle,
+    currentCardData.subtitle ||
+      "",
     72,
-    240,
+    245,
     700,
-    34
+    33
   );
 
 
-  /* PRODUCT BACKGROUND */
+  /* PRODUCT AREA */
 
-  ctx.fillStyle = soft;
+  ctx.fillStyle =
+    soft;
+
 
   roundRect(
     ctx,
@@ -1398,51 +2389,45 @@ async function downloadCard() {
     315,
     774,
     430,
-    42
+    40
   );
 
-
-  /* PRODUCT */
 
   if (selectedImage) {
 
     const img =
       new Image();
 
-    img.onload = function() {
 
-      drawImageContain(
-        ctx,
-        img,
-        140,
-        345,
-        620,
-        365
-      );
+    img.onload =
+      function() {
 
-      drawDownloadFeatures(
-        ctx,
-        text,
-        muted,
-        accent
-      );
+        drawImageContain(
+          ctx,
+          img,
+          140,
+          340,
+          620,
+          380
+        );
 
-    };
 
-    img.onerror = function() {
+        drawDownloadFeatures(
+          ctx,
+          text,
+          muted,
+          accent
+        );
 
-      drawDownloadFeatures(
-        ctx,
-        text,
-        muted,
-        accent
-      );
+      };
 
-    };
 
-    img.src = selectedImage;
+    img.src =
+      selectedImage;
 
-  } else {
+  }
+
+  else {
 
     drawDownloadFeatures(
       ctx,
@@ -1456,9 +2441,9 @@ async function downloadCard() {
 }
 
 
-/* ---------------------------
-   FEATURES В PNG
---------------------------- */
+/* =========================
+   DOWNLOAD FEATURES
+========================= */
 
 function drawDownloadFeatures(
   ctx,
@@ -1467,14 +2452,12 @@ function drawDownloadFeatures(
   accent
 ) {
 
-  const features =
-    currentCardData.features || [];
-
-
   ctx.fillStyle =
-    selectedStyle === "dark"
-      ? "#30343d"
+    selectedStyle ===
+    "dark"
+      ? "#30343c"
       : "#dfe2e8";
+
 
   ctx.fillRect(
     72,
@@ -1484,27 +2467,40 @@ function drawDownloadFeatures(
   );
 
 
+  const features =
+    currentCardData.features ||
+    [];
+
+
   features.forEach(
     (feature,index) => {
 
       if (index > 3) return;
 
+
       const col =
         index % 2;
 
       const row =
-        Math.floor(index / 2);
+        Math.floor(
+          index / 2
+        );
+
 
       const x =
         col === 0
           ? 72
           : 480;
 
+
       const y =
-        845 + row * 105;
+        845 +
+        row * 105;
 
 
-      ctx.fillStyle = accent;
+      ctx.fillStyle =
+        accent;
+
 
       roundRect(
         ctx,
@@ -1512,19 +2508,24 @@ function drawDownloadFeatures(
         y - 27,
         54,
         54,
-        16
+        15
       );
 
 
       ctx.fillStyle =
-        selectedStyle === "dark"
+        selectedStyle ===
+        "dark"
           ? "#111318"
-          : "#ffffff";
+          : "#fff";
+
 
       ctx.font =
         "900 20px Arial";
 
-      ctx.textAlign = "center";
+
+      ctx.textAlign =
+        "center";
+
 
       ctx.fillText(
         String(index + 1),
@@ -1532,67 +2533,70 @@ function drawDownloadFeatures(
         y + 8
       );
 
-      ctx.textAlign = "left";
+
+      ctx.textAlign =
+        "left";
 
 
-      ctx.fillStyle = text;
+      ctx.fillStyle =
+        text;
+
 
       ctx.font =
-        "700 22px Arial";
+        "700 21px Arial";
 
 
       wrapText(
         ctx,
         feature,
         x + 72,
-        y + 4,
+        y + 5,
         300,
-        27
+        26
       );
 
     }
   );
 
 
-  ctx.fillStyle = muted;
+  ctx.fillStyle =
+    muted;
 
   ctx.font =
     "700 10px Arial";
 
+
   ctx.fillText(
-    "СОЗДАНО С ПОМОЩЬЮ CARDLY AI",
+    "CARDLY AI · MARKETPLACE DESIGN",
     72,
     1150
   );
 
 
   const link =
-    document.createElement("a");
+    document.createElement(
+      "a"
+    );
+
 
   link.download =
     "cardly-ai-card.png";
 
+
   link.href =
-    document
-      .getElementById("card")
-      ? createCanvasDownloadURL(ctx.canvas)
-      : "#";
+    ctx.canvas.toDataURL(
+      "image/png"
+    );
+
 
   link.click();
 
 }
 
 
-function createCanvasDownloadURL(canvas) {
-
-  return canvas.toDataURL("image/png");
-
-}
-
-
-/* ---------------------------
-   ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
---------------------------- */
+/* =========================
+   HELPERS
+========================= */
 
 function roundRect(
   ctx,
@@ -1605,9 +2609,15 @@ function roundRect(
 
   ctx.beginPath();
 
-  ctx.moveTo(x + radius,y);
+  ctx.moveTo(
+    x + radius,
+    y
+  );
 
-  ctx.lineTo(x + width - radius,y);
+  ctx.lineTo(
+    x + width - radius,
+    y
+  );
 
   ctx.quadraticCurveTo(
     x + width,
@@ -1674,17 +2684,23 @@ function drawImageContain(
       height / img.height
     );
 
+
   const w =
     img.width * ratio;
 
   const h =
     img.height * ratio;
 
+
   const dx =
-    x + (width - w) / 2;
+    x +
+    (width - w) / 2;
+
 
   const dy =
-    y + (height - h) / 2;
+    y +
+    (height - h) / 2;
+
 
   ctx.drawImage(
     img,
@@ -1707,25 +2723,37 @@ function wrapText(
 ) {
 
   const words =
-    String(text).split(" ");
+    String(text)
+      .split(" ");
+
 
   let line = "";
-  let currentY = y;
+
+  let currentY =
+    y;
 
 
-  for (let n = 0; n < words.length; n++) {
+  for (
+    let i = 0;
+    i < words.length;
+    i++
+  ) {
 
-    const testLine =
+    const test =
       line +
-      words[n] +
+      words[i] +
       " ";
 
-    const metrics =
-      ctx.measureText(testLine);
+
+    const width =
+      ctx.measureText(
+        test
+      ).width;
+
 
     if (
-      metrics.width > maxWidth &&
-      n > 0
+      width > maxWidth &&
+      i > 0
     ) {
 
       ctx.fillText(
@@ -1734,14 +2762,20 @@ function wrapText(
         currentY
       );
 
+
       line =
-        words[n] + " ";
+        words[i] + " ";
 
-      currentY += lineHeight;
 
-    } else {
+      currentY +=
+        lineHeight;
 
-      line = testLine;
+    }
+
+    else {
+
+      line =
+        test;
 
     }
 
@@ -1757,14 +2791,74 @@ function wrapText(
 }
 
 
-function escapeHTML(text) {
+function escapeHTML(
+  text
+) {
 
   return String(text)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function scrollToPricing() {
+
+  document
+    .getElementById(
+      "pricing"
+    )
+    .scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+
+function scrollToGenerator() {
+
+  document
+    .getElementById(
+      "generator"
+    )
+    .scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+
+function choosePlan(
+  plan
+) {
+
+  alert(
+    "Тариф " +
+    plan +
+    " будет доступен после подключения оплаты."
+  );
 
 }
 
