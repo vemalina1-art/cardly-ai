@@ -5,15 +5,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>BiRefNet Diagnostic</title>
+<title>BiRefNet Test</title>
 
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
     body {
         margin: 0;
         padding: 30px;
-        font-family: Arial, sans-serif;
         background: #111;
         color: white;
+        font-family: Arial, sans-serif;
     }
 
     h1 {
@@ -23,10 +27,10 @@
     button {
         padding: 14px 20px;
         margin: 8px 5px 8px 0;
-        border: 0;
+        border: none;
         border-radius: 8px;
-        cursor: pointer;
         font-size: 15px;
+        cursor: pointer;
     }
 
     #load {
@@ -39,8 +43,13 @@
         color: white;
     }
 
+    #run:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
     #status {
-        margin: 15px 0;
+        margin-top: 15px;
         padding: 15px;
         background: #1d1d1d;
         border-radius: 8px;
@@ -49,47 +58,54 @@
 
     .images {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        margin-top: 20px;
+        grid-template-columns: repeat(2, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 25px;
+        max-width: 900px;
     }
 
     .box {
         background: #1c1c1c;
-        padding: 10px;
-        border-radius: 10px;
+        padding: 12px;
+        border-radius: 12px;
     }
 
     .box h3 {
-        margin: 5px 0 10px;
+        margin: 0 0 10px;
     }
 
     img {
-        width: 100%;
         display: block;
+        width: 100%;
+        min-height: 200px;
+        object-fit: contain;
         background:
             linear-gradient(45deg, #777 25%, transparent 25%),
             linear-gradient(-45deg, #777 25%, transparent 25%),
             linear-gradient(45deg, transparent 75%, #777 75%),
             linear-gradient(-45deg, transparent 75%, #777 75%);
         background-size: 20px 20px;
-        background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+        background-position:
+            0 0,
+            0 10px,
+            10px -10px,
+            -10px 0;
     }
 
     pre {
-        white-space: pre-wrap;
-        word-break: break-word;
-        background: #050505;
+        margin-top: 25px;
         padding: 15px;
+        background: #050505;
         border-radius: 8px;
+        white-space: pre-wrap;
         overflow-x: auto;
     }
 
-    .good {
+    .ok {
         color: #4ade80;
     }
 
-    .bad {
+    .error {
         color: #f87171;
     }
 </style>
@@ -97,9 +113,13 @@
 
 <body>
 
-<h1>🔬 BiRefNet Diagnostic</h1>
+<h1>🔬 BiRefNet — правильный output</h1>
 
-<input type="file" id="file" accept="image/*">
+<input
+    type="file"
+    id="file"
+    accept="image/*"
+>
 
 <br>
 
@@ -108,7 +128,7 @@
 </button>
 
 <button id="run" disabled>
-    🔎 Проверить все варианты маски
+    ✂️ Проверить маску
 </button>
 
 <div id="status">
@@ -123,28 +143,8 @@
     </div>
 
     <div class="box">
-        <h3>Вариант A — sigmoid</h3>
-        <img id="maskA">
-    </div>
-
-    <div class="box">
-        <h3>Вариант B — min/max normalize</h3>
-        <img id="maskB">
-    </div>
-
-    <div class="box">
-        <h3>Вариант C — inverted</h3>
-        <img id="maskC">
-    </div>
-
-    <div class="box">
-        <h3>Вариант D — normalized inverted</h3>
-        <img id="maskD">
-    </div>
-
-    <div class="box">
-        <h3>Вариант E — contrast</h3>
-        <img id="maskE">
+        <h3>Маска BiRefNet</h3>
+        <img id="mask">
     </div>
 
 </div>
@@ -163,7 +163,7 @@ import {
 
 
 // ======================================================
-// CONFIG
+// HUGGING FACE PROXY
 // ======================================================
 
 env.allowRemoteModels = true;
@@ -194,538 +194,499 @@ const status =
 const debug =
     document.getElementById("debug");
 
-const originalImage =
+const original =
     document.getElementById("original");
+
+const maskImage =
+    document.getElementById("mask");
 
 
 // ======================================================
 // VARIABLES
 // ======================================================
 
-let model = null;
-let processor = null;
 let selectedFile = null;
 
+let model = null;
+
+let processor = null;
+
 
 // ======================================================
-// FILE
+// SELECT IMAGE
 // ======================================================
 
-fileInput.addEventListener("change", () => {
+fileInput.addEventListener(
+    "change",
+    () => {
 
-    selectedFile = fileInput.files[0];
+        selectedFile =
+            fileInput.files[0];
 
-    if (!selectedFile) {
-        return;
+        if (!selectedFile) {
+            return;
+        }
+
+        original.src =
+            URL.createObjectURL(
+                selectedFile
+            );
+
+        status.textContent =
+            "📷 Фото загружено.\n\n" +
+            "Теперь нажми «Загрузить AI-модель».";
+
     }
-
-    originalImage.src =
-        URL.createObjectURL(selectedFile);
-
-    status.textContent =
-        "📷 Изображение загружено.\nТеперь загрузи AI-модель.";
-
-});
+);
 
 
 // ======================================================
 // LOAD MODEL
 // ======================================================
 
-loadButton.addEventListener("click", async () => {
-
-    try {
-
-        status.textContent =
-            "⏳ Загружаем процессор...";
-
-        processor =
-            await AutoProcessor.from_pretrained(
-                "studioludens/birefnet-lite-512"
-            );
-
-
-        status.textContent =
-            "⏳ Загружаем модель...\nЭто может занять некоторое время.";
+loadButton.addEventListener(
+    "click",
+    async () => {
 
         try {
 
-            model =
-                await AutoModel.from_pretrained(
-                    "studioludens/birefnet-lite-512",
-                    {
-                        dtype: "fp16",
-                        device: "webgpu"
-                    }
-                );
+            loadButton.disabled = true;
 
             status.textContent =
-                "🚀 BiRefNet работает через WebGPU.";
+                "⏳ Загружаем процессор BiRefNet...";
 
-        } catch (webgpuError) {
 
-            console.warn(
-                "WebGPU error:",
-                webgpuError
+            processor =
+                await AutoProcessor.from_pretrained(
+                    "studioludens/birefnet-lite-512"
+                );
+
+
+            status.textContent =
+                "⏳ Загружаем модель BiRefNet...\n\n" +
+                "Если используется WebGPU, загрузка может занять некоторое время.";
+
+
+            try {
+
+                model =
+                    await AutoModel.from_pretrained(
+                        "studioludens/birefnet-lite-512",
+                        {
+                            dtype: "fp16",
+                            device: "webgpu"
+                        }
+                    );
+
+                status.textContent =
+                    "🚀 Модель загружена через WebGPU.";
+
+            } catch (webgpuError) {
+
+                console.warn(
+                    "WebGPU error:",
+                    webgpuError
+                );
+
+                status.textContent =
+                    "⚠️ WebGPU не запустился.\n" +
+                    "Переходим на WASM...";
+
+
+                model =
+                    await AutoModel.from_pretrained(
+                        "studioludens/birefnet-lite-512",
+                        {
+                            device: "wasm"
+                        }
+                    );
+
+
+                status.textContent =
+                    "🟢 Модель загружена через WASM.";
+
+            }
+
+
+            runButton.disabled = false;
+
+
+            status.textContent +=
+                "\n\n✅ BiRefNet полностью готов.";
+
+        } catch (error) {
+
+            console.error(
+                error
             );
 
-            status.textContent =
-                "⚠️ WebGPU не сработал.\nПробуем WASM...";
+            status.innerHTML =
+                '<span class="error">' +
+                "❌ Ошибка загрузки модели\n\n" +
+                error.message +
+                "</span>";
 
-            model =
-                await AutoModel.from_pretrained(
-                    "studioludens/birefnet-lite-512",
-                    {
-                        device: "wasm"
-                    }
-                );
+            loadButton.disabled = false;
 
-            status.textContent =
-                "🟢 BiRefNet работает через WASM.";
         }
 
+    }
+);
 
-        runButton.disabled = false;
 
-        status.textContent +=
-            "\n\n✅ Модель полностью загружена.";
+// ======================================================
+// CREATE MASK IMAGE
+// ======================================================
+
+async function createMaskImage(
+    logits,
+    originalWidth,
+    originalHeight
+) {
+
+    /*
+        Здесь используем именно официальный
+        подход модели:
+
+        logits
+        ↓
+        sigmoid
+        ↓
+        ×255
+        ↓
+        RawImage
+        ↓
+        resize
+    */
+
+
+    console.log(
+        "LOGITS OBJECT:",
+        logits
+    );
+
+
+    // --------------------------------------------------
+    // Убираем batch dimension
+    // --------------------------------------------------
+
+    let maskTensor;
+
+
+    try {
+
+        /*
+            Ожидаем:
+
+            logits:
+            [1, 1, 512, 512]
+
+            logits[0]:
+            [1, 512, 512]
+        */
+
+        maskTensor =
+            logits[0];
 
     } catch (error) {
 
-        console.error(error);
-
-        status.textContent =
-            "❌ Ошибка загрузки модели:\n\n" +
-            error.message;
-
-    }
-
-});
-
-
-// ======================================================
-// CREATE IMAGE FROM MASK
-// ======================================================
-
-function maskToDataURL(
-    values,
-    width,
-    height,
-    mode
-) {
-
-    const canvas =
-        document.createElement("canvas");
-
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx =
-        canvas.getContext("2d");
-
-    const imageData =
-        ctx.createImageData(
-            width,
-            height
+        console.warn(
+            "Не удалось взять logits[0]",
+            error
         );
 
-    let min = Infinity;
-    let max = -Infinity;
-
-    for (let i = 0; i < values.length; i++) {
-
-        if (values[i] < min)
-            min = values[i];
-
-        if (values[i] > max)
-            max = values[i];
+        maskTensor =
+            logits;
 
     }
 
 
-    const range =
-        max - min || 1;
-
-
-    for (
-        let i = 0;
-        i < values.length;
-        i++
-    ) {
-
-        const raw =
-            values[i];
-
-        let value = 0;
-
-
-        // ----------------------------------------------
-        // A
-        // обычный sigmoid
-        // ----------------------------------------------
-
-        if (mode === "sigmoid") {
-
-            value =
-                1 /
-                (
-                    1 +
-                    Math.exp(-raw)
-                );
-
-        }
-
-
-        // ----------------------------------------------
-        // B
-        // нормализация min/max
-        // ----------------------------------------------
-
-        else if (mode === "normalize") {
-
-            value =
-                (raw - min) /
-                range;
-
-        }
-
-
-        // ----------------------------------------------
-        // C
-        // sigmoid inverted
-        // ----------------------------------------------
-
-        else if (mode === "inverse") {
-
-            const sigmoid =
-                1 /
-                (
-                    1 +
-                    Math.exp(-raw)
-                );
-
-            value =
-                1 - sigmoid;
-
-        }
-
-
-        // ----------------------------------------------
-        // D
-        // normalized inverted
-        // ----------------------------------------------
-
-        else if (mode === "normalizeInverse") {
-
-            value =
-                1 -
-                (
-                    (raw - min) /
-                    range
-                );
-
-        }
-
-
-        // ----------------------------------------------
-        // E
-        // normalized + contrast
-        // ----------------------------------------------
-
-        else if (mode === "contrast") {
-
-            let normalized =
-                (raw - min) /
-                range;
-
-
-            // усиливаем контраст
-
-            normalized =
-                Math.pow(
-                    normalized,
-                    0.35
-                );
-
-            value =
-                normalized;
-
-        }
-
-
-        value =
-            Math.max(
-                0,
-                Math.min(
-                    1,
-                    value
-                )
-            );
-
-
-        const gray =
-            Math.round(
-                value * 255
-            );
-
-
-        const index =
-            i * 4;
-
-
-        imageData.data[index] =
-            gray;
-
-        imageData.data[index + 1] =
-            gray;
-
-        imageData.data[index + 2] =
-            gray;
-
-        imageData.data[index + 3] =
-            255;
-
-    }
-
-
-    ctx.putImageData(
-        imageData,
-        0,
-        0
+    console.log(
+        "MASK TENSOR:",
+        maskTensor
     );
 
 
-    return canvas.toDataURL(
-        "image/png"
+    // --------------------------------------------------
+    // SIGMOID
+    // --------------------------------------------------
+
+    const sigmoidMask =
+        maskTensor
+            .sigmoid()
+            .mul(255);
+
+
+    console.log(
+        "SIGMOID MASK:",
+        sigmoidMask
     );
+
+
+    // --------------------------------------------------
+    // RawImage
+    // --------------------------------------------------
+
+    const mask =
+        await RawImage.fromTensor(
+            sigmoidMask
+        );
+
+
+    console.log(
+        "MASK RAW IMAGE:",
+        mask
+    );
+
+
+    // --------------------------------------------------
+    // RESIZE
+    // --------------------------------------------------
+
+    const resized =
+        mask.resize(
+            originalWidth,
+            originalHeight
+        );
+
+
+    return resized.toDataURL();
 
 }
 
 
 // ======================================================
-// RUN
+// RUN MODEL
 // ======================================================
 
-runButton.addEventListener("click", async () => {
+runButton.addEventListener(
+    "click",
+    async () => {
 
-    if (!selectedFile) {
+        if (!selectedFile) {
 
-        alert(
-            "Сначала выбери изображение."
-        );
-
-        return;
-    }
-
-
-    if (!model || !processor) {
-
-        alert(
-            "Сначала загрузи модель."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        status.textContent =
-            "⏳ Читаем изображение...";
-
-
-        const image =
-            await RawImage.read(
-                selectedFile
+            alert(
+                "Сначала выбери фотографию."
             );
 
+            return;
+        }
 
-        status.textContent =
-            "⏳ Подготавливаем изображение...";
+
+        if (!model || !processor) {
+
+            alert(
+                "Сначала загрузи модель."
+            );
+
+            return;
+        }
 
 
-        const {
-            pixel_values
-        } =
-            await processor(
+        try {
+
+            runButton.disabled = true;
+
+
+            status.textContent =
+                "⏳ Читаем изображение...";
+
+
+            const image =
+                await RawImage.read(
+                    selectedFile
+                );
+
+
+            console.log(
+                "ORIGINAL IMAGE:",
                 image
             );
 
 
-        status.textContent =
-            "🧠 BiRefNet анализирует изображение...";
+            status.textContent =
+                "⏳ Подготавливаем изображение для BiRefNet...";
 
 
-        const output =
-            await model({
-                input_image:
-                    pixel_values
-            });
-
-
-        console.log(
-            "FULL MODEL OUTPUT:",
-            output
-        );
-
-
-        const outputImage =
-            output.output_image;
-
-
-        if (!outputImage) {
-
-            throw new Error(
-                "output.output_image отсутствует"
-            );
-
-        }
-
-
-        console.log(
-            "OUTPUT IMAGE:",
-            outputImage
-        );
-
-
-        const dims =
-            outputImage.dims;
-
-
-        console.log(
-            "DIMS:",
-            dims
-        );
-
-
-        const tensor =
-            outputImage.ort_tensor;
-
-
-        if (!tensor) {
-
-            throw new Error(
-                "ort_tensor отсутствует"
-            );
-
-        }
-
-
-        const rawData =
-            tensor.data;
-
-
-        console.log(
-            "RAW DATA:",
-            rawData
-        );
-
-
-        // ==================================================
-        // DIMS
-        // ==================================================
-
-        let width = 512;
-        let height = 512;
-
-
-        if (
-            dims &&
-            dims.length >= 2
-        ) {
-
-            height =
-                dims[dims.length - 2];
-
-            width =
-                dims[dims.length - 1];
-
-        }
-
-
-        // ==================================================
-        // STATISTICS
-        // ==================================================
-
-        let min =
-            Infinity;
-
-        let max =
-            -Infinity;
-
-        let sum =
-            0;
-
-
-        for (
-            let i = 0;
-            i < rawData.length;
-            i++
-        ) {
-
-            const value =
-                rawData[i];
-
-            if (value < min)
-                min = value;
-
-            if (value > max)
-                max = value;
-
-            sum += value;
-
-        }
-
-
-        const average =
-            sum /
-            rawData.length;
-
-
-        const sigmoid =
-            x =>
-                1 /
-                (
-                    1 +
-                    Math.exp(-x)
+            const {
+                pixel_values
+            } =
+                await processor(
+                    image
                 );
 
 
-        const sigmoidMin =
-            sigmoid(min);
-
-        const sigmoidMax =
-            sigmoid(max);
-
-        const sigmoidAverage =
-            sigmoid(average);
+            console.log(
+                "PIXEL VALUES:",
+                pixel_values
+            );
 
 
-        // ==================================================
-        // DEBUG TEXT
-        // ==================================================
+            status.textContent =
+                "🧠 BiRefNet анализирует товар...";
 
-        debug.textContent =
+
+            /*
+                ВАЖНО:
+
+                Берём именно logits.
+
+                Это официальный output
+                модели BiRefNet.
+            */
+
+            const output =
+                await model({
+                    input_image:
+                        pixel_values
+                });
+
+
+            console.log(
+                "================================"
+            );
+
+            console.log(
+                "FULL MODEL OUTPUT:",
+                output
+            );
+
+            console.log(
+                "OUTPUT KEYS:",
+                Object.keys(output)
+            );
+
+            console.log(
+                "LOGITS:",
+                output.logits
+            );
+
+            console.log(
+                "LOGITS DIMS:",
+                output.logits?.dims
+            );
+
+            console.log(
+                "================================"
+            );
+
+
+            // ------------------------------------------------
+            // CHECK LOGITS
+            // ------------------------------------------------
+
+            if (!output.logits) {
+
+                throw new Error(
+                    "BiRefNet не вернул output.logits"
+                );
+
+            }
+
+
+            const logits =
+                output.logits;
+
+
+            // ------------------------------------------------
+            // DEBUG
+            // ------------------------------------------------
+
+            let rawData = null;
+
+
+            if (
+                logits &&
+                logits.ort_tensor &&
+                logits.ort_tensor.data
+            ) {
+
+                rawData =
+                    logits.ort_tensor.data;
+
+            }
+
+
+            let min =
+                Infinity;
+
+            let max =
+                -Infinity;
+
+            let sum =
+                0;
+
+
+            if (rawData) {
+
+                for (
+                    let i = 0;
+                    i < rawData.length;
+                    i++
+                ) {
+
+                    const value =
+                        rawData[i];
+
+
+                    if (value < min)
+                        min = value;
+
+
+                    if (value > max)
+                        max = value;
+
+
+                    sum += value;
+
+                }
+
+            }
+
+
+            const average =
+                rawData
+                    ? sum / rawData.length
+                    : NaN;
+
+
+            const sigmoid =
+                x =>
+                    1 /
+                    (
+                        1 +
+                        Math.exp(-x)
+                    );
+
+
+            const sigMin =
+                sigmoid(min);
+
+            const sigMax =
+                sigmoid(max);
+
+            const sigAverage =
+                sigmoid(average);
+
+
+            debug.textContent =
 `
 ========================================
-BIREFNET DEEP DIAGNOSTIC
+BIREFNET CORRECT OUTPUT DEBUG
 ========================================
 
-Model output:
-${JSON.stringify(dims)}
+Output keys:
+${Object.keys(output).join(", ")}
 
-Width:
-${width}
+----------------------------------------
+LOGITS
+----------------------------------------
 
-Height:
-${height}
+Dims:
+${JSON.stringify(logits.dims)}
 
 Raw values:
-${rawData.length}
-
-----------------------------------------
-RAW
-----------------------------------------
+${rawData ? rawData.length : "not available"}
 
 Minimum:
 ${min}
@@ -740,119 +701,91 @@ ${average}
 SIGMOID
 ----------------------------------------
 
-Sigmoid minimum:
-${sigmoidMin}
+Minimum:
+${sigMin}
 
-Sigmoid maximum:
-${sigmoidMax}
+Maximum:
+${sigMax}
 
-Sigmoid average:
-${sigmoidAverage}
+Average:
+${sigAverage}
 
 ----------------------------------------
-FIRST 20 VALUES
+IMPORTANT
 ----------------------------------------
 
-${Array.from(rawData.slice(0, 20)).join("\n")}
+Теперь используется:
 
-========================================
-FULL OUTPUT OBJECT
-========================================
+output.logits
 
-Открой F12 → Console
-и посмотри объект:
-FULL MODEL OUTPUT
+а НЕ:
+
+output.output_image
+
+Это соответствует документации
+studioludens/birefnet-lite-512.
 
 ========================================
 `;
 
 
-        // ==================================================
-        // CREATE ALL MASKS
-        // ==================================================
+            // ------------------------------------------------
+            // CREATE MASK
+            // ------------------------------------------------
 
-        document.getElementById("maskA").src =
-            maskToDataURL(
-                rawData,
-                width,
-                height,
-                "sigmoid"
+            status.textContent =
+                "🎨 Создаём маску...";
+
+
+            const maskURL =
+                await createMaskImage(
+                    logits,
+                    image.width,
+                    image.height
+                );
+
+
+            maskImage.src =
+                maskURL;
+
+
+            status.innerHTML =
+                '<span class="ok">' +
+                "🎉 МАСКА ГОТОВА!" +
+                "</span>" +
+                "\n\n" +
+                "Теперь посмотри на изображение справа.";
+
+
+            runButton.disabled = false;
+
+
+        } catch (error) {
+
+            console.error(
+                "BIREFNET ERROR:",
+                error
             );
 
 
-        document.getElementById("maskB").src =
-            maskToDataURL(
-                rawData,
-                width,
-                height,
-                "normalize"
-            );
+            status.innerHTML =
+                '<span class="error">' +
+                "❌ ОШИБКА\n\n" +
+                error.message +
+                "</span>";
 
 
-        document.getElementById("maskC").src =
-            maskToDataURL(
-                rawData,
-                width,
-                height,
-                "inverse"
-            );
+            debug.textContent =
+                error.stack ||
+                error.toString();
 
 
-        document.getElementById("maskD").src =
-            maskToDataURL(
-                rawData,
-                width,
-                height,
-                "normalizeInverse"
-            );
+            runButton.disabled = false;
 
-
-        document.getElementById("maskE").src =
-            maskToDataURL(
-                rawData,
-                width,
-                height,
-                "contrast"
-            );
-
-
-        status.innerHTML =
-`
-<span class="good">
-✅ Диагностика завершена.
-</span>
-
-Мы получили сразу 5 вариантов обработки
-одного и того же выхода модели.
-
-Сейчас главное — посмотреть,
-в каком из пяти вариантов товар становится белым,
-а фон чёрным.
-`;
-
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-
-        status.innerHTML =
-`
-<span class="bad">
-❌ Ошибка
-</span>
-
-${error.message}
-`;
-
-        debug.textContent =
-            error.stack ||
-            error.toString();
+        }
 
     }
-
-});
+);
 
 </script>
 
