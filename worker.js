@@ -1,341 +1,474 @@
+````javascript
 export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
+    async fetch(request, env) {
 
-    // =========================================
-    // CORS
-    // =========================================
-
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "*"
-    };
-
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: corsHeaders
-      });
-    }
+        const url = new URL(request.url);
 
 
-    // =========================================
-    // TEST AI
-    // =========================================
+        /* =====================================================
+           CORS
+        ===================================================== */
 
-    if (
-      request.method === "GET" &&
-      url.pathname === "/api/test-ai"
-    ) {
-      try {
-        const result = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          {
-            messages: [
-              {
-                role: "user",
-                content: "Ответь одним словом: работает?"
-              }
-            ]
-          }
-        );
-
-        return Response.json({
-          ok: true,
-          result
-        });
-
-      } catch (error) {
-        return Response.json(
-          {
-            ok: false,
-            error: error.message
-          },
-          {
-            status: 500
-          }
-        );
-      }
-    }
+        const corsHeaders = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*"
+        };
 
 
-    // =========================================
-    // TEST HUGGING FACE CONFIG
-    // =========================================
+        if (request.method === "OPTIONS") {
 
-    if (
-      request.method === "GET" &&
-      url.pathname === "/api/test-huggingface"
-    ) {
-      try {
-        const hfURL =
-          "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json";
+            return new Response(null, {
+                status: 204,
+                headers: corsHeaders
+            });
 
-        const response = await fetch(hfURL);
-
-        const headers = new Headers(response.headers);
-
-        headers.set(
-          "Access-Control-Allow-Origin",
-          "*"
-        );
-
-        return new Response(
-          await response.arrayBuffer(),
-          {
-            status: response.status,
-            headers
-          }
-        );
-
-      } catch (error) {
-        return Response.json(
-          {
-            ok: false,
-            error: error.message
-          },
-          {
-            status: 500,
-            headers: corsHeaders
-          }
-        );
-      }
-    }
-
-
-    // =========================================
-    // HUGGING FACE MODEL PROXY
-    // =========================================
-
-    if (
-      url.pathname.startsWith("/api/model/")
-    ) {
-
-      let path =
-        url.pathname.substring(
-          "/api/model/".length
-        );
-
-
-      // -----------------------------------------
-      // Защита от неправильного URL Transformers.js
-      //
-      // Иногда приходит:
-      //
-      // {file}/preprocessor_config.json
-      //
-      // Нам нужен:
-      //
-      // preprocessor_config.json
-      // -----------------------------------------
-
-      path = path.replace(
-        "{file}/",
-        ""
-      );
-
-
-      // -----------------------------------------
-      // Удаляем возможный повторный путь модели
-      // -----------------------------------------
-
-      const modelPrefix =
-        "studioludens/birefnet-lite-512/resolve/main/";
-
-      if (path.startsWith(modelPrefix)) {
-        path =
-          path.substring(
-            modelPrefix.length
-          );
-      }
-
-
-      // -----------------------------------------
-      // Разрешаем только файлы нашей модели
-      // -----------------------------------------
-
-      const allowedPrefixes = [
-        "config.json",
-        "preprocessor_config.json",
-        "onnx/",
-        "tokenizer",
-        "processor",
-        "generation",
-        "special_tokens"
-      ];
-
-      const allowed =
-        allowedPrefixes.some(
-          prefix => path.startsWith(prefix)
-        );
-
-
-      if (!allowed) {
-
-        return new Response(
-          "File not allowed",
-          {
-            status: 403,
-            headers: corsHeaders
-          }
-        );
-
-      }
-
-
-      // -----------------------------------------
-      // Hugging Face URL
-      // -----------------------------------------
-
-      const hfURL =
-        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/" +
-        path;
-
-
-      try {
-
-        // Передаём полезные заголовки браузера
-        const requestHeaders =
-          new Headers();
-
-
-        const range =
-          request.headers.get("Range");
-
-        if (range) {
-          requestHeaders.set(
-            "Range",
-            range
-          );
         }
 
 
-        const accept =
-          request.headers.get("Accept");
+        /* =====================================================
+           TEST AI
+        ===================================================== */
 
-        if (accept) {
-          requestHeaders.set(
-            "Accept",
-            accept
-          );
-        }
+        if (url.pathname === "/api/test-ai") {
+
+            try {
+
+                const result =
+                    await env.AI.run(
+                        "@cf/meta/llama-3.1-8b-instruct-fp8",
+                        {
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: "Ответь одним словом: работает?"
+                                }
+                            ]
+                        }
+                    );
 
 
-        const response =
-          await fetch(
-            hfURL,
-            {
-              method: "GET",
-              headers: requestHeaders
+                return new Response(
+                    JSON.stringify(result),
+                    {
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+
+            } catch (error) {
+
+                return new Response(
+                    JSON.stringify({
+                        error: error.message
+                    }),
+                    {
+                        status: 500,
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
             }
-          );
+        }
 
 
-        const headers =
-          new Headers(
-            response.headers
-          );
+        /* =====================================================
+           TEST HUGGING FACE
+        ===================================================== */
+
+        if (url.pathname === "/api/test-huggingface") {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json"
+                    );
 
 
-        // CORS
-        headers.set(
-          "Access-Control-Allow-Origin",
-          "*"
-        );
-
-        headers.set(
-          "Access-Control-Allow-Methods",
-          "GET, OPTIONS"
-        );
-
-        headers.set(
-          "Access-Control-Allow-Headers",
-          "*"
-        );
+                const text =
+                    await response.text();
 
 
-        // Разрешаем браузеру кешировать модель
-        headers.set(
-          "Cache-Control",
-          "public, max-age=31536000"
-        );
+                return new Response(
+                    text,
+                    {
+                        status: response.status,
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type":
+                                response.headers.get(
+                                    "content-type"
+                                ) ||
+                                "application/json"
+                        }
+                    }
+                );
 
 
-        return new Response(
-          response.body,
-          {
-            status: response.status,
-            headers
-          }
-        );
+            } catch (error) {
+
+                return new Response(
+                    JSON.stringify({
+                        error: error.message
+                    }),
+                    {
+                        status: 500,
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+            }
+        }
 
 
-      } catch (error) {
+        /* =====================================================
+           HUGGING FACE MODEL PROXY
+           
+           /api/model/
+           ↓
+           https://huggingface.co/
+        ===================================================== */
 
-        return Response.json(
-          {
-            ok: false,
-            error: error.message,
-            requestedPath: path,
-            huggingFaceURL: hfURL
-          },
-          {
-            status: 500,
-            headers: corsHeaders
-          }
-        );
+        if (url.pathname.startsWith("/api/model/")) {
 
-      }
-    }
+            try {
 
-
-    // =========================================
-    // GENERATE CARD
-    // =========================================
-
-    if (
-      request.method === "POST" &&
-      url.pathname === "/api/generate"
-    ) {
-
-      try {
-
-        const body =
-          await request.json();
+                let path =
+                    url.pathname.substring(
+                        "/api/model/".length
+                    );
 
 
-        const productName =
-          body.productName || "";
+                /*
+                    Transformers.js иногда создаёт:
+
+                    {file}/preprocessor_config.json
+
+                    Убираем {file}/
+                */
+
+                path =
+                    path.replace(
+                        "{file}/",
+                        ""
+                    );
 
 
-        const features =
-          body.features || "";
+                /*
+                    Если Transformers.js передал:
+
+                    model/resolve/main/...
+
+                    или повторил имя модели,
+                    нормализуем URL.
+                */
 
 
-        const prompt = `
-Ты AI-дизайнер маркетплейсов.
+                const hfBase =
+                    "https://huggingface.co/";
 
-Создай структуру инфографики товара.
 
-Название:
+                /*
+                    Разрешённые файлы.
+
+                    Нам нужны:
+                    config
+                    processor
+                    tokenizer
+                    ONNX
+                    generation
+                    special tokens
+                */
+
+                const allowedPrefixes = [
+
+                    "config.json",
+
+                    "preprocessor_config.json",
+
+                    "onnx/",
+
+                    "tokenizer",
+
+                    "processor",
+
+                    "generation",
+
+                    "special_tokens",
+
+                    "merges",
+
+                    "vocab",
+
+                    "sentencepiece",
+
+                    "normalizer"
+
+                ];
+
+
+                const isAllowed =
+                    allowedPrefixes.some(
+                        prefix =>
+                            path.startsWith(prefix)
+                    );
+
+
+                if (!isAllowed) {
+
+                    return new Response(
+                        JSON.stringify({
+                            error:
+                                "Forbidden access to file",
+                            path
+                        }),
+                        {
+                            status: 403,
+                            headers: {
+                                ...corsHeaders,
+                                "Content-Type":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+                }
+
+
+                /*
+                    Создаём URL Hugging Face.
+
+                    path приходит примерно:
+
+                    onnx-community/
+                    BiRefNet_512x512-ONNX/
+                    resolve/
+                    main/
+                    config.json
+                */
+
+                const hfUrl =
+                    hfBase + path;
+
+
+                console.log(
+                    "HF proxy:",
+                    hfUrl
+                );
+
+
+                /*
+                    Передаём важные заголовки.
+
+                    Range особенно важен для
+                    больших ONNX-файлов.
+                */
+
+                const headers =
+                    new Headers();
+
+
+                const range =
+                    request.headers.get(
+                        "Range"
+                    );
+
+                if (range) {
+
+                    headers.set(
+                        "Range",
+                        range
+                    );
+
+                }
+
+
+                const accept =
+                    request.headers.get(
+                        "Accept"
+                    );
+
+                if (accept) {
+
+                    headers.set(
+                        "Accept",
+                        accept
+                    );
+
+                }
+
+
+                /*
+                    Запрашиваем Hugging Face.
+                */
+
+                const response =
+                    await fetch(
+                        hfUrl,
+                        {
+                            method: "GET",
+                            headers
+                        }
+                    );
+
+
+                /*
+                    Копируем ответ.
+                */
+
+                const responseHeaders =
+                    new Headers();
+
+
+                response.headers.forEach(
+                    (value, key) => {
+
+                        responseHeaders.set(
+                            key,
+                            value
+                        );
+
+                    }
+                );
+
+
+                /*
+                    CORS
+                */
+
+                Object.entries(
+                    corsHeaders
+                ).forEach(
+                    ([key, value]) => {
+
+                        responseHeaders.set(
+                            key,
+                            value
+                        );
+
+                    }
+                );
+
+
+                /*
+                    Кэшируем модели.
+
+                    ONNX-файлы большие,
+                    поэтому повторно скачивать
+                    их не нужно.
+                */
+
+                responseHeaders.set(
+                    "Cache-Control",
+                    "public, max-age=31536000"
+                );
+
+
+                return new Response(
+                    response.body,
+                    {
+                        status:
+                            response.status,
+
+                        statusText:
+                            response.statusText,
+
+                        headers:
+                            responseHeaders
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "HF proxy error:",
+                    error
+                );
+
+
+                return new Response(
+                    JSON.stringify({
+                        error: error.message
+                    }),
+                    {
+                        status: 500,
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           GENERATE
+        ===================================================== */
+
+        if (
+            url.pathname === "/api/generate" &&
+            request.method === "POST"
+        ) {
+
+            try {
+
+                const body =
+                    await request.json();
+
+
+                const productName =
+                    body.productName ||
+                    "Товар";
+
+
+                const features =
+                    body.features ||
+                    "";
+
+
+                const prompt = `
+Ты профессиональный дизайнер инфографики
+для Wildberries и Ozon.
+
+Создай структуру карточки товара.
+
+Товар:
 ${productName}
 
 Характеристики:
 ${features}
 
-Используй ТОЛЬКО информацию пользователя.
-
-Верни только JSON.
+Верни ТОЛЬКО JSON.
 
 Формат:
 
 {
-  "title": "...",
-  "subtitle": "...",
-  "features": ["...", "...", "..."],
+  "title": "короткий заголовок",
+  "subtitle": "короткий подзаголовок",
+  "features": [
+    "характеристика 1",
+    "характеристика 2",
+    "характеристика 3"
+  ],
   "design": "hero",
   "productPosition": "center",
-  "productScale": 0.8,
+  "productScale": 0.75,
   "titlePosition": "top",
   "featuresPosition": "bottom",
   "background": "light",
@@ -348,10 +481,15 @@ design:
 hero | split | editorial | dynamic | info | premium
 
 productPosition:
-center | center-bottom | center-top |
-left | right |
-left-bottom | right-bottom |
-left-top | right-top
+center |
+center-bottom |
+center-top |
+left |
+right |
+left-bottom |
+right-bottom |
+left-top |
+right-top
 
 background:
 light | dark | gradient | soft | accent
@@ -365,114 +503,294 @@ none | soft | medium
 decoration:
 none | lines | circles | blobs | grid | diagonal
 
-Ответь только JSON.
+productScale:
+от 0.55 до 0.95
 `;
 
 
-        const result =
-          await env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct-fp8",
-            {
-              messages: [
-                {
-                  role: "user",
-                  content: prompt
+                const result =
+                    await env.AI.run(
+                        "@cf/meta/llama-3.1-8b-instruct-fp8",
+                        {
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: prompt
+                                }
+                            ]
+                        }
+                    );
+
+
+                let text =
+                    result.response ||
+                    "";
+
+
+                /*
+                    Убираем возможный markdown
+                    ```json ... ```
+                */
+
+                text =
+                    text
+                        .replace(
+                            /```json/gi,
+                            ""
+                        )
+                        .replace(
+                            /```/g,
+                            ""
+                        )
+                        .trim();
+
+
+                let parsed;
+
+
+                try {
+
+                    parsed =
+                        JSON.parse(text);
+
+                } catch {
+
+                    parsed = {
+
+                        title:
+                            productName,
+
+                        subtitle:
+                            "Качество и удобство",
+
+                        features:
+                            [
+                                "Надёжный материал",
+                                "Удобное использование",
+                                "Современный дизайн"
+                            ],
+
+                        design:
+                            "hero",
+
+                        productPosition:
+                            "center",
+
+                        productScale:
+                            0.75,
+
+                        titlePosition:
+                            "top",
+
+                        featuresPosition:
+                            "bottom",
+
+                        background:
+                            "light",
+
+                        accent:
+                            "blue",
+
+                        shadow:
+                            "soft",
+
+                        decoration:
+                            "none"
+
+                    };
+
                 }
-              ]
+
+
+                /*
+                    Безопасные значения.
+                */
+
+                const designs = [
+                    "hero",
+                    "split",
+                    "editorial",
+                    "dynamic",
+                    "info",
+                    "premium"
+                ];
+
+
+                const positions = [
+                    "center",
+                    "center-bottom",
+                    "center-top",
+                    "left",
+                    "right",
+                    "left-bottom",
+                    "right-bottom",
+                    "left-top",
+                    "right-top"
+                ];
+
+
+                const backgrounds = [
+                    "light",
+                    "dark",
+                    "gradient",
+                    "soft",
+                    "accent"
+                ];
+
+
+                const accents = [
+                    "blue",
+                    "cyan",
+                    "green",
+                    "orange",
+                    "violet",
+                    "red",
+                    "none"
+                ];
+
+
+                const shadows = [
+                    "none",
+                    "soft",
+                    "medium"
+                ];
+
+
+                const decorations = [
+                    "none",
+                    "lines",
+                    "circles",
+                    "blobs",
+                    "grid",
+                    "diagonal"
+                ];
+
+
+                if (
+                    !designs.includes(
+                        parsed.design
+                    )
+                ) {
+
+                    parsed.design =
+                        "hero";
+
+                }
+
+
+                if (
+                    !positions.includes(
+                        parsed.productPosition
+                    )
+                ) {
+
+                    parsed.productPosition =
+                        "center";
+
+                }
+
+
+                if (
+                    !backgrounds.includes(
+                        parsed.background
+                    )
+                ) {
+
+                    parsed.background =
+                        "light";
+
+                }
+
+
+                if (
+                    !accents.includes(
+                        parsed.accent
+                    )
+                ) {
+
+                    parsed.accent =
+                        "blue";
+
+                }
+
+
+                if (
+                    !shadows.includes(
+                        parsed.shadow
+                    )
+                ) {
+
+                    parsed.shadow =
+                        "soft";
+
+                }
+
+
+                if (
+                    !decorations.includes(
+                        parsed.decoration
+                    )
+                ) {
+
+                    parsed.decoration =
+                        "none";
+
+                }
+
+
+                parsed.productScale =
+                    Math.max(
+                        0.55,
+                        Math.min(
+                            0.95,
+                            Number(
+                                parsed.productScale
+                            ) || 0.75
+                        )
+                    );
+
+
+                return new Response(
+                    JSON.stringify(parsed),
+                    {
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            } catch (error) {
+
+                return new Response(
+                    JSON.stringify({
+                        error: error.message
+                    }),
+                    {
+                        status: 500,
+                        headers: {
+                            ...corsHeaders,
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
             }
-          );
-
-
-        let text =
-          result.response || "";
-
-
-        let data;
-
-
-        try {
-
-          data =
-            JSON.parse(text);
-
-        } catch {
-
-          data = {
-
-            title:
-              productName || "Товар",
-
-            subtitle:
-              "",
-
-            features:
-              features
-                .split("\n")
-                .filter(Boolean)
-                .slice(0, 4),
-
-            design:
-              "hero",
-
-            productPosition:
-              "center-bottom",
-
-            productScale:
-              0.8,
-
-            titlePosition:
-              "top",
-
-            featuresPosition:
-              "bottom",
-
-            background:
-              "light",
-
-            accent:
-              "blue",
-
-            shadow:
-              "soft",
-
-            decoration:
-              "none"
-          };
 
         }
 
 
-        return Response.json(
-          data,
-          {
-            headers: corsHeaders
-          }
+        /* =====================================================
+           STATIC ASSETS
+        ===================================================== */
+
+        return env.ASSETS.fetch(
+            request
         );
 
-
-      } catch (error) {
-
-        return Response.json(
-          {
-            error:
-              error.message
-          },
-          {
-            status: 500,
-            headers: corsHeaders
-          }
-        );
-
-      }
     }
-
-
-    // =========================================
-    // WEBSITE
-    // =========================================
-
-    return env.ASSETS.fetch(
-      request
-    );
-  }
 };
+````
