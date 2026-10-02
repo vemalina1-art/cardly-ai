@@ -4,11 +4,6 @@ export default {
 
         const url = new URL(request.url);
 
-
-        /* =====================================================
-           CORS
-        ===================================================== */
-
         const corsHeaders = {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -16,37 +11,37 @@ export default {
         };
 
 
-        if (request.method === "OPTIONS") {
+        // =====================================================
+        // CORS / OPTIONS
+        // =====================================================
 
+        if (request.method === "OPTIONS") {
             return new Response(null, {
                 status: 204,
                 headers: corsHeaders
             });
-
         }
 
 
-        /* =====================================================
-           TEST AI
-        ===================================================== */
+        // =====================================================
+        // TEST AI
+        // =====================================================
 
         if (url.pathname === "/api/test-ai") {
 
             try {
 
-                const result =
-                    await env.AI.run(
-                        "@cf/meta/llama-3.1-8b-instruct-fp8",
-                        {
-                            messages: [
-                                {
-                                    role: "user",
-                                    content: "Ответь одним словом: работает?"
-                                }
-                            ]
-                        }
-                    );
-
+                const result = await env.AI.run(
+                    "@cf/meta/llama-3.1-8b-instruct-fp8",
+                    {
+                        messages: [
+                            {
+                                role: "user",
+                                content: "Ответь одним словом: работает?"
+                            }
+                        ]
+                    }
+                );
 
                 return new Response(
                     JSON.stringify(result),
@@ -58,7 +53,6 @@ export default {
                     }
                 );
 
-
             } catch (error) {
 
                 return new Response(
@@ -73,28 +67,23 @@ export default {
                         }
                     }
                 );
-
             }
         }
 
 
-        /* =====================================================
-           TEST HUGGING FACE
-        ===================================================== */
+        // =====================================================
+        // TEST HUGGING FACE
+        // =====================================================
 
         if (url.pathname === "/api/test-huggingface") {
 
             try {
 
-                const response =
-                    await fetch(
-                        "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json"
-                    );
+                const response = await fetch(
+                    "https://huggingface.co/studioludens/birefnet-lite-512/resolve/main/config.json"
+                );
 
-
-                const text =
-                    await response.text();
-
+                const text = await response.text();
 
                 return new Response(
                     text,
@@ -103,14 +92,11 @@ export default {
                         headers: {
                             ...corsHeaders,
                             "Content-Type":
-                                response.headers.get(
-                                    "content-type"
-                                ) ||
+                                response.headers.get("content-type") ||
                                 "application/json"
                         }
                     }
                 );
-
 
             } catch (error) {
 
@@ -127,111 +113,154 @@ export default {
                         }
                     }
                 );
-
             }
         }
 
 
-        /* =====================================================
-           HUGGING FACE MODEL PROXY
-           
-           /api/model/
-           ↓
-           https://huggingface.co/
-        ===================================================== */
+        // =====================================================
+        // HUGGING FACE MODEL PROXY
+        // =====================================================
 
         if (url.pathname.startsWith("/api/model/")) {
 
             try {
 
-                let path =
-                    url.pathname.substring(
-                        "/api/model/".length
+                let path = url.pathname.substring(
+                    "/api/model/".length
+                );
+
+                path = decodeURIComponent(path);
+
+                // Иногда Transformers.js добавляет {file}/
+                path = path.replace("{file}/", "");
+
+
+                console.log("MODEL REQUEST:", path);
+
+
+                // -------------------------------------------------
+                // Ожидаемый формат:
+                //
+                // onnx-community/
+                // BiRefNet_512x512-ONNX/
+                // resolve/
+                // main/
+                // preprocessor_config.json
+                // -------------------------------------------------
+
+                const parts = path.split("/");
+
+
+                if (
+                    parts.length < 5 ||
+                    parts[2] !== "resolve"
+                ) {
+
+                    return new Response(
+                        JSON.stringify({
+                            error: "Invalid model path",
+                            path: path
+                        }),
+                        {
+                            status: 400,
+                            headers: {
+                                ...corsHeaders,
+                                "Content-Type":
+                                    "application/json"
+                            }
+                        }
                     );
+                }
 
 
-                /*
-                    Transformers.js иногда создаёт:
+                const modelOwner = parts[0];
+                const modelName = parts[1];
+                const revision = parts[3];
 
-                    {file}/preprocessor_config.json
-
-                    Убираем {file}/
-                */
-
-                path =
-                    path.replace(
-                        "{file}/",
-                        ""
-                    );
+                const filePath = parts
+                    .slice(4)
+                    .join("/");
 
 
-                /*
-                    Если Transformers.js передал:
+                console.log(
+                    "MODEL OWNER:",
+                    modelOwner
+                );
 
-                    model/resolve/main/...
+                console.log(
+                    "MODEL NAME:",
+                    modelName
+                );
 
-                    или повторил имя модели,
-                    нормализуем URL.
-                */
+                console.log(
+                    "REVISION:",
+                    revision
+                );
+
+                console.log(
+                    "FILE:",
+                    filePath
+                );
 
 
-                const hfBase =
-                    "https://huggingface.co/";
+                // =================================================
+                // ALLOWED FILES
+                // =================================================
 
-
-                /*
-                    Разрешённые файлы.
-
-                    Нам нужны:
-                    config
-                    processor
-                    tokenizer
-                    ONNX
-                    generation
-                    special tokens
-                */
-
-                const allowedPrefixes = [
+                const allowedFiles = [
 
                     "config.json",
 
                     "preprocessor_config.json",
 
-                    "onnx/",
+                    "processor_config.json",
 
-                    "tokenizer",
+                    "tokenizer.json",
 
-                    "processor",
+                    "tokenizer_config.json",
 
-                    "generation",
+                    "special_tokens_map.json",
 
-                    "special_tokens",
+                    "generation_config.json",
 
-                    "merges",
+                    "vocab.json",
 
-                    "vocab",
+                    "merges.txt",
 
-                    "sentencepiece",
-
-                    "normalizer"
+                    "normalizer.json"
 
                 ];
 
 
-                const isAllowed =
-                    allowedPrefixes.some(
-                        prefix =>
-                            path.startsWith(prefix)
+                const allowedDirectories = [
+
+                    "onnx/"
+
+                ];
+
+
+                const isAllowedFile =
+                    allowedFiles.includes(filePath);
+
+
+                const isAllowedDirectory =
+                    allowedDirectories.some(
+                        directory =>
+                            filePath.startsWith(directory)
                     );
 
 
-                if (!isAllowed) {
+                if (
+                    !isAllowedFile &&
+                    !isAllowedDirectory
+                ) {
 
                     return new Response(
                         JSON.stringify({
                             error:
                                 "Forbidden access to file",
-                            path
+                            file:
+                                filePath
                         }),
                         {
                             status: 403,
@@ -242,90 +271,77 @@ export default {
                             }
                         }
                     );
-
                 }
 
 
-                /*
-                    Создаём URL Hugging Face.
-
-                    path приходит примерно:
-
-                    onnx-community/
-                    BiRefNet_512x512-ONNX/
-                    resolve/
-                    main/
-                    config.json
-                */
+                // =================================================
+                // HUGGING FACE URL
+                // =================================================
 
                 const hfUrl =
-                    hfBase + path;
+                    "https://huggingface.co/" +
+                    modelOwner +
+                    "/" +
+                    modelName +
+                    "/resolve/" +
+                    revision +
+                    "/" +
+                    filePath;
 
 
                 console.log(
-                    "HF proxy:",
+                    "FETCH HF:",
                     hfUrl
                 );
 
 
-                /*
-                    Передаём важные заголовки.
+                // =================================================
+                // REQUEST HEADERS
+                // =================================================
 
-                    Range особенно важен для
-                    больших ONNX-файлов.
-                */
-
-                const headers =
-                    new Headers();
+                const headers = new Headers();
 
 
                 const range =
-                    request.headers.get(
-                        "Range"
-                    );
+                    request.headers.get("Range");
+
 
                 if (range) {
-
-                    headers.set(
-                        "Range",
-                        range
-                    );
-
+                    headers.set("Range", range);
                 }
 
 
                 const accept =
-                    request.headers.get(
-                        "Accept"
-                    );
+                    request.headers.get("Accept");
+
 
                 if (accept) {
-
-                    headers.set(
-                        "Accept",
-                        accept
-                    );
-
+                    headers.set("Accept", accept);
                 }
 
 
-                /*
-                    Запрашиваем Hugging Face.
-                */
+                // =================================================
+                // FETCH HUGGING FACE
+                // =================================================
 
-                const response =
-                    await fetch(
-                        hfUrl,
-                        {
-                            method: "GET",
-                            headers
-                        }
-                    );
+                const response = await fetch(
+                    hfUrl,
+                    {
+                        method: "GET",
+                        headers: headers
+                    }
+                );
 
 
-                /*
-                    Копируем ответ.
-                */
+                console.log(
+                    "HF STATUS:",
+                    response.status
+                );
+
+
+                // =================================================
+                // RESPONSE HEADERS
+                // =================================================
 
                 const responseHeaders =
                     new Headers();
@@ -333,41 +349,25 @@ export default {
 
                 response.headers.forEach(
                     (value, key) => {
-
                         responseHeaders.set(
                             key,
                             value
                         );
-
                     }
                 );
 
-
-                /*
-                    CORS
-                */
 
                 Object.entries(
                     corsHeaders
                 ).forEach(
                     ([key, value]) => {
-
                         responseHeaders.set(
                             key,
                             value
                         );
-
                     }
                 );
 
-
-                /*
-                    Кэшируем модели.
-
-                    ONNX-файлы большие,
-                    поэтому повторно скачивать
-                    их не нужно.
-                */
 
                 responseHeaders.set(
                     "Cache-Control",
@@ -393,14 +393,15 @@ export default {
             } catch (error) {
 
                 console.error(
-                    "HF proxy error:",
+                    "MODEL PROXY ERROR:",
                     error
                 );
 
 
                 return new Response(
                     JSON.stringify({
-                        error: error.message
+                        error:
+                            error.message
                     }),
                     {
                         status: 500,
@@ -411,15 +412,13 @@ export default {
                         }
                     }
                 );
-
             }
-
         }
 
 
-        /* =====================================================
-           GENERATE
-        ===================================================== */
+        // =====================================================
+        // AI GENERATE
+        // =====================================================
 
         if (
             url.pathname === "/api/generate" &&
@@ -527,11 +526,7 @@ productScale:
                     "";
 
 
-                /*
-                    Убираем возможный markdown
-                    ```json ... ```
-                */
-
+                // Убираем ```json ... ```
                 text =
                     text
                         .replace(
@@ -563,12 +558,11 @@ productScale:
                         subtitle:
                             "Качество и удобство",
 
-                        features:
-                            [
-                                "Надёжный материал",
-                                "Удобное использование",
-                                "Современный дизайн"
-                            ],
+                        features: [
+                            "Надёжный материал",
+                            "Удобное использование",
+                            "Современный дизайн"
+                        ],
 
                         design:
                             "hero",
@@ -596,15 +590,13 @@ productScale:
 
                         decoration:
                             "none"
-
                     };
-
                 }
 
 
-                /*
-                    Безопасные значения.
-                */
+                // =================================================
+                // VALIDATION
+                // =================================================
 
                 const designs = [
                     "hero",
@@ -671,10 +663,7 @@ productScale:
                         parsed.design
                     )
                 ) {
-
-                    parsed.design =
-                        "hero";
-
+                    parsed.design = "hero";
                 }
 
 
@@ -683,10 +672,8 @@ productScale:
                         parsed.productPosition
                     )
                 ) {
-
                     parsed.productPosition =
                         "center";
-
                 }
 
 
@@ -695,10 +682,8 @@ productScale:
                         parsed.background
                     )
                 ) {
-
                     parsed.background =
                         "light";
-
                 }
 
 
@@ -707,10 +692,8 @@ productScale:
                         parsed.accent
                     )
                 ) {
-
                     parsed.accent =
                         "blue";
-
                 }
 
 
@@ -719,10 +702,8 @@ productScale:
                         parsed.shadow
                     )
                 ) {
-
                     parsed.shadow =
                         "soft";
-
                 }
 
 
@@ -731,10 +712,8 @@ productScale:
                         parsed.decoration
                     )
                 ) {
-
                     parsed.decoration =
                         "none";
-
                 }
 
 
@@ -749,6 +728,10 @@ productScale:
                         )
                     );
 
+
+                // =================================================
+                // RESPONSE
+                // =================================================
 
                 return new Response(
                     JSON.stringify(parsed),
@@ -766,7 +749,8 @@ productScale:
 
                 return new Response(
                     JSON.stringify({
-                        error: error.message
+                        error:
+                            error.message
                     }),
                     {
                         status: 500,
@@ -777,20 +761,15 @@ productScale:
                         }
                     }
                 );
-
             }
-
         }
 
 
-        /* =====================================================
-           STATIC ASSETS
-        ===================================================== */
+        // =====================================================
+        // STATIC ASSETS
+        // =====================================================
 
-        return env.ASSETS.fetch(
-            request
-        );
-
+        return env.ASSETS.fetch(request);
     }
 };
 ````
