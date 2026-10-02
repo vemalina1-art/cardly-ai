@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>BiRefNet Test</title>
+<title>Cardly AI — Background Removal Test</title>
 
 <style>
     * {
@@ -16,7 +16,7 @@
         margin: 0;
         padding: 30px;
         background: #111;
-        color: white;
+        color: #fff;
         font-family: Arial, sans-serif;
     }
 
@@ -25,22 +25,22 @@
     }
 
     button {
-        padding: 14px 20px;
+        padding: 13px 18px;
         margin: 8px 5px 8px 0;
-        border: none;
+        border: 0;
         border-radius: 8px;
-        font-size: 15px;
         cursor: pointer;
+        font-size: 15px;
     }
 
     #load {
         background: #444;
-        color: white;
+        color: #fff;
     }
 
     #run {
         background: #2563eb;
-        color: white;
+        color: #fff;
     }
 
     #run:disabled {
@@ -51,40 +51,41 @@
     #status {
         margin-top: 15px;
         padding: 15px;
-        background: #1d1d1d;
-        border-radius: 8px;
+        background: #1c1c1c;
+        border-radius: 10px;
         white-space: pre-wrap;
     }
 
-    .images {
+    .results {
         display: grid;
         grid-template-columns: repeat(2, minmax(250px, 1fr));
         gap: 20px;
+        max-width: 1000px;
         margin-top: 25px;
-        max-width: 900px;
     }
 
-    .box {
+    .card {
         background: #1c1c1c;
         padding: 12px;
         border-radius: 12px;
     }
 
-    .box h3 {
+    .card h3 {
         margin: 0 0 10px;
     }
 
-    img {
-        display: block;
-        width: 100%;
-        min-height: 200px;
-        object-fit: contain;
+    .preview {
+        position: relative;
+        overflow: hidden;
+
         background:
             linear-gradient(45deg, #777 25%, transparent 25%),
             linear-gradient(-45deg, #777 25%, transparent 25%),
             linear-gradient(45deg, transparent 75%, #777 75%),
             linear-gradient(-45deg, transparent 75%, #777 75%);
+
         background-size: 20px 20px;
+
         background-position:
             0 0,
             0 10px,
@@ -92,20 +93,27 @@
             -10px 0;
     }
 
+    .preview img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
     pre {
         margin-top: 25px;
         padding: 15px;
         background: #050505;
-        border-radius: 8px;
+        border-radius: 10px;
         white-space: pre-wrap;
+        word-break: break-word;
         overflow-x: auto;
     }
 
-    .ok {
+    .good {
         color: #4ade80;
     }
 
-    .error {
+    .bad {
         color: #f87171;
     }
 </style>
@@ -113,7 +121,7 @@
 
 <body>
 
-<h1>🔬 BiRefNet — правильный output</h1>
+<h1>✂️ BiRefNet — Background Removal Test</h1>
 
 <input
     type="file"
@@ -128,26 +136,82 @@
 </button>
 
 <button id="run" disabled>
-    ✂️ Проверить маску
+    ✂️ Вырезать фон
 </button>
 
 <div id="status">
-Модель ещё не загружена.
+Выбери фотографию.
 </div>
 
-<div class="images">
 
-    <div class="box">
-        <h3>Исходное изображение</h3>
-        <img id="original">
+<div class="results">
+
+    <!-- ORIGINAL -->
+
+    <div class="card">
+
+        <h3>Исходное фото</h3>
+
+        <div class="preview">
+            <img id="original">
+        </div>
+
     </div>
 
-    <div class="box">
-        <h3>Маска BiRefNet</h3>
-        <img id="mask">
+
+    <!-- SOFT -->
+
+    <div class="card">
+
+        <h3>🟢 Мягкий вариант</h3>
+
+        <div class="preview">
+            <img id="soft">
+        </div>
+
+    </div>
+
+
+    <!-- MEDIUM -->
+
+    <div class="card">
+
+        <h3>🟡 Средний вариант</h3>
+
+        <div class="preview">
+            <img id="medium">
+        </div>
+
+    </div>
+
+
+    <!-- HARD -->
+
+    <div class="card">
+
+        <h3>🔴 Жёсткий вариант</h3>
+
+        <div class="preview">
+            <img id="hard">
+        </div>
+
+    </div>
+
+
+    <!-- MASK -->
+
+    <div class="card">
+
+        <h3>⚪ Нормализованная маска</h3>
+
+        <div class="preview">
+            <img id="mask">
+        </div>
+
     </div>
 
 </div>
+
 
 <pre id="debug"></pre>
 
@@ -163,7 +227,7 @@ import {
 
 
 // ======================================================
-// HUGGING FACE PROXY
+// TRANSFORMERS.JS
 // ======================================================
 
 env.allowRemoteModels = true;
@@ -197,9 +261,6 @@ const debug =
 const original =
     document.getElementById("original");
 
-const maskImage =
-    document.getElementById("mask");
-
 
 // ======================================================
 // VARIABLES
@@ -213,7 +274,7 @@ let processor = null;
 
 
 // ======================================================
-// SELECT IMAGE
+// FILE
 // ======================================================
 
 fileInput.addEventListener(
@@ -253,7 +314,7 @@ loadButton.addEventListener(
             loadButton.disabled = true;
 
             status.textContent =
-                "⏳ Загружаем процессор BiRefNet...";
+                "⏳ Загружаем процессор...";
 
 
             processor =
@@ -263,8 +324,7 @@ loadButton.addEventListener(
 
 
             status.textContent =
-                "⏳ Загружаем модель BiRefNet...\n\n" +
-                "Если используется WebGPU, загрузка может занять некоторое время.";
+                "⏳ Загружаем BiRefNet...";
 
 
             try {
@@ -279,7 +339,7 @@ loadButton.addEventListener(
                     );
 
                 status.textContent =
-                    "🚀 Модель загружена через WebGPU.";
+                    "🚀 BiRefNet работает через WebGPU.";
 
             } catch (webgpuError) {
 
@@ -290,7 +350,7 @@ loadButton.addEventListener(
 
                 status.textContent =
                     "⚠️ WebGPU не запустился.\n" +
-                    "Переходим на WASM...";
+                    "Пробуем WASM...";
 
 
                 model =
@@ -303,26 +363,23 @@ loadButton.addEventListener(
 
 
                 status.textContent =
-                    "🟢 Модель загружена через WASM.";
+                    "🟢 BiRefNet работает через WASM.";
 
             }
 
 
             runButton.disabled = false;
 
-
             status.textContent +=
-                "\n\n✅ BiRefNet полностью готов.";
+                "\n\n✅ Модель готова.";
 
         } catch (error) {
 
-            console.error(
-                error
-            );
+            console.error(error);
 
             status.innerHTML =
-                '<span class="error">' +
-                "❌ Ошибка загрузки модели\n\n" +
+                '<span class="bad">' +
+                "❌ Ошибка загрузки:\n\n" +
                 error.message +
                 "</span>";
 
@@ -335,128 +392,368 @@ loadButton.addEventListener(
 
 
 // ======================================================
-// CREATE MASK IMAGE
+// LOAD ORIGINAL IMAGE INTO CANVAS
 // ======================================================
 
-async function createMaskImage(
-    logits,
-    originalWidth,
-    originalHeight
+async function loadImageBitmap(
+    file
 ) {
 
-    /*
-        Здесь используем именно официальный
-        подход модели:
-
-        logits
-        ↓
-        sigmoid
-        ↓
-        ×255
-        ↓
-        RawImage
-        ↓
-        resize
-    */
-
-
-    console.log(
-        "LOGITS OBJECT:",
-        logits
+    return await createImageBitmap(
+        file
     );
-
-
-    // --------------------------------------------------
-    // Убираем batch dimension
-    // --------------------------------------------------
-
-    let maskTensor;
-
-
-    try {
-
-        /*
-            Ожидаем:
-
-            logits:
-            [1, 1, 512, 512]
-
-            logits[0]:
-            [1, 512, 512]
-        */
-
-        maskTensor =
-            logits[0];
-
-    } catch (error) {
-
-        console.warn(
-            "Не удалось взять logits[0]",
-            error
-        );
-
-        maskTensor =
-            logits;
-
-    }
-
-
-    console.log(
-        "MASK TENSOR:",
-        maskTensor
-    );
-
-
-    // --------------------------------------------------
-    // SIGMOID
-    // --------------------------------------------------
-
-    const sigmoidMask =
-        maskTensor
-            .sigmoid()
-            .mul(255);
-
-
-    console.log(
-        "SIGMOID MASK:",
-        sigmoidMask
-    );
-
-
-    // --------------------------------------------------
-    // RawImage
-    // --------------------------------------------------
-
-    const mask =
-        await RawImage.fromTensor(
-            sigmoidMask
-        );
-
-
-    console.log(
-        "MASK RAW IMAGE:",
-        mask
-    );
-
-
-    // --------------------------------------------------
-    // RESIZE
-    // --------------------------------------------------
-
-    const resized =
-        mask.resize(
-            originalWidth,
-            originalHeight
-        );
-
-
-    return resized.toDataURL();
 
 }
 
 
 // ======================================================
-// RUN MODEL
+// CREATE MASK
+// ======================================================
+
+function createMaskCanvas(
+    values,
+    width,
+    height
+) {
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+    canvas.width =
+        width;
+
+    canvas.height =
+        height;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    const imageData =
+        ctx.createImageData(
+            width,
+            height
+        );
+
+
+    let min =
+        Infinity;
+
+    let max =
+        -Infinity;
+
+
+    // ----------------------------------------------
+    // FIND MIN / MAX
+    // ----------------------------------------------
+
+    for (
+        let i = 0;
+        i < values.length;
+        i++
+    ) {
+
+        const value =
+            values[i];
+
+
+        if (value < min)
+            min = value;
+
+
+        if (value > max)
+            max = value;
+
+    }
+
+
+    const range =
+        max - min || 1;
+
+
+    // ----------------------------------------------
+    // NORMALIZE
+    // ----------------------------------------------
+
+    for (
+        let i = 0;
+        i < values.length;
+        i++
+    ) {
+
+        const normalized =
+            (
+                values[i] - min
+            ) / range;
+
+
+        const gray =
+            Math.round(
+                normalized * 255
+            );
+
+
+        const index =
+            i * 4;
+
+
+        imageData.data[index] =
+            gray;
+
+        imageData.data[index + 1] =
+            gray;
+
+        imageData.data[index + 2] =
+            gray;
+
+        imageData.data[index + 3] =
+            255;
+
+    }
+
+
+    ctx.putImageData(
+        imageData,
+        0,
+        0
+    );
+
+
+    return {
+        canvas,
+        min,
+        max,
+        range
+    };
+
+}
+
+
+// ======================================================
+// RESIZE MASK TO ORIGINAL IMAGE
+// ======================================================
+
+function resizeMask(
+    maskCanvas,
+    width,
+    height
+) {
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+    canvas.width =
+        width;
+
+    canvas.height =
+        height;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    ctx.imageSmoothingEnabled =
+        true;
+
+    ctx.imageSmoothingQuality =
+        "high";
+
+
+    ctx.drawImage(
+        maskCanvas,
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    return canvas;
+
+}
+
+
+// ======================================================
+// CREATE TRANSPARENT PRODUCT
+// ======================================================
+
+function createTransparentVersion(
+    bitmap,
+    maskCanvas,
+    threshold,
+    feather
+) {
+
+    const width =
+        bitmap.width;
+
+    const height =
+        bitmap.height;
+
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+    canvas.width =
+        width;
+
+    canvas.height =
+        height;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    // ----------------------------------------------
+    // DRAW ORIGINAL
+    // ----------------------------------------------
+
+    ctx.drawImage(
+        bitmap,
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    const imageData =
+        ctx.getImageData(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+    const maskData =
+        maskCanvas
+            .getContext("2d")
+            .getImageData(
+                0,
+                0,
+                width,
+                height
+            );
+
+
+    // ----------------------------------------------
+    // APPLY MASK
+    // ----------------------------------------------
+
+    for (
+        let y = 0;
+        y < height;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < width;
+            x++
+        ) {
+
+            const i =
+                (
+                    y * width +
+                    x
+                ) * 4;
+
+
+            const maskValue =
+                maskData.data[i] /
+                255;
+
+
+            let alpha;
+
+
+            // ------------------------------------------
+            // FEATHER
+            // ------------------------------------------
+
+            if (
+                maskValue <=
+                threshold - feather
+            ) {
+
+                alpha = 0;
+
+            } else if (
+                maskValue >=
+                threshold + feather
+            ) {
+
+                alpha = 1;
+
+            } else {
+
+                const t =
+                    (
+                        maskValue -
+                        (
+                            threshold -
+                            feather
+                        )
+                    ) /
+                    (
+                        feather * 2
+                    );
+
+
+                // smoothstep
+
+                alpha =
+                    t * t *
+                    (
+                        3 -
+                        2 * t
+                    );
+
+            }
+
+
+            imageData.data[i + 3] =
+                Math.round(
+                    alpha * 255
+                );
+
+        }
+
+    }
+
+
+    ctx.putImageData(
+        imageData,
+        0,
+        0
+    );
+
+
+    return canvas.toDataURL(
+        "image/png"
+    );
+
+}
+
+
+// ======================================================
+// RUN
 // ======================================================
 
 runButton.addEventListener(
@@ -466,10 +763,11 @@ runButton.addEventListener(
         if (!selectedFile) {
 
             alert(
-                "Сначала выбери фотографию."
+                "Сначала выбери фото."
             );
 
             return;
+
         }
 
 
@@ -480,6 +778,7 @@ runButton.addEventListener(
             );
 
             return;
+
         }
 
 
@@ -498,14 +797,14 @@ runButton.addEventListener(
                 );
 
 
-            console.log(
-                "ORIGINAL IMAGE:",
-                image
-            );
+            const bitmap =
+                await loadImageBitmap(
+                    selectedFile
+                );
 
 
             status.textContent =
-                "⏳ Подготавливаем изображение для BiRefNet...";
+                "⏳ Подготавливаем изображение...";
 
 
             const {
@@ -516,24 +815,9 @@ runButton.addEventListener(
                 );
 
 
-            console.log(
-                "PIXEL VALUES:",
-                pixel_values
-            );
-
-
             status.textContent =
                 "🧠 BiRefNet анализирует товар...";
 
-
-            /*
-                ВАЖНО:
-
-                Берём именно logits.
-
-                Это официальный output
-                модели BiRefNet.
-            */
 
             const output =
                 await model({
@@ -543,69 +827,64 @@ runButton.addEventListener(
 
 
             console.log(
-                "================================"
-            );
-
-            console.log(
-                "FULL MODEL OUTPUT:",
+                "FULL OUTPUT:",
                 output
             );
 
-            console.log(
-                "OUTPUT KEYS:",
-                Object.keys(output)
-            );
 
-            console.log(
-                "LOGITS:",
-                output.logits
-            );
+            // ==================================================
+            // REAL OUTPUT FROM YOUR MODEL
+            // ==================================================
 
-            console.log(
-                "LOGITS DIMS:",
-                output.logits?.dims
-            );
-
-            console.log(
-                "================================"
-            );
+            const outputImage =
+                output.output_image;
 
 
-            // ------------------------------------------------
-            // CHECK LOGITS
-            // ------------------------------------------------
-
-            if (!output.logits) {
+            if (!outputImage) {
 
                 throw new Error(
-                    "BiRefNet не вернул output.logits"
+                    "BiRefNet не вернул output.output_image"
                 );
 
             }
 
 
-            const logits =
-                output.logits;
+            console.log(
+                "OUTPUT IMAGE:",
+                outputImage
+            );
 
 
-            // ------------------------------------------------
-            // DEBUG
-            // ------------------------------------------------
+            console.log(
+                "DIMS:",
+                outputImage.dims
+            );
 
-            let rawData = null;
+
+            const rawData =
+                outputImage
+                    .ort_tensor
+                    .data;
 
 
-            if (
-                logits &&
-                logits.ort_tensor &&
-                logits.ort_tensor.data
-            ) {
+            // ==================================================
+            // CHECK DIMENSIONS
+            // ==================================================
 
-                rawData =
-                    logits.ort_tensor.data;
+            const dims =
+                outputImage.dims;
 
-            }
 
+            const maskWidth =
+                dims[dims.length - 1];
+
+            const maskHeight =
+                dims[dims.length - 2];
+
+
+            // ==================================================
+            // STATS
+            // ==================================================
 
             let min =
                 Infinity;
@@ -617,76 +896,164 @@ runButton.addEventListener(
                 0;
 
 
-            if (rawData) {
+            for (
+                let i = 0;
+                i < rawData.length;
+                i++
+            ) {
 
-                for (
-                    let i = 0;
-                    i < rawData.length;
-                    i++
-                ) {
-
-                    const value =
-                        rawData[i];
+                const value =
+                    rawData[i];
 
 
-                    if (value < min)
-                        min = value;
+                if (value < min)
+                    min = value;
 
 
-                    if (value > max)
-                        max = value;
+                if (value > max)
+                    max = value;
 
 
-                    sum += value;
-
-                }
+                sum += value;
 
             }
 
 
             const average =
-                rawData
-                    ? sum / rawData.length
-                    : NaN;
+                sum /
+                rawData.length;
 
 
-            const sigmoid =
-                x =>
-                    1 /
-                    (
-                        1 +
-                        Math.exp(-x)
-                    );
+            // ==================================================
+            // CREATE NORMALIZED MASK
+            // ==================================================
+
+            status.textContent =
+                "🎨 Нормализуем маску...";
 
 
-            const sigMin =
-                sigmoid(min);
+            const maskResult =
+                createMaskCanvas(
+                    rawData,
+                    maskWidth,
+                    maskHeight
+                );
 
-            const sigMax =
-                sigmoid(max);
 
-            const sigAverage =
-                sigmoid(average);
+            // ==================================================
+            // UPSCALE
+            // ==================================================
 
+            const resizedMask =
+                resizeMask(
+                    maskResult.canvas,
+                    bitmap.width,
+                    bitmap.height
+                );
+
+
+            // ==================================================
+            // SHOW MASK
+            // ==================================================
+
+            document.getElementById(
+                "mask"
+            ).src =
+                resizedMask.toDataURL(
+                    "image/png"
+                );
+
+
+            // ==================================================
+            // THREE VARIANTS
+            // ==================================================
+
+            /*
+                МЯГКИЙ
+
+                Оставляем больше полупрозрачных
+                областей.
+            */
+
+            const soft =
+                createTransparentVersion(
+                    bitmap,
+                    resizedMask,
+                    0.35,
+                    0.20
+                );
+
+
+            /*
+                СРЕДНИЙ
+
+                Основной вариант.
+            */
+
+            const medium =
+                createTransparentVersion(
+                    bitmap,
+                    resizedMask,
+                    0.50,
+                    0.12
+                );
+
+
+            /*
+                ЖЁСТКИЙ
+
+                Агрессивно удаляем фон.
+            */
+
+            const hard =
+                createTransparentVersion(
+                    bitmap,
+                    resizedMask,
+                    0.65,
+                    0.08
+                );
+
+
+            document.getElementById(
+                "soft"
+            ).src =
+                soft;
+
+
+            document.getElementById(
+                "medium"
+            ).src =
+                medium;
+
+
+            document.getElementById(
+                "hard"
+            ).src =
+                hard;
+
+
+            // ==================================================
+            // DEBUG
+            // ==================================================
 
             debug.textContent =
 `
 ========================================
-BIREFNET CORRECT OUTPUT DEBUG
+BIREFNET BACKGROUND REMOVAL
 ========================================
 
-Output keys:
-${Object.keys(output).join(", ")}
+Model output:
+${JSON.stringify(dims)}
 
-----------------------------------------
-LOGITS
-----------------------------------------
-
-Dims:
-${JSON.stringify(logits.dims)}
+Mask:
+${maskWidth} × ${maskHeight}
 
 Raw values:
-${rawData ? rawData.length : "not available"}
+${rawData.length}
+
+----------------------------------------
+RAW
+----------------------------------------
 
 Minimum:
 ${min}
@@ -697,64 +1064,43 @@ ${max}
 Average:
 ${average}
 
-----------------------------------------
-SIGMOID
-----------------------------------------
-
-Minimum:
-${sigMin}
-
-Maximum:
-${sigMax}
-
-Average:
-${sigAverage}
+Range:
+${maskResult.range}
 
 ----------------------------------------
-IMPORTANT
+NORMALIZATION
 ----------------------------------------
 
-Теперь используется:
+Formula:
 
-output.logits
+(value - min) / (max - min)
 
-а НЕ:
+----------------------------------------
+THRESHOLDS
+----------------------------------------
 
-output.output_image
+Soft:
+threshold = 0.35
+feather = 0.20
 
-Это соответствует документации
-studioludens/birefnet-lite-512.
+Medium:
+threshold = 0.50
+feather = 0.12
+
+Hard:
+threshold = 0.65
+feather = 0.08
 
 ========================================
 `;
 
 
-            // ------------------------------------------------
-            // CREATE MASK
-            // ------------------------------------------------
-
-            status.textContent =
-                "🎨 Создаём маску...";
-
-
-            const maskURL =
-                await createMaskImage(
-                    logits,
-                    image.width,
-                    image.height
-                );
-
-
-            maskImage.src =
-                maskURL;
-
-
             status.innerHTML =
-                '<span class="ok">' +
-                "🎉 МАСКА ГОТОВА!" +
+                '<span class="good">' +
+                "🎉 ГОТОВО!" +
                 "</span>" +
                 "\n\n" +
-                "Теперь посмотри на изображение справа.";
+                "Показаны три варианта удаления фона.";
 
 
             runButton.disabled = false;
@@ -763,13 +1109,13 @@ studioludens/birefnet-lite-512.
         } catch (error) {
 
             console.error(
-                "BIREFNET ERROR:",
+                "BACKGROUND REMOVAL ERROR:",
                 error
             );
 
 
             status.innerHTML =
-                '<span class="error">' +
+                '<span class="bad">' +
                 "❌ ОШИБКА\n\n" +
                 error.message +
                 "</span>";
