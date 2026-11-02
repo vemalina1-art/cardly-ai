@@ -28,62 +28,57 @@ export default {
     }
 
     // =========================================
-    // HUGGING FACE MODEL PROXY
+    // BIRE FNET MODEL FILE PROXY
     // =========================================
 
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
-        return jsonResponse({
-          error: "Method not allowed"
-        }, 405);
+        return jsonResponse({ error: "Method not allowed" }, 405);
       }
 
       try {
-        let modelPath = url.pathname.slice("/api/model/".length);
+        const prefix = "/api/model/";
+        const modelPath = url.pathname.slice(prefix.length);
 
-        modelPath = decodeURIComponent(modelPath);
-        modelPath = modelPath.replace(/^\/+/, "");
+        const allowedPrefix =
+          "onnx-community/BiRefNet_512x512-ONNX/resolve/main/";
 
-        if (
-          !modelPath ||
-          modelPath.includes("..") ||
-          modelPath.includes("\\") ||
-          modelPath.includes("\0")
-        ) {
+        const allowedFiles = [
+          "config.json",
+          "preprocessor_config.json",
+          "onnx/model_fp16.onnx"
+        ];
+
+        if (!modelPath.startsWith(allowedPrefix)) {
+          return jsonResponse({ error: "Model path not allowed" }, 403);
+        }
+
+        const filePath = modelPath.slice(allowedPrefix.length);
+
+        if (!allowedFiles.includes(filePath)) {
           return jsonResponse({
-            error: "Invalid model file path",
-            received: modelPath
-          }, 400);
+            error: "Model file not allowed",
+            file: filePath
+          }, 403);
         }
 
         const hfUrl = new URL(
           "https://huggingface.co/" + modelPath
         );
 
-        if (hfUrl.hostname !== "huggingface.co") {
-          return jsonResponse({
-            error: "Invalid destination"
-          }, 400);
-        }
-
         hfUrl.search = url.search;
 
         const headers = new Headers();
 
-        const headersToForward = [
+        for (const name of [
           "Range",
           "If-Range",
           "If-None-Match",
           "If-Modified-Since",
           "Accept"
-        ];
-
-        for (const name of headersToForward) {
+        ]) {
           const value = request.headers.get(name);
-
-          if (value) {
-            headers.set(name, value);
-          }
+          if (value) headers.set(name, value);
         }
 
         const hfResponse = await fetch(hfUrl.toString(), {
@@ -92,35 +87,12 @@ export default {
           redirect: "follow"
         });
 
-        console.log(
-          "HUGGING FACE:",
-          hfResponse.status,
-          hfUrl.pathname
-        );
+        const responseHeaders = new Headers(hfResponse.headers);
 
-        const responseHeaders = new Headers(
-          hfResponse.headers
-        );
-
-        responseHeaders.set(
-          "Access-Control-Allow-Origin",
-          "*"
-        );
-
-        responseHeaders.set(
-          "Access-Control-Allow-Methods",
-          "GET, HEAD, OPTIONS"
-        );
-
-        responseHeaders.set(
-          "Access-Control-Allow-Headers",
-          "*"
-        );
-
-        responseHeaders.set(
-          "Access-Control-Expose-Headers",
-          "*"
-        );
+        responseHeaders.set("Access-Control-Allow-Origin", "*");
+        responseHeaders.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        responseHeaders.set("Access-Control-Allow-Headers", "*");
+        responseHeaders.set("Access-Control-Expose-Headers", "*");
 
         return new Response(
           request.method === "HEAD" ? null : hfResponse.body,
@@ -130,10 +102,8 @@ export default {
             headers: responseHeaders
           }
         );
-
       } catch (error) {
         console.error("MODEL PROXY ERROR:", error);
-
         return jsonResponse({
           error: "Model proxy failed",
           message: error.message
@@ -142,10 +112,10 @@ export default {
     }
 
     // =========================================
-    // TEST HUGGING FACE DIRECTLY
+    // TEST MODEL FILE
     // =========================================
 
-    if (url.pathname === "/api/test-huggingface") {
+    if (url.pathname === "/api/test-model") {
       try {
         const testUrl =
           "https://huggingface.co/onnx-community/" +
@@ -153,47 +123,14 @@ export default {
           "preprocessor_config.json";
 
         const response = await fetch(testUrl);
-        const body = await response.text();
 
         return jsonResponse({
+          ok: response.ok,
           status: response.status,
-          url: testUrl,
-          response: body.slice(0, 3000)
+          response: (await response.text()).slice(0, 2000)
         });
-
       } catch (error) {
-        return jsonResponse({
-          error: error.message
-        }, 500);
-      }
-    }
-
-    // =========================================
-    // TEST MODEL THROUGH OUR PROXY
-    // =========================================
-
-    if (url.pathname === "/api/test-model-proxy") {
-      try {
-        const testUrl = new URL(
-          "/api/model/onnx-community/" +
-          "BiRefNet_512x512-ONNX/resolve/main/" +
-          "preprocessor_config.json",
-          url.origin
-        );
-
-        const response = await fetch(testUrl);
-        const body = await response.text();
-
-        return jsonResponse({
-          status: response.status,
-          url: testUrl.toString(),
-          response: body.slice(0, 3000)
-        });
-
-      } catch (error) {
-        return jsonResponse({
-          error: error.message
-        }, 500);
+        return jsonResponse({ error: error.message }, 500);
       }
     }
 
@@ -216,11 +153,8 @@ export default {
         );
 
         return jsonResponse(result);
-
       } catch (error) {
-        return jsonResponse({
-          error: error.message
-        }, 500);
+        return jsonResponse({ error: error.message }, 500);
       }
     }
 
@@ -235,19 +169,22 @@ export default {
       try {
         const body = await request.json();
 
-        const productName = String(
-          body.productName || ""
-        );
+        const productName = String(body.productName || "").slice(0, 160);
 
         const characteristics = String(
-          body.characteristics || ""
-        );
+          body.characteristics || body.features || ""
+        ).slice(0, 2000);
+
+        if (!productName.trim()) {
+          return jsonResponse({ error: "Введите название товара" }, 400);
+        }
 
         const prompt = `
-Ты профессиональный дизайнер инфографики
-для Wildberries и Ozon.
+Ты арт-директор профессионального сервиса инфографики для Wildberries и Ozon.
 
-Создай структуру карточки товара размером 900x1200.
+Создай только структуру дизайна карточки 900x1200.
+Не выдумывай характеристики товара.
+Используй только факты из входных данных.
 
 Название товара:
 ${productName}
@@ -255,47 +192,48 @@ ${productName}
 Характеристики:
 ${characteristics}
 
-Верни только JSON без Markdown.
+Верни только корректный JSON без Markdown и комментариев.
 
-Используй следующую структуру:
-
+Формат:
 {
-  "title": "",
-  "subtitle": "",
-  "features": [],
+  "title": "короткий выразительный заголовок",
+  "subtitle": "короткое пояснение",
+  "features": ["преимущество 1", "преимущество 2"],
   "design": "hero",
   "productPosition": "center",
-  "productScale": 70,
   "titlePosition": "top",
   "featuresPosition": "bottom",
-  "background": "#f5f7fa",
-  "accent": "#2563eb",
-  "shadow": true,
+  "background": "light",
+  "accent": "blue",
+  "shadow": "soft",
   "decoration": "none"
 }
 
+Правила:
+- Заголовок короткий, максимум 5 слов.
+- Не добавляй рекламных обещаний, которых нет во входных данных.
+- В features добавляй только подтверждённые характеристики.
+- Не повторяй одно и то же в заголовке и преимуществах.
+- Максимум 4 преимущества.
+- Не используй длинные предложения.
+
 Допустимые значения:
 
-design:
-hero, split, editorial, dynamic, info, premium
+design: hero, split, editorial, dynamic, info, premium
 
-productPosition:
-left, center, right
+productPosition: left, center, right
 
-titlePosition:
-top, center, bottom
+titlePosition: top, middle, bottom
 
-featuresPosition:
-top, middle, bottom
+featuresPosition: left, right, bottom
 
-features:
-массив максимум из четырёх коротких преимуществ.
+background: light, dark, soft, gradient, accent
 
-productScale:
-число от 40 до 100.
+accent: blue, cyan, green, orange, violet, black
 
-background и accent:
-цвета в HEX.
+shadow: soft, medium, none
+
+decoration: none
 `;
 
         const result = await env.AI.run(
@@ -305,7 +243,7 @@ background и accent:
               {
                 role: "system",
                 content:
-                  "Ты профессиональный дизайнер маркетплейсов. Возвращай только корректный JSON без Markdown."
+                  "Ты профессиональный арт-директор. Возвращай только валидный JSON. Не добавляй Markdown."
               },
               {
                 role: "user",
@@ -315,10 +253,7 @@ background и accent:
           }
         );
 
-        let answer =
-          result.response ||
-          result.text ||
-          "";
+        let answer = result.response || result.text || "";
 
         answer = answer
           .replace(/```json/gi, "")
@@ -329,15 +264,48 @@ background и accent:
         const end = answer.lastIndexOf("}");
 
         if (start === -1 || end === -1) {
-          throw new Error("AI не вернул JSON");
+          throw new Error("AI не вернул корректный JSON");
         }
 
-        const data = JSON.parse(
-          answer.slice(start, end + 1)
-        );
+        const data = JSON.parse(answer.slice(start, end + 1));
+
+        const allowed = {
+          design: ["hero", "split", "editorial", "dynamic", "info", "premium"],
+          productPosition: ["left", "center", "right"],
+          titlePosition: ["top", "middle", "bottom"],
+          featuresPosition: ["left", "right", "bottom"],
+          background: ["light", "dark", "soft", "gradient", "accent"],
+          accent: ["blue", "cyan", "green", "orange", "violet", "black"],
+          shadow: ["soft", "medium", "none"],
+          decoration: ["none"]
+        };
+
+        for (const [key, values] of Object.entries(allowed)) {
+          if (!values.includes(data[key])) {
+            data[key] = {
+              design: "hero",
+              productPosition: "center",
+              titlePosition: "top",
+              featuresPosition: "bottom",
+              background: "light",
+              accent: "blue",
+              shadow: "soft",
+              decoration: "none"
+            }[key];
+          }
+        }
+
+        data.title = String(data.title || productName).slice(0, 100);
+        data.subtitle = String(data.subtitle || "").slice(0, 150);
+
+        data.features = Array.isArray(data.features)
+          ? data.features
+              .filter(item => typeof item === "string")
+              .slice(0, 4)
+              .map(item => item.slice(0, 90))
+          : [];
 
         return jsonResponse(data);
-
       } catch (error) {
         console.error("GENERATE ERROR:", error);
 
