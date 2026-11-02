@@ -16,7 +16,6 @@
   --ink: #172033;
   --muted: #7c879b;
   --line: #e8ecf3;
-  --surface: #ffffff;
   --bg: #f5f7fb;
 }
 
@@ -127,18 +126,9 @@ button { cursor: pointer; }
 }
 
 .upload input { display: none; }
-
 .upload-content { padding: 18px; }
-
-.upload-icon {
-  font-size: 36px;
-  margin-bottom: 9px;
-}
-
-.upload-title {
-  font-weight: 800;
-  font-size: 14px;
-}
+.upload-icon { font-size: 36px; margin-bottom: 9px; }
+.upload-title { font-weight: 800; font-size: 14px; }
 
 .upload-subtitle {
   font-size: 11px;
@@ -289,7 +279,11 @@ button { cursor: pointer; }
 
 .empty-icon { font-size: 44px; margin-bottom: 15px; }
 .empty strong { color: #465168; font-size: 14px; }
-.empty p { font-size: 12px; line-height: 1.6; }
+
+.empty p {
+  font-size: 12px;
+  line-height: 1.6;
+}
 
 .card-wrapper {
   display: none;
@@ -415,19 +409,12 @@ button { cursor: pointer; }
   opacity: .55;
 }
 
-.decor {
-  position: absolute;
-  z-index: 1;
-  pointer-events: none;
-}
-
 .card.hero { background: linear-gradient(145deg,#fff,#eaf0fb); }
 .card.split { background: linear-gradient(110deg,#edf3ff 0 48%,#fff 48%); }
 .card.editorial { background: #f5f1e9; }
 .card.dynamic { background: linear-gradient(145deg,#e8f5f7,#f7fbff); }
 .card.info { background: #f2f5fa; }
 .card.premium { background: #f8f6f1; }
-
 .card.dark { background: linear-gradient(145deg,#172033,#263955); }
 
 .card.hero .product { width: 76%; }
@@ -436,9 +423,20 @@ button { cursor: pointer; }
 .card.info .product { width: 61%; }
 .card.premium .product { width: 72%; }
 
-.card.split .card-title { max-width: 43%; font-size: clamp(22px,6.5cqw,32px); }
-.card.editorial .card-title { font-family: 'Manrope',sans-serif; font-weight: 700; }
-.card.premium .card-title { font-weight: 600; letter-spacing: -1px; }
+.card.split .card-title {
+  max-width: 43%;
+  font-size: clamp(22px,6.5cqw,32px);
+}
+
+.card.editorial .card-title {
+  font-family: 'Manrope',sans-serif;
+  font-weight: 700;
+}
+
+.card.premium .card-title {
+  font-weight: 600;
+  letter-spacing: -1px;
+}
 
 .accent-blue { --accent: #3867e8; }
 .accent-cyan { --accent: #0891b2; }
@@ -458,7 +456,10 @@ button { cursor: pointer; }
   .header { padding: 0 18px; }
   .header-note { display: none; }
   .panel, .preview-panel { padding: 17px; }
-  .preview-header { align-items: flex-start; flex-direction: column; }
+  .preview-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>
 </head>
@@ -540,7 +541,10 @@ const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
 
 env.allowRemoteModels = true;
 env.remoteHost = window.location.origin + "/api/model/";
-env.remotePathTemplate = "{model}/resolve/{revision}/{file}";
+
+// Исправленный шаблон: Transformers.js добавляет имя файла самостоятельно.
+env.remotePathTemplate = "{model}/resolve/{revision}";
+
 env.useBrowserCache = true;
 
 const imageInput = document.getElementById("imageInput");
@@ -558,10 +562,8 @@ const emptyPreview = document.getElementById("emptyPreview");
 const cardWrapper = document.getElementById("cardWrapper");
 const card = document.getElementById("card");
 
-let originalImage = null;
 let cutoutImage = null;
 let modelPromise = null;
-let lastDesign = null;
 let isRemoving = false;
 
 function setStatus(message, type = "loading", progress = 0) {
@@ -598,7 +600,11 @@ async function getModel() {
 
   if (!modelPromise) {
     modelPromise = (async () => {
-      setStatus("Загружаем модель BiRefNet. При первом запуске это может занять несколько минут…", "loading", 8);
+      setStatus(
+        "Загружаем модель BiRefNet. При первом запуске это может занять несколько минут…",
+        "loading",
+        8
+      );
 
       const processor = await AutoProcessor.from_pretrained(MODEL_ID);
 
@@ -608,7 +614,12 @@ async function getModel() {
         progress_callback: (event) => {
           if (event.status === "progress" && event.total) {
             const percent = Math.round((event.loaded / event.total) * 75);
-            setStatus("Загрузка модели BiRefNet… " + percent + "%", "loading", Math.max(8, percent));
+
+            setStatus(
+              "Загрузка модели BiRefNet… " + percent + "%",
+              "loading",
+              Math.max(8, percent)
+            );
           }
         }
       });
@@ -629,15 +640,18 @@ async function removeBackground(file) {
   isRemoving = true;
   generateBtn.disabled = true;
 
+  let sourceUrl = null;
+
   try {
     setStatus("Подготавливаем фотографию…", "loading", 5);
 
-    const sourceUrl = URL.createObjectURL(file);
+    sourceUrl = URL.createObjectURL(file);
     const sourceImage = await loadImage(sourceUrl);
 
     if (sourceImage.width > 5000 || sourceImage.height > 5000) {
-      URL.revokeObjectURL(sourceUrl);
-      throw new Error("Слишком большое изображение. Используйте фото до 5000 пикселей по каждой стороне.");
+      throw new Error(
+        "Слишком большое изображение. Используйте фото до 5000 пикселей по каждой стороне."
+      );
     }
 
     const { model, processor } = await getModel();
@@ -661,7 +675,10 @@ async function removeBackground(file) {
     resultCanvas.width = width;
     resultCanvas.height = height;
 
-    const ctx = resultCanvas.getContext("2d", { willReadFrequently: true });
+    const ctx = resultCanvas.getContext("2d", {
+      willReadFrequently: true
+    });
+
     ctx.drawImage(sourceImage, 0, 0, width, height);
 
     const maskCanvas = document.createElement("canvas");
@@ -671,11 +688,13 @@ async function removeBackground(file) {
     const maskCtx = maskCanvas.getContext("2d");
     const maskPixels = maskCtx.createImageData(width, height);
 
-    const channels = mask.channels || Math.max(1, Math.round(mask.data.length / (width * height)));
+    const channels = mask.channels ||
+      Math.max(1, Math.round(mask.data.length / (width * height)));
 
     for (let i = 0; i < width * height; i++) {
       const alpha = mask.data[i * channels];
       const p = i * 4;
+
       maskPixels.data[p] = 255;
       maskPixels.data[p + 1] = 255;
       maskPixels.data[p + 2] = 255;
@@ -689,17 +708,15 @@ async function removeBackground(file) {
     ctx.globalCompositeOperation = "source-over";
 
     cutoutImage = resultCanvas.toDataURL("image/png");
-    originalImage = cutoutImage;
-
-    URL.revokeObjectURL(sourceUrl);
 
     uploadContent.innerHTML = "";
+
     const preview = document.createElement("img");
     preview.className = "upload-preview";
     preview.src = cutoutImage;
     preview.alt = "Товар без фона";
-    uploadContent.appendChild(preview);
 
+    uploadContent.appendChild(preview);
     uploadBox.classList.add("checker");
 
     setStatus("Фон удалён. Товар готов к оформлению.", "success", 100);
@@ -707,9 +724,17 @@ async function removeBackground(file) {
 
   } catch (error) {
     console.error("BACKGROUND REMOVAL ERROR:", error);
-    setStatus("Не удалось удалить фон: " + error.message, "error", 0);
+
+    setStatus(
+      "Не удалось удалить фон: " + error.message,
+      "error",
+      0
+    );
+
     generateBtn.disabled = true;
+
   } finally {
+    if (sourceUrl) URL.revokeObjectURL(sourceUrl);
     isRemoving = false;
   }
 }
@@ -724,10 +749,10 @@ imageInput.addEventListener("change", async () => {
   }
 
   cutoutImage = null;
-  originalImage = null;
   generateBtn.disabled = true;
 
-  uploadContent.innerHTML = '<div class="upload-content"><div class="upload-icon">◌</div><div class="upload-title">Обрабатываем фото…</div></div>';
+  uploadContent.innerHTML =
+    '<div class="upload-content"><div class="upload-icon">◌</div><div class="upload-title">Обрабатываем фото…</div></div>';
 
   await removeBackground(file);
 });
@@ -735,7 +760,9 @@ imageInput.addEventListener("change", async () => {
 async function requestDesign() {
   const response = await fetch("/api/generate", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       productName: productName.value.trim(),
       characteristics: featuresInput.value.trim()
@@ -752,25 +779,49 @@ async function requestDesign() {
 }
 
 function renderCard(data) {
-  const designOptions = ["hero", "split", "editorial", "dynamic", "info", "premium"];
-  const backgroundOptions = ["light", "dark", "soft", "gradient", "accent"];
-  const accentOptions = ["blue", "cyan", "green", "orange", "violet", "black"];
+  const designOptions = [
+    "hero", "split", "editorial", "dynamic", "info", "premium"
+  ];
+
+  const backgroundOptions = [
+    "light", "dark", "soft", "gradient", "accent"
+  ];
+
+  const accentOptions = [
+    "blue", "cyan", "green", "orange", "violet", "black"
+  ];
+
   const positionOptions = ["left", "center", "right"];
   const titleOptions = ["top", "middle", "bottom"];
   const featureOptions = ["left", "right", "bottom"];
 
-  const design = designOptions.includes(data.design) ? data.design : "hero";
-  const background = backgroundOptions.includes(data.background) ? data.background : "light";
-  const accent = accentOptions.includes(data.accent) ? data.accent : "blue";
-  const productPosition = positionOptions.includes(data.productPosition) ? data.productPosition : "center";
-  const titlePosition = titleOptions.includes(data.titlePosition) ? data.titlePosition : "top";
-  const featuresPosition = featureOptions.includes(data.featuresPosition) ? data.featuresPosition : "bottom";
+  const design = designOptions.includes(data.design)
+    ? data.design : "hero";
+
+  const background = backgroundOptions.includes(data.background)
+    ? data.background : "light";
+
+  const accent = accentOptions.includes(data.accent)
+    ? data.accent : "blue";
+
+  const productPosition = positionOptions.includes(data.productPosition)
+    ? data.productPosition : "center";
+
+  const titlePosition = titleOptions.includes(data.titlePosition)
+    ? data.titlePosition : "top";
+
+  const featuresPosition = featureOptions.includes(data.featuresPosition)
+    ? data.featuresPosition : "bottom";
 
   const title = escapeHTML(data.title || productName.value);
   const subtitle = escapeHTML(data.subtitle || "");
-  const features = Array.isArray(data.features) ? data.features.slice(0, 4) : [];
 
-  card.className = `card ${design} ${background === "dark" ? "dark" : ""} accent-${accent}`;
+  const features = Array.isArray(data.features)
+    ? data.features.slice(0, 4)
+    : [];
+
+  card.className =
+    `card ${design} ${background === "dark" ? "dark" : ""} accent-${accent}`;
 
   const backgroundStyles = {
     light: "",
@@ -781,6 +832,7 @@ function renderCard(data) {
   };
 
   card.style.background = "";
+
   if (backgroundStyles[background]) {
     card.setAttribute("style", backgroundStyles[background]);
   } else {
@@ -808,7 +860,6 @@ function renderCard(data) {
     <div class="features ${featuresPosition}">${featureHTML}</div>
   `;
 
-  lastDesign = data;
   emptyPreview.style.display = "none";
   cardWrapper.style.display = "flex";
   variantBtn.style.display = "inline-block";
@@ -879,6 +930,7 @@ downloadBtn.addEventListener("click", async () => {
     link.download = "cardly-ai-900x1200.png";
     link.href = finalCanvas.toDataURL("image/png");
     link.click();
+
   } catch (error) {
     alert("Не удалось сохранить PNG: " + error.message);
   } finally {
@@ -887,5 +939,6 @@ downloadBtn.addEventListener("click", async () => {
   }
 });
 </script>
+
 </body>
 </html>
