@@ -2,243 +2,170 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardly AI — Тест удаления фона</title>
 
-    <title>Cardly AI — Background Removal Test</title>
+<style>
+* {
+    box-sizing: border-box;
+}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    background: #f3f6fb;
+    color: #172033;
+}
 
-        body {
-            margin: 0;
-            padding: 30px;
-            font-family: Arial, sans-serif;
-            background: #f3f4f6;
-            color: #111827;
-        }
+h1 {
+    margin-bottom: 8px;
+}
 
-        h1 {
-            margin: 0 0 8px;
-        }
+.subtitle {
+    color: #64748b;
+    margin-bottom: 25px;
+}
 
-        .subtitle {
-            color: #6b7280;
-            margin-bottom: 25px;
-        }
+.panel {
+    background: white;
+    padding: 22px;
+    border-radius: 16px;
+    margin-bottom: 22px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.05);
+}
 
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.06);
-        }
+button {
+    padding: 13px 22px;
+    border: 0;
+    border-radius: 10px;
+    background: #2563eb;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
 
-        input[type="file"] {
-            margin-bottom: 15px;
-        }
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
 
-        button {
-            border: 0;
-            background: #111827;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
-        }
+#status {
+    margin-top: 16px;
+    padding: 14px;
+    background: #eff6ff;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
 
-        button:disabled {
-            opacity: .5;
-            cursor: not-allowed;
-        }
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
 
-        #status {
-            margin-top: 15px;
-            padding: 12px;
-            background: #f3f4f6;
-            border-radius: 10px;
-            white-space: pre-wrap;
-            font-size: 14px;
-            line-height: 1.5;
-        }
+.card {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.05);
+}
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
+.preview {
+    min-height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: #e5e7eb;
+    background-image:
+        linear-gradient(45deg,#ccc 25%,transparent 25%),
+        linear-gradient(-45deg,#ccc 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#ccc 75%),
+        linear-gradient(-45deg,transparent 75%,#ccc 75%);
+    background-size: 30px 30px;
+    background-position: 0 0,0 15px,15px -15px,-15px 0;
+}
 
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.06);
-        }
+.preview img {
+    max-width: 100%;
+    max-height: 550px;
+    object-fit: contain;
+}
 
-        .card h3 {
-            margin-top: 0;
-        }
+.dark {
+    background: #111827;
+}
 
-        .preview {
-            width: 100%;
-            min-height: 350px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            border-radius: 12px;
+.info {
+    margin-top: 10px;
+    color: #64748b;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
 
-            background:
-                linear-gradient(45deg, #ddd 25%, transparent 25%),
-                linear-gradient(-45deg, #ddd 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #ddd 75%),
-                linear-gradient(-45deg, transparent 75%, #ddd 75%);
-
-            background-size: 30px 30px;
-            background-position:
-                0 0,
-                0 15px,
-                15px -15px,
-                -15px 0;
-        }
-
-        .preview img {
-            max-width: 100%;
-            max-height: 600px;
-            object-fit: contain;
-        }
-
-        .dark {
-            background: #111827;
-        }
-
-        .info {
-            margin-top: 10px;
-            color: #6b7280;
-            font-size: 13px;
-            word-break: break-word;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 900px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+@media(max-width:850px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 
 <body>
 
-<h1>Cardly AI — Background Removal Test</h1>
+<h1>Cardly AI — Background Removal</h1>
+<div class="subtitle">Тест модели BiRefNet 512×512</div>
 
-<div class="subtitle">
-    BiRefNet 512×512 ONNX • Transformers.js • Cloudflare Worker proxy
-</div>
+<div class="panel">
 
+    <input type="file" id="fileInput" accept="image/*">
 
-<div class="controls">
+    <br><br>
 
-    <input
-        type="file"
-        id="fileInput"
-        accept="image/*"
-    >
-
-    <br>
-
-    <button
-        id="runBtn"
-        disabled
-    >
+    <button id="runBtn" disabled>
         Удалить фон
     </button>
 
     <div id="status">
-        ⏳ Загружаем Transformers.js...
+        Подготавливаем загрузку модели...
     </div>
 
 </div>
-
 
 <div class="grid">
 
-    <!-- ORIGINAL -->
-
     <div class="card">
-
-        <h3>1. Оригинал</h3>
-
+        <h3>1. Исходное изображение</h3>
         <div class="preview">
-
-            <img
-                id="originalPreview"
-                alt="Оригинал"
-            >
-
+            <img id="originalPreview">
         </div>
-
-        <div
-            class="info"
-            id="originalInfo"
-        ></div>
-
+        <div class="info" id="originalInfo"></div>
     </div>
 
-
-    <!-- MASK -->
-
     <div class="card">
-
-        <h3>2. Маска BiRefNet</h3>
-
+        <h3>2. Маска объекта</h3>
         <div class="preview dark">
-
-            <img
-                id="maskPreview"
-                alt="Маска"
-            >
-
+            <img id="maskPreview">
         </div>
-
         <div class="info">
-
-            Белое = оставить<br>
-            Чёрное = удалить
-
+            Светлое — объект, тёмное — фон.
         </div>
-
     </div>
 
-
-    <!-- RESULT -->
-
     <div class="card">
-
         <h3>3. Результат</h3>
-
         <div class="preview">
-
-            <img
-                id="resultPreview"
-                alt="Результат"
-            >
-
+            <img id="resultPreview">
         </div>
-
-        <div
-            class="info"
-            id="resultInfo"
-        ></div>
-
+        <div class="info" id="resultInfo"></div>
     </div>
 
 </div>
-
 
 <script type="module">
 
@@ -250,804 +177,358 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
-/* =========================================================
-   MODEL
-========================================================= */
+/* ==========================================
+   НАСТРОЙКИ МОДЕЛИ
+========================================== */
 
-const MODEL_ID =
-    "onnx-community/BiRefNet_512x512-ONNX";
-
-
-/* =========================================================
-   WORKER PROXY
-========================================================= */
-
-const API_MODEL_URL =
-    window.location.origin + "/api/model/";
-
-
-/* =========================================================
-   TRANSFORMERS.JS CONFIG
-========================================================= */
+const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
 
 env.allowRemoteModels = true;
 
-
 /*
-    Наш Cloudflare Worker.
+   Важно: remoteHost — адрес нашего Worker.
+   remotePathTemplate содержит {file}.
 */
 
 env.remoteHost =
-    API_MODEL_URL;
-
-
-/*
-    ВАЖНО!
-
-    Здесь обязательно должен быть {file}.
-
-    Именно он превращает:
-
-    {model}/resolve/{revision}/{file}
-
-    в:
-
-    onnx-community/
-    BiRefNet_512x512-ONNX/
-    resolve/
-    main/
-    preprocessor_config.json
-*/
+    window.location.origin + "/api/model/";
 
 env.remotePathTemplate =
     "{model}/resolve/{revision}/{file}";
 
-
-/*
-    Кэш браузера разрешён.
-*/
-
 env.useBrowserCache = true;
 
 
-/* =========================================================
-   ELEMENTS
-========================================================= */
+/* ==========================================
+   ЭЛЕМЕНТЫ СТРАНИЦЫ
+========================================== */
 
-const fileInput =
-    document.getElementById("fileInput");
+const fileInput = document.getElementById("fileInput");
+const runBtn = document.getElementById("runBtn");
+const status = document.getElementById("status");
 
-const runBtn =
-    document.getElementById("runBtn");
+const originalPreview = document.getElementById("originalPreview");
+const maskPreview = document.getElementById("maskPreview");
+const resultPreview = document.getElementById("resultPreview");
 
-const status =
-    document.getElementById("status");
-
-const originalPreview =
-    document.getElementById("originalPreview");
-
-const maskPreview =
-    document.getElementById("maskPreview");
-
-const resultPreview =
-    document.getElementById("resultPreview");
-
-const originalInfo =
-    document.getElementById("originalInfo");
-
-const resultInfo =
-    document.getElementById("resultInfo");
+const originalInfo = document.getElementById("originalInfo");
+const resultInfo = document.getElementById("resultInfo");
 
 
-/* =========================================================
-   GLOBALS
-========================================================= */
+/* ==========================================
+   ПЕРЕМЕННЫЕ
+========================================== */
 
 let model = null;
-
 let processor = null;
-
 let selectedFile = null;
-
 let originalImage = null;
 
 
-/* =========================================================
-   STATUS
-========================================================= */
+/* ==========================================
+   СТАТУС
+========================================== */
 
-function setStatus(message) {
-
+function showStatus(message) {
     status.textContent = message;
-
     console.log(message);
 }
 
 
-/* =========================================================
-   INITIALIZE MODEL
-========================================================= */
+/* ==========================================
+   ЗАГРУЗКА МОДЕЛИ
+========================================== */
 
-async function init() {
+async function loadModel() {
 
     try {
 
-        setStatus(
-            "⏳ Загружаем processor...\n\n" +
-            "Модель: " +
+        showStatus(
+            "Шаг 1/3: загружаем настройки BiRefNet...\n" +
+            "Модель: " + MODEL_ID
+        );
+
+        processor = await AutoProcessor.from_pretrained(
             MODEL_ID
         );
 
-
-        /* -----------------------------------------------
-           PROCESSOR
-        ----------------------------------------------- */
-
-        processor =
-            await AutoProcessor.from_pretrained(
-                MODEL_ID
-            );
-
-
-        setStatus(
-            "✅ Processor загружен.\n\n" +
-            "⏳ Загружаем BiRefNet...\n\n" +
-            "Первый запуск может быть долгим."
+        showStatus(
+            "Шаг 2/3: настройки загружены.\n" +
+            "Загружаем нейросеть..."
         );
-
-
-        /* -----------------------------------------------
-           TRY WEBGPU
-        ----------------------------------------------- */
 
         try {
 
             if (!navigator.gpu) {
-
-                throw new Error(
-                    "WebGPU отсутствует в браузере."
-                );
+                throw new Error("WebGPU недоступен");
             }
 
-
-            const adapter =
-                await navigator.gpu.requestAdapter();
-
+            const adapter = await navigator.gpu.requestAdapter();
 
             if (!adapter) {
-
-                throw new Error(
-                    "WebGPU adapter не найден."
-                );
+                throw new Error("WebGPU adapter не найден");
             }
 
-
-            console.log(
-                "WebGPU adapter найден."
+            model = await AutoModel.from_pretrained(
+                MODEL_ID,
+                {
+                    dtype: "fp16",
+                    device: "webgpu"
+                }
             );
 
-
-            model =
-                await AutoModel.from_pretrained(
-                    MODEL_ID,
-                    {
-                        dtype: "fp16",
-                        device: "webgpu"
-                    }
-                );
-
-
-            setStatus(
-                "✅ BiRefNet загружен через WebGPU.\n\n" +
-                "Можно выбирать изображение."
+            showStatus(
+                "Модель успешно загружена через WebGPU.\n" +
+                "Теперь выбери изображение."
             );
-
 
         } catch (webgpuError) {
 
-            console.warn(
-                "WebGPU не сработал:",
-                webgpuError
+            console.warn("WebGPU:", webgpuError);
+
+            showStatus(
+                "WebGPU недоступен. Пробуем WASM..."
             );
 
-
-            setStatus(
-                "⚠️ WebGPU не запустился.\n\n" +
-                "⏳ Переходим на WASM..."
+            model = await AutoModel.from_pretrained(
+                MODEL_ID,
+                {
+                    dtype: "q8",
+                    device: "wasm"
+                }
             );
 
-
-            /* -------------------------------------------
-               WASM FALLBACK
-            ------------------------------------------- */
-
-            model =
-                await AutoModel.from_pretrained(
-                    MODEL_ID,
-                    {
-                        dtype: "q8",
-                        device: "wasm"
-                    }
-                );
-
-
-            setStatus(
-                "✅ BiRefNet загружен через WASM.\n\n" +
-                "Можно выбирать изображение."
+            showStatus(
+                "Модель успешно загружена через WASM.\n" +
+                "Теперь выбери изображение."
             );
         }
 
-
         runBtn.disabled = false;
-
 
     } catch (error) {
 
-        console.error(
-            "MODEL LOAD ERROR:",
-            error
-        );
+        console.error("MODEL ERROR:", error);
 
-
-        setStatus(
-            "❌ ОШИБКА ЗАГРУЗКИ МОДЕЛИ\n\n" +
-            error.message +
-            "\n\n" +
-            "Открой F12 → Console."
+        showStatus(
+            "ОШИБКА ЗАГРУЗКИ МОДЕЛИ\n\n" +
+            error.message
         );
     }
 }
 
 
-/* =========================================================
-   FILE SELECT
-========================================================= */
+/* ==========================================
+   ВЫБОР ФОТО
+========================================== */
 
-fileInput.addEventListener(
-    "change",
-    async () => {
+fileInput.addEventListener("change", async () => {
 
-        const file =
-            fileInput.files?.[0];
+    const file = fileInput.files[0];
 
+    if (!file) return;
 
-        if (!file) {
-            return;
-        }
-
-
-        selectedFile = file;
-
-
-        /* -----------------------------------------------
-           ORIGINAL PREVIEW
-        ----------------------------------------------- */
-
-        const url =
-            URL.createObjectURL(file);
-
-
-        originalPreview.src =
-            url;
-
-
-        originalInfo.textContent =
-            `${file.name} • ` +
-            `${(file.size / 1024 / 1024).toFixed(2)} MB`;
-
-
-        maskPreview.src = "";
-
-        resultPreview.src = "";
-
-        resultInfo.textContent = "";
-
-
-        /* -----------------------------------------------
-           READ IMAGE
-        ----------------------------------------------- */
-
-        try {
-
-            originalImage =
-                await RawImage.fromURL(
-                    url
-                );
-
-
-            console.log(
-                "Original:",
-                originalImage.width,
-                "x",
-                originalImage.height
-            );
-
-
-            setStatus(
-                "✅ Изображение загружено.\n\n" +
-                "Нажми «Удалить фон»."
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            setStatus(
-                "❌ Не удалось прочитать изображение.\n\n" +
-                error.message
-            );
-        }
-
+    if (!file.type.startsWith("image/")) {
+        showStatus("Выбери файл изображения.");
+        return;
     }
-);
 
+    selectedFile = file;
 
-/* =========================================================
-   BACKGROUND REMOVAL
-========================================================= */
+    const imageUrl = URL.createObjectURL(file);
 
-runBtn.addEventListener(
-    "click",
-    async () => {
+    originalPreview.src = imageUrl;
 
-        if (!selectedFile) {
+    originalInfo.textContent =
+        file.name + " • " +
+        (file.size / 1024 / 1024).toFixed(2) + " MB";
 
-            setStatus(
-                "❌ Сначала выбери изображение."
-            );
+    maskPreview.removeAttribute("src");
+    resultPreview.removeAttribute("src");
 
-            return;
-        }
+    try {
 
+        originalImage = await RawImage.fromURL(imageUrl);
 
-        if (!model || !processor) {
+        showStatus(
+            "Изображение загружено.\n" +
+            "Нажми «Удалить фон»."
+        );
 
-            setStatus(
-                "❌ Модель ещё не загружена."
-            );
+    } catch (error) {
 
-            return;
-        }
+        console.error(error);
 
-
-        runBtn.disabled = true;
-
-
-        try {
-
-            /* =============================================
-               IMAGE
-            ============================================= */
-
-            const image =
-                originalImage;
-
-
-            if (!image) {
-
-                throw new Error(
-                    "Изображение не загружено."
-                );
-            }
-
-
-            /* =============================================
-               PROCESSOR
-            ============================================= */
-
-            setStatus(
-                "⏳ Подготавливаем изображение..."
-            );
-
-
-            const {
-                pixel_values
-            } =
-                await processor(
-                    image
-                );
-
-
-            console.log(
-                "pixel_values:",
-                pixel_values
-            );
-
-
-            /* =============================================
-               MODEL
-            ============================================= */
-
-            setStatus(
-                "🧠 BiRefNet анализирует товар..."
-            );
-
-
-            const output =
-                await model({
-
-                    input_image:
-                        pixel_values
-
-                });
-
-
-            console.log(
-                "MODEL OUTPUT:",
-                output
-            );
-
-
-            /* =============================================
-               CHECK OUTPUT
-            ============================================= */
-
-            if (!output.output_image) {
-
-                throw new Error(
-                    "BiRefNet не вернул output_image."
-                );
-            }
-
-
-            const outputImage =
-                output.output_image;
-
-
-            console.log(
-                "output_image:",
-                outputImage
-            );
-
-
-            console.log(
-                "output_image dims:",
-                outputImage.dims
-            );
-
-
-            /* =============================================
-               SIGMOID → 0..255
-            ============================================= */
-
-            let maskTensor =
-                outputImage[0]
-                    .sigmoid()
-                    .mul(255)
-                    .to("uint8");
-
-
-            console.log(
-                "maskTensor:",
-                maskTensor
-            );
-
-
-            /* =============================================
-               TENSOR → RAW IMAGE
-            ============================================= */
-
-            let mask =
-                await RawImage.fromTensor(
-                    maskTensor
-                );
-
-
-            console.log(
-                "Mask:",
-                mask.width,
-                "x",
-                mask.height
-            );
-
-
-            /* =============================================
-               RESIZE MASK
-            ============================================= */
-
-            mask =
-                await mask.resize(
-                    image.width,
-                    image.height
-                );
-
-
-            console.log(
-                "Resized mask:",
-                mask.width,
-                "x",
-                mask.height
-            );
-
-
-            /* =============================================
-               MASK CANVAS
-            ============================================= */
-
-            const maskCanvas =
-                document.createElement(
-                    "canvas"
-                );
-
-
-            maskCanvas.width =
-                mask.width;
-
-            maskCanvas.height =
-                mask.height;
-
-
-            const maskCtx =
-                maskCanvas.getContext(
-                    "2d"
-                );
-
-
-            const maskImageData =
-                maskCtx.createImageData(
-                    mask.width,
-                    mask.height
-                );
-
-
-            const maskData =
-                mask.data;
-
-
-            let channels = 1;
-
-
-            if (
-                mask.dims &&
-                mask.dims.length === 3
-            ) {
-
-                channels =
-                    mask.dims[0];
-            }
-
-
-            console.log(
-                "Mask channels:",
-                channels
-            );
-
-
-            /* =============================================
-               DRAW MASK
-            ============================================= */
-
-            for (
-                let i = 0;
-                i < mask.width * mask.height;
-                i++
-            ) {
-
-                let value;
-
-
-                if (channels === 1) {
-
-                    value =
-                        maskData[i];
-
-                } else {
-
-                    value =
-                        maskData[
-                            i * channels
-                        ];
-                }
-
-
-                maskImageData.data[
-                    i * 4
-                ] =
-                    value;
-
-
-                maskImageData.data[
-                    i * 4 + 1
-                ] =
-                    value;
-
-
-                maskImageData.data[
-                    i * 4 + 2
-                ] =
-                    value;
-
-
-                maskImageData.data[
-                    i * 4 + 3
-                ] =
-                    255;
-            }
-
-
-            maskCtx.putImageData(
-                maskImageData,
-                0,
-                0
-            );
-
-
-            maskPreview.src =
-                maskCanvas.toDataURL(
-                    "image/png"
-                );
-
-
-            /* =============================================
-               CREATE RESULT
-            ============================================= */
-
-            setStatus(
-                "✂️ Создаём прозрачный PNG..."
-            );
-
-
-            const bitmap =
-                await createImageBitmap(
-                    selectedFile
-                );
-
-
-            const resultCanvas =
-                document.createElement(
-                    "canvas"
-                );
-
-
-            resultCanvas.width =
-                bitmap.width;
-
-            resultCanvas.height =
-                bitmap.height;
-
-
-            const resultCtx =
-                resultCanvas.getContext(
-                    "2d",
-                    {
-                        willReadFrequently:
-                            true
-                    }
-                );
-
-
-            /* =============================================
-               DRAW ORIGINAL
-            ============================================= */
-
-            resultCtx.drawImage(
-                bitmap,
-                0,
-                0
-            );
-
-
-            /* =============================================
-               ORIGINAL PIXELS
-            ============================================= */
-
-            const originalPixels =
-                resultCtx.getImageData(
-                    0,
-                    0,
-                    bitmap.width,
-                    bitmap.height
-                );
-
-
-            /* =============================================
-               MASK PIXELS
-            ============================================= */
-
-            const maskPixels =
-                maskCtx.getImageData(
-                    0,
-                    0,
-                    mask.width,
-                    mask.height
-                );
-
-
-            const originalData =
-                originalPixels.data;
-
-
-            const alphaData =
-                maskPixels.data;
-
-
-            /* =============================================
-               APPLY ALPHA
-            ============================================= */
-
-            for (
-                let i = 0;
-                i < originalData.length;
-                i += 4
-            ) {
-
-                /*
-                    Красный канал маски
-                    используется как alpha.
-                */
-
-                originalData[i + 3] =
-                    alphaData[i];
-            }
-
-
-            resultCtx.putImageData(
-                originalPixels,
-                0,
-                0
-            );
-
-
-            /* =============================================
-               EXPORT
-            ============================================= */
-
-            const resultUrl =
-                resultCanvas.toDataURL(
-                    "image/png"
-                );
-
-
-            resultPreview.src =
-                resultUrl;
-
-
-            resultInfo.textContent =
-                `${bitmap.width} × ` +
-                `${bitmap.height}px • ` +
-                `PNG с прозрачным фоном`;
-
-
-            setStatus(
-                "🎉 ГОТОВО!\n\n" +
-                "1. Оригинал — исходное фото.\n" +
-                "2. Маска — что BiRefNet считает главным объектом.\n" +
-                "3. Результат — прозрачный PNG."
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "BACKGROUND REMOVAL ERROR:",
-                error
-            );
-
-
-            setStatus(
-                "❌ ОШИБКА\n\n" +
-                error.message +
-                "\n\n" +
-                "Открой F12 → Console для подробностей."
-            );
-
-
-        } finally {
-
-            runBtn.disabled = false;
-        }
-
+        showStatus(
+            "Не удалось открыть изображение: " +
+            error.message
+        );
     }
-);
+});
 
 
-/* =========================================================
-   START
-========================================================= */
+/* ==========================================
+   СОЗДАНИЕ ПРОЗРАЧНОГО PNG
+========================================== */
 
-init();
+runBtn.addEventListener("click", async () => {
+
+    if (!selectedFile || !originalImage || !model || !processor) {
+        showStatus("Сначала дождись загрузки модели и выбери фото.");
+        return;
+    }
+
+    runBtn.disabled = true;
+
+    try {
+
+        showStatus("Подготавливаем изображение...");
+
+        const { pixel_values } = await processor(originalImage);
+
+        showStatus("BiRefNet анализирует изображение...");
+
+        const output = await model({
+            input_image: pixel_values
+        });
+
+        console.log("OUTPUT:", output);
+
+        if (!output.output_image) {
+            throw new Error("Модель не вернула output_image.");
+        }
+
+        const maskTensor = output.output_image[0]
+            .sigmoid()
+            .mul(255)
+            .to("uint8");
+
+        let mask = await RawImage.fromTensor(maskTensor);
+
+        mask = await mask.resize(
+            originalImage.width,
+            originalImage.height
+        );
+
+        const maskCanvas = document.createElement("canvas");
+
+        maskCanvas.width = mask.width;
+        maskCanvas.height = mask.height;
+
+        const maskCtx = maskCanvas.getContext("2d");
+
+        const maskImageData = maskCtx.createImageData(
+            mask.width,
+            mask.height
+        );
+
+        const channels = mask.dims?.length === 3
+            ? mask.dims[0]
+            : 1;
+
+        for (let i = 0; i < mask.width * mask.height; i++) {
+
+            const value = mask.data[i * channels];
+
+            const p = i * 4;
+
+            maskImageData.data[p] = value;
+            maskImageData.data[p + 1] = value;
+            maskImageData.data[p + 2] = value;
+            maskImageData.data[p + 3] = 255;
+        }
+
+        maskCtx.putImageData(maskImageData, 0, 0);
+
+        maskPreview.src = maskCanvas.toDataURL("image/png");
+
+        showStatus("Создаём PNG с прозрачным фоном...");
+
+        const bitmap = await createImageBitmap(selectedFile);
+
+        const resultCanvas = document.createElement("canvas");
+
+        resultCanvas.width = bitmap.width;
+        resultCanvas.height = bitmap.height;
+
+        const resultCtx = resultCanvas.getContext("2d", {
+            willReadFrequently: true
+        });
+
+        resultCtx.drawImage(bitmap, 0, 0);
+
+        const originalPixels = resultCtx.getImageData(
+            0,
+            0,
+            bitmap.width,
+            bitmap.height
+        );
+
+        const maskPixels = maskCtx.getImageData(
+            0,
+            0,
+            mask.width,
+            mask.height
+        );
+
+        for (let i = 0; i < originalPixels.data.length; i += 4) {
+            originalPixels.data[i + 3] = maskPixels.data[i];
+        }
+
+        resultCtx.putImageData(originalPixels, 0, 0);
+
+        const resultBlob = await new Promise(resolve => {
+            resultCanvas.toBlob(resolve, "image/png");
+        });
+
+        if (!resultBlob) {
+            throw new Error("Не удалось создать PNG.");
+        }
+
+        const resultUrl = URL.createObjectURL(resultBlob);
+
+        resultPreview.src = resultUrl;
+
+        resultInfo.textContent =
+            bitmap.width + " × " +
+            bitmap.height + " px • PNG";
+
+        showStatus(
+            "Готово! Фон обработан.\n" +
+            "Проверь качество маски на изображении."
+        );
+
+        const downloadLink = document.createElement("a");
+
+        downloadLink.href = resultUrl;
+        downloadLink.download = "cardly-background-removed.png";
+        downloadLink.textContent = "Скачать PNG";
+
+        resultInfo.appendChild(document.createElement("br"));
+        resultInfo.appendChild(downloadLink);
+
+    } catch (error) {
+
+        console.error("REMOVAL ERROR:", error);
+
+        showStatus(
+            "ОШИБКА ОБРАБОТКИ\n\n" +
+            error.message
+        );
+
+    } finally {
+
+        runBtn.disabled = false;
+    }
+
+});
+
+
+/* ==========================================
+   ЗАПУСК
+========================================== */
+
+loadModel();
 
 </script>
 
