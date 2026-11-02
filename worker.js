@@ -29,7 +29,7 @@ export default {
 
     // ==========================================
     // 1. BIRE FNET MODEL FILE PROXY
-    // НЕ ИЗМЕНЯЕМ РАБОТАЮЩЕЕ УДАЛЕНИЕ ФОНА
+    // НЕ ИЗМЕНЯЕМ
     // ==========================================
 
     if (url.pathname.startsWith("/api/model/")) {
@@ -51,9 +51,7 @@ export default {
         ];
 
         if (!modelPath.startsWith(allowedPrefix)) {
-          return jsonResponse({
-            error: "Model path not allowed"
-          }, 403);
+          return jsonResponse({ error: "Model path not allowed" }, 403);
         }
 
         const filePath = modelPath.slice(allowedPrefix.length);
@@ -81,10 +79,7 @@ export default {
           "Accept"
         ]) {
           const value = request.headers.get(name);
-
-          if (value) {
-            headers.set(name, value);
-          }
+          if (value) headers.set(name, value);
         }
 
         const hfResponse = await fetch(hfUrl.toString(), {
@@ -142,9 +137,7 @@ export default {
         });
 
       } catch (error) {
-        return jsonResponse({
-          error: error.message
-        }, 500);
+        return jsonResponse({ error: error.message }, 500);
       }
     }
 
@@ -169,15 +162,12 @@ export default {
         return jsonResponse(result);
 
       } catch (error) {
-        return jsonResponse({
-          error: error.message
-        }, 500);
+        return jsonResponse({ error: error.message }, 500);
       }
     }
 
     // ==========================================
-    // 4. NEW IMAGE GENERATION — FLUX
-    // ОТДЕЛЬНО ОТ BIRE FNET
+    // 4. TEST IMAGE GENERATION — FLUX
     // ==========================================
 
     if (
@@ -204,16 +194,11 @@ export default {
 
         const result = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
-          {
-            prompt,
-            steps
-          }
+          { prompt, steps }
         );
 
         if (!result || !result.image) {
-          throw new Error(
-            "Модель не вернула изображение"
-          );
+          throw new Error("Модель не вернула изображение");
         }
 
         const binary = atob(result.image);
@@ -232,10 +217,7 @@ export default {
         });
 
       } catch (error) {
-        console.error(
-          "IMAGE GENERATION ERROR:",
-          error
-        );
+        console.error("IMAGE GENERATION ERROR:", error);
 
         return jsonResponse({
           error: error.message || "Ошибка генерации изображения"
@@ -244,7 +226,153 @@ export default {
     }
 
     // ==========================================
-    // 5. GENERATE CARD DESIGN — СТАРАЯ СИСТЕМА
+    // 5. NEW AI ADVERTISING SCENE
+    // LLAMA CREATES SCENE PROMPT
+    // FLUX GENERATES BACKGROUND
+    // ==========================================
+
+    if (
+      url.pathname === "/api/generate-scene" &&
+      request.method === "POST"
+    ) {
+      try {
+        const body = await request.json();
+
+        const productName = String(body.productName || "")
+          .trim()
+          .slice(0, 160);
+
+        const characteristics = String(
+          body.characteristics || ""
+        ).trim().slice(0, 1200);
+
+        const style = String(body.style || "premium")
+          .trim()
+          .slice(0, 40);
+
+        if (!productName) {
+          return jsonResponse({
+            error: "Введите название товара"
+          }, 400);
+        }
+
+        const styleDescriptions = {
+          premium: "premium luxury advertising photography",
+          editorial: "high-end editorial magazine photography",
+          showcase: "professional product showcase photography",
+          lifestyle: "realistic lifestyle interior photography",
+          infographic: "modern clean commercial advertising photography",
+          cinematic: "cinematic dramatic commercial photography"
+        };
+
+        const selectedStyle =
+          styleDescriptions[style] || styleDescriptions.premium;
+
+        // Llama придумывает окружение,
+        // не меняя и не описывая сам товар как изображение.
+
+        const artDirection = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fp8",
+          {
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional commercial art director. " +
+                  "Create a detailed visual description of an advertising " +
+                  "BACKGROUND SCENE only. Never include the product itself. " +
+                  "Do not invent product specifications. " +
+                  "Describe environment, materials, surfaces, lighting, " +
+                  "depth, colors and composition. " +
+                  "Leave a clear central area for placing the real product. " +
+                  "Return only the scene description in English. " +
+                  "Maximum 120 words."
+              },
+              {
+                role: "user",
+                content:
+                  "Product category/name: " + productName +
+                  "\nProduct characteristics: " + characteristics +
+                  "\nVisual style: " + selectedStyle +
+                  "\nCreate a suitable realistic advertising environment. " +
+                  "For bathroom products use suitable bathroom surfaces " +
+                  "and subtle water details. For kitchen products use " +
+                  "suitable kitchen materials. Choose the environment " +
+                  "according to the product category."
+              }
+            ]
+          }
+        );
+
+        const sceneDescription = String(
+          artDirection.response || artDirection.text || ""
+        ).trim();
+
+        if (!sceneDescription) {
+          throw new Error(
+            "AI не смог подготовить описание рекламной сцены"
+          );
+        }
+
+        // Итоговый промпт для FLUX.
+        // Товар генерироваться не должен.
+
+        const finalPrompt = (
+          "Create a photorealistic vertical 3:4 commercial advertising " +
+          "background scene. " +
+          sceneDescription + ". " +
+          "Visual direction: " + selectedStyle + ". " +
+          "Professional studio lighting, realistic materials, " +
+          "natural shadows, subtle reflections, beautiful depth, " +
+          "premium composition, carefully balanced colors. " +
+          "Keep the central area visually clear for placing a real product. " +
+          "Background environment only. Absolutely no products, " +
+          "no objects resembling the product, no text, no letters, " +
+          "no typography, no logos, no watermark."
+        ).slice(0, 2048);
+
+        const imageResult = await env.AI.run(
+          "@cf/black-forest-labs/flux-1-schnell",
+          {
+            prompt: finalPrompt,
+            steps: 4
+          }
+        );
+
+        if (!imageResult || !imageResult.image) {
+          throw new Error(
+            "FLUX не вернул изображение рекламной сцены"
+          );
+        }
+
+        const binary = atob(imageResult.image);
+
+        const bytes = Uint8Array.from(
+          binary,
+          char => char.charCodeAt(0)
+        );
+
+        return new Response(bytes, {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "image/jpeg",
+            "Cache-Control": "no-store"
+          }
+        });
+
+      } catch (error) {
+        console.error("AD SCENE GENERATION ERROR:", error);
+
+        return jsonResponse({
+          error: error.message ||
+            "Не удалось создать рекламное окружение"
+        }, 500);
+      }
+    }
+
+    // ==========================================
+    // 6. GENERATE CARD DESIGN — CLASSIC MODE
+    // СТАРАЯ СИСТЕМА СОХРАНЕНА
     // ==========================================
 
     if (
@@ -360,25 +488,21 @@ decoration: none
             "info",
             "premium"
           ],
-
           productPosition: [
             "left",
             "center",
             "right"
           ],
-
           titlePosition: [
             "top",
             "middle",
             "bottom"
           ],
-
           featuresPosition: [
             "left",
             "right",
             "bottom"
           ],
-
           background: [
             "light",
             "dark",
@@ -386,7 +510,6 @@ decoration: none
             "gradient",
             "accent"
           ],
-
           accent: [
             "blue",
             "cyan",
@@ -395,13 +518,11 @@ decoration: none
             "violet",
             "black"
           ],
-
           shadow: [
             "soft",
             "medium",
             "none"
           ],
-
           decoration: [
             "none"
           ]
@@ -451,7 +572,7 @@ decoration: none
     }
 
     // ==========================================
-    // 6. STATIC WEBSITE FILES
+    // 7. STATIC WEBSITE FILES
     // ==========================================
 
     return env.ASSETS.fetch(request);
