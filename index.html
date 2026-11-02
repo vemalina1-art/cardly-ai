@@ -28,7 +28,7 @@ body {
   font-family: 'Manrope', sans-serif;
 }
 
-button, input, textarea { font: inherit; }
+button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 
 .header {
@@ -232,6 +232,13 @@ button { cursor: pointer; }
 .generate:hover { background: #2855d0; }
 .generate:disabled { opacity: .55; cursor: wait; }
 
+.ai-generate {
+  background: #172033;
+  margin-top: 10px;
+}
+
+.ai-generate:hover { background: #293b5b; }
+
 .preview-panel { min-height: 700px; }
 
 .preview-header {
@@ -303,6 +310,40 @@ button { cursor: pointer; }
 }
 
 .card.dark { color: white; }
+
+/* AI SCENE BACKGROUND */
+
+.scene-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.scene-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.18),
+    transparent 35%,
+    transparent 70%,
+    rgba(0,0,0,.08)
+  );
+  pointer-events: none;
+}
+
+.card.dark .scene-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,.2),
+    transparent 40%,
+    rgba(0,0,0,.16)
+  );
+}
 
 .card-title {
   position: absolute;
@@ -502,15 +543,40 @@ button { cursor: pointer; }
       <label class="label" for="featuresInput">Характеристики</label>
       <textarea class="textarea" id="featuresInput" placeholder="Материал: латунь&#10;Цвет: хром&#10;Тип установки: настенный"></textarea>
 
-      <button class="generate" id="generateBtn" disabled>✨ Создать карточку</button>
+      <button class="generate" id="generateBtn" disabled>
+        ✨ Создать карточку
+      </button>
+
+      <label class="label" for="styleSelect">Стиль рекламной композиции</label>
+
+      <select class="input" id="styleSelect">
+        <option value="premium">Premium Advertising</option>
+        <option value="editorial">Editorial Style</option>
+        <option value="showcase">Product Showcase</option>
+        <option value="lifestyle">Lifestyle</option>
+        <option value="infographic">Modern Infographic</option>
+        <option value="cinematic">Cinematic Style</option>
+      </select>
+
+      <button
+        class="generate ai-generate"
+        id="aiSceneBtn"
+        disabled
+      >
+        ✦ Создать AI-композицию
+      </button>
     </section>
 
     <section class="preview-panel">
       <div class="preview-header">
         <div class="preview-title">Предпросмотр</div>
         <div class="actions">
-          <button class="secondary" id="variantBtn" style="display:none">Другой вариант</button>
-          <button class="secondary" id="downloadBtn" style="display:none">Скачать PNG</button>
+          <button class="secondary" id="variantBtn" style="display:none">
+            Другой вариант
+          </button>
+          <button class="secondary" id="downloadBtn" style="display:none">
+            Скачать PNG
+          </button>
         </div>
       </div>
 
@@ -518,7 +584,10 @@ button { cursor: pointer; }
         <div>
           <div class="empty-icon">✧</div>
           <strong>Здесь появится ваша инфографика</strong>
-          <p>Сначала загрузите фотографию товара.<br>Cardly AI удалит фон и подготовит изображение.</p>
+          <p>
+            Сначала загрузите фотографию товара.<br>
+            Cardly AI удалит фон и подготовит изображение.
+          </p>
         </div>
       </div>
 
@@ -545,7 +614,7 @@ env.remoteHost = window.location.origin + "/api/model/";
 env.remotePathTemplate = "{model}/resolve/{revision}";
 env.useBrowserCache = true;
 
-// Переключаем ONNX Runtime на WASM.
+// Настройки ONNX Runtime.
 env.backends.onnx.wasm.numThreads = Math.min(
   4,
   navigator.hardwareConcurrency || 4
@@ -560,6 +629,8 @@ const progressBar = document.getElementById("progressBar");
 const productName = document.getElementById("productName");
 const featuresInput = document.getElementById("featuresInput");
 const generateBtn = document.getElementById("generateBtn");
+const aiSceneBtn = document.getElementById("aiSceneBtn");
+const styleSelect = document.getElementById("styleSelect");
 const variantBtn = document.getElementById("variantBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const emptyPreview = document.getElementById("emptyPreview");
@@ -569,6 +640,7 @@ const card = document.getElementById("card");
 let cutoutImage = null;
 let modelPromise = null;
 let isRemoving = false;
+let sceneObjectUrl = null;
 
 function setStatus(message, type = "loading", progress = 0) {
   removeStatus.className = "status " + type;
@@ -643,6 +715,7 @@ async function removeBackground(file) {
 
   isRemoving = true;
   generateBtn.disabled = true;
+  aiSceneBtn.disabled = true;
 
   let sourceUrl = null;
 
@@ -741,6 +814,7 @@ async function removeBackground(file) {
     );
 
     generateBtn.disabled = false;
+    aiSceneBtn.disabled = false;
 
   } catch (error) {
     console.error("BACKGROUND REMOVAL ERROR:", error);
@@ -752,6 +826,7 @@ async function removeBackground(file) {
     );
 
     generateBtn.disabled = true;
+    aiSceneBtn.disabled = true;
 
   } finally {
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
@@ -770,6 +845,12 @@ imageInput.addEventListener("change", async () => {
 
   cutoutImage = null;
   generateBtn.disabled = true;
+  aiSceneBtn.disabled = true;
+
+  if (sceneObjectUrl) {
+    URL.revokeObjectURL(sceneObjectUrl);
+    sceneObjectUrl = null;
+  }
 
   uploadContent.innerHTML =
     '<div class="upload-content"><div class="upload-icon">◌</div><div class="upload-title">Обрабатываем фото…</div></div>';
@@ -798,7 +879,40 @@ async function requestDesign() {
   return data;
 }
 
-function renderCard(data) {
+async function requestAIScene() {
+  const response = await fetch("/api/generate-scene", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      productName: productName.value.trim(),
+      characteristics: featuresInput.value.trim(),
+      style: styleSelect.value
+    })
+  });
+
+  if (!response.ok) {
+    let message = "Не удалось создать AI-фон";
+
+    try {
+      const errorData = await response.json();
+      message = errorData.error || message;
+    } catch (_) {}
+
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+
+  if (!blob.type.startsWith("image/")) {
+    throw new Error("Сервер вернул файл неправильного формата.");
+  }
+
+  return blob;
+}
+
+async function renderCard(data, sceneUrl = null) {
   const designOptions = [
     "hero", "split", "editorial", "dynamic", "info", "premium"
   ];
@@ -873,12 +987,46 @@ function renderCard(data) {
   };
 
   card.innerHTML = `
+    ${
+      sceneUrl
+        ? `<img class="scene-background" src="${sceneUrl}" alt="AI-фон">`
+        : ""
+    }
+
+    ${sceneUrl ? `<div class="scene-overlay"></div>` : ""}
+
     <div class="design-label">${labels[design]}</div>
-    <h2 class="card-title title-${titlePosition}">${title}</h2>
-    ${subtitle ? `<div class="card-subtitle">${subtitle}</div>` : ""}
-    <img class="product ${productPosition}" src="${cutoutImage}" alt="Товар">
-    <div class="features ${featuresPosition}">${featureHTML}</div>
+
+    <h2 class="card-title title-${titlePosition}">
+      ${title}
+    </h2>
+
+    ${
+      subtitle
+        ? `<div class="card-subtitle">${subtitle}</div>`
+        : ""
+    }
+
+    <img
+      class="product ${productPosition}"
+      src="${cutoutImage}"
+      alt="Товар"
+    >
+
+    <div class="features ${featuresPosition}">
+      ${featureHTML}
+    </div>
   `;
+
+  if (sceneUrl) {
+    const sceneImage = card.querySelector(".scene-background");
+
+    try {
+      await sceneImage.decode();
+    } catch (error) {
+      console.warn("Не удалось загрузить AI-фон:", error);
+    }
+  }
 
   emptyPreview.style.display = "none";
   cardWrapper.style.display = "flex";
@@ -898,20 +1046,88 @@ async function generateCard() {
   }
 
   generateBtn.disabled = true;
+  aiSceneBtn.disabled = true;
   generateBtn.textContent = "Создаём дизайн…";
 
   try {
     const data = await requestDesign();
-    renderCard(data);
+    await renderCard(data);
+
+    if (sceneObjectUrl) {
+      URL.revokeObjectURL(sceneObjectUrl);
+      sceneObjectUrl = null;
+    }
+
   } catch (error) {
     alert("Ошибка: " + error.message);
+
   } finally {
     generateBtn.disabled = false;
+    aiSceneBtn.disabled = false;
     generateBtn.textContent = "✨ Создать карточку";
   }
 }
 
+async function generateAIComposition() {
+  if (!cutoutImage) {
+    alert("Сначала загрузите фото товара.");
+    return;
+  }
+
+  if (!productName.value.trim()) {
+    alert("Введите название товара.");
+    return;
+  }
+
+  aiSceneBtn.disabled = true;
+  generateBtn.disabled = true;
+  variantBtn.disabled = true;
+
+  aiSceneBtn.textContent = "✦ Создаём рекламную сцену…";
+
+  let newSceneUrl = null;
+
+  try {
+    // Сначала создаём структуру карточки.
+    const design = await requestDesign();
+
+    aiSceneBtn.textContent = "✦ Генерируем AI-фон…";
+
+    // Затем генерируем отдельное окружение.
+    const sceneBlob = await requestAIScene();
+
+    newSceneUrl = URL.createObjectURL(sceneBlob);
+
+    // Накладываем исходный товар поверх AI-фона.
+    await renderCard(design, newSceneUrl);
+
+    if (sceneObjectUrl) {
+      URL.revokeObjectURL(sceneObjectUrl);
+    }
+
+    sceneObjectUrl = newSceneUrl;
+    newSceneUrl = null;
+
+  } catch (error) {
+    console.error("AI COMPOSITION ERROR:", error);
+    alert("Не удалось создать композицию: " + error.message);
+
+  } finally {
+    if (newSceneUrl) {
+      URL.revokeObjectURL(newSceneUrl);
+    }
+
+    aiSceneBtn.disabled = false;
+    generateBtn.disabled = false;
+    variantBtn.disabled = false;
+
+    aiSceneBtn.textContent = "✦ Создать AI-композицию";
+  }
+}
+
 generateBtn.addEventListener("click", generateCard);
+
+aiSceneBtn.addEventListener("click", generateAIComposition);
 
 variantBtn.addEventListener("click", async () => {
   variantBtn.disabled = true;
@@ -919,9 +1135,16 @@ variantBtn.addEventListener("click", async () => {
 
   try {
     const data = await requestDesign();
-    renderCard(data);
+    await renderCard(data);
+
+    if (sceneObjectUrl) {
+      URL.revokeObjectURL(sceneObjectUrl);
+      sceneObjectUrl = null;
+    }
+
   } catch (error) {
     alert("Ошибка: " + error.message);
+
   } finally {
     variantBtn.disabled = false;
     variantBtn.textContent = "Другой вариант";
@@ -953,6 +1176,7 @@ downloadBtn.addEventListener("click", async () => {
 
   } catch (error) {
     alert("Не удалось сохранить PNG: " + error.message);
+
   } finally {
     downloadBtn.disabled = false;
     downloadBtn.textContent = "Скачать PNG";
