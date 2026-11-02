@@ -1,4 +1,4 @@
-```javascript
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -27,9 +27,9 @@ export default {
       });
     }
 
-    /* =========================================
-       HUGGING FACE PROXY
-       ========================================= */
+    // =========================================
+    // HUGGING FACE MODEL PROXY
+    // =========================================
 
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
@@ -39,12 +39,9 @@ export default {
       }
 
       try {
-        let modelPath = url.pathname.slice(
-          "/api/model/".length
-        );
+        let modelPath = url.pathname.slice("/api/model/".length);
 
         modelPath = decodeURIComponent(modelPath);
-
         modelPath = modelPath.replace(/^\/+/, "");
 
         if (
@@ -63,14 +60,12 @@ export default {
           "https://huggingface.co/" + modelPath
         );
 
-        // Не разрешаем менять домен назначения.
         if (hfUrl.hostname !== "huggingface.co") {
           return jsonResponse({
             error: "Invalid destination"
           }, 400);
         }
 
-        // Передаём параметры запроса, если они есть.
         hfUrl.search = url.search;
 
         const headers = new Headers();
@@ -103,7 +98,6 @@ export default {
           hfUrl.pathname
         );
 
-        // Передаём ответ Hugging Face без подмены ошибки.
         const responseHeaders = new Headers(
           hfResponse.headers
         );
@@ -129,9 +123,7 @@ export default {
         );
 
         return new Response(
-          request.method === "HEAD"
-            ? null
-            : hfResponse.body,
+          request.method === "HEAD" ? null : hfResponse.body,
           {
             status: hfResponse.status,
             statusText: hfResponse.statusText,
@@ -149,9 +141,9 @@ export default {
       }
     }
 
-    /* =========================================
-       TEST HUGGING FACE DIRECTLY
-       ========================================= */
+    // =========================================
+    // TEST HUGGING FACE DIRECTLY
+    // =========================================
 
     if (url.pathname === "/api/test-huggingface") {
       try {
@@ -161,7 +153,6 @@ export default {
           "preprocessor_config.json";
 
         const response = await fetch(testUrl);
-
         const body = await response.text();
 
         return jsonResponse({
@@ -177,22 +168,20 @@ export default {
       }
     }
 
-    /* =========================================
-       TEST MODEL THROUGH OUR PROXY
-       ========================================= */
+    // =========================================
+    // TEST MODEL THROUGH OUR PROXY
+    // =========================================
 
     if (url.pathname === "/api/test-model-proxy") {
       try {
-        const testUrl =
-          new URL(
-            "/api/model/onnx-community/" +
-            "BiRefNet_512x512-ONNX/resolve/main/" +
-            "preprocessor_config.json",
-            url.origin
-          );
+        const testUrl = new URL(
+          "/api/model/onnx-community/" +
+          "BiRefNet_512x512-ONNX/resolve/main/" +
+          "preprocessor_config.json",
+          url.origin
+        );
 
         const response = await fetch(testUrl);
-
         const body = await response.text();
 
         return jsonResponse({
@@ -208,9 +197,9 @@ export default {
       }
     }
 
-    /* =========================================
-       TEST CLOUDFLARE AI
-       ========================================= */
+    // =========================================
+    // TEST CLOUDFLARE AI
+    // =========================================
 
     if (url.pathname === "/api/test-ai") {
       try {
@@ -235,9 +224,9 @@ export default {
       }
     }
 
-    /* =========================================
-       GENERATE CARD DESIGN
-       ========================================= */
+    // =========================================
+    // GENERATE CARD DESIGN
+    // =========================================
 
     if (
       url.pathname === "/api/generate" &&
@@ -316,7 +305,7 @@ background и accent:
               {
                 role: "system",
                 content:
-                  "Ты профессиональный дизайнер маркетплейсов. Возвращай только корректный JSON."
+                  "Ты профессиональный дизайнер маркетплейсов. Возвращай только корректный JSON без Markdown."
               },
               {
                 role: "user",
@@ -340,9 +329,7 @@ background и accent:
         const end = answer.lastIndexOf("}");
 
         if (start === -1 || end === -1) {
-          throw new Error(
-            "AI не вернул JSON"
-          );
+          throw new Error("AI не вернул JSON");
         }
 
         const data = JSON.parse(
@@ -360,11 +347,10 @@ background и accent:
       }
     }
 
-    /* =========================================
-       STATIC WEBSITE FILES
-       ========================================= */
+    // =========================================
+    // STATIC WEBSITE FILES
+    // =========================================
 
     return env.ASSETS.fetch(request);
   }
 };
-```
