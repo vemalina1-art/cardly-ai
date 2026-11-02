@@ -1,2032 +1,891 @@
+
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Cardly AI — генератор инфографики</title>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Onest:wght@400;500;600;700;800&display=swap');
 
-* {
-    box-sizing: border-box;
+:root {
+  --blue: #3867e8;
+  --ink: #172033;
+  --muted: #7c879b;
+  --line: #e8ecf3;
+  --surface: #ffffff;
+  --bg: #f5f7fb;
 }
+
+* { box-sizing: border-box; }
 
 body {
-    margin: 0;
-    font-family: Inter, Arial, sans-serif;
-    background: #f4f6fa;
-    color: #111827;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', sans-serif;
 }
 
-button,
-input,
-textarea {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-
-/* ========================= */
-/* HEADER */
-/* ========================= */
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
 
 .header {
-    height: 72px;
-    padding: 0 32px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
+  height: 70px;
+  padding: 0 5%;
+  background: white;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
-    font-size: 23px;
-    font-weight: 850;
-    letter-spacing: -1px;
+  font-family: 'Onest', sans-serif;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -1.2px;
 }
 
-.logo span {
-    color: #2563eb;
+.logo span { color: var(--blue); }
+
+.header-note {
+  font-size: 12px;
+  color: var(--muted);
 }
-
-.header-right {
-    color: #6b7280;
-    font-size: 14px;
-}
-
-
-/* ========================= */
-/* MAIN */
-/* ========================= */
 
 .main {
-    max-width: 1400px;
-    margin: auto;
-    padding: 35px;
+  max-width: 1420px;
+  padding: 38px 30px 60px;
+  margin: auto;
 }
 
-.page-title {
-    margin-bottom: 28px;
+.intro { margin-bottom: 28px; }
+
+.intro h1 {
+  font-family: 'Onest', sans-serif;
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -1.5px;
+  margin: 0 0 8px;
 }
 
-.page-title h1 {
-    margin: 0 0 8px;
-    font-size: 32px;
-    letter-spacing: -1px;
+.intro p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
 }
-
-.page-title p {
-    margin: 0;
-    color: #6b7280;
-}
-
-
-/* ========================= */
-/* WORKSPACE */
-/* ========================= */
 
 .workspace {
-    display: grid;
-    grid-template-columns: 390px 1fr;
-    gap: 28px;
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
-
-/* ========================= */
-/* PANELS */
-/* ========================= */
-
-.panel,
-.preview-panel {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 20px;
-    padding: 24px;
-
-    box-shadow:
-        0 12px 35px rgba(15, 23, 42, .05);
+.panel, .preview-panel {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(25, 42, 75, .035);
 }
 
-.panel-title,
-.preview-title {
-    font-size: 18px;
-    font-weight: 750;
+.panel-heading {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 22px;
 }
-
-.panel-title {
-    margin-bottom: 20px;
-}
-
-
-/* ========================= */
-/* FORM */
-/* ========================= */
 
 .label {
-    display: block;
-
-    margin-bottom: 8px;
-
-    font-size: 13px;
-    font-weight: 650;
-
-    color: #374151;
+  display: block;
+  margin: 18px 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #465168;
 }
-
-.input,
-.textarea {
-    width: 100%;
-
-    border: 1px solid #d8dee8;
-    border-radius: 12px;
-
-    padding: 13px 14px;
-
-    outline: none;
-
-    transition: .2s;
-}
-
-.input:focus,
-.textarea:focus {
-    border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 3px rgba(37, 99, 235, .1);
-}
-
-.textarea {
-    min-height: 130px;
-    resize: vertical;
-}
-
-
-/* ========================= */
-/* UPLOAD */
-/* ========================= */
 
 .upload {
-    position: relative;
-
-    min-height: 230px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 2px dashed #d4dae4;
-    border-radius: 16px;
-
-    overflow: hidden;
-
-    text-align: center;
-
-    cursor: pointer;
-
-    transition: .2s;
+  min-height: 210px;
+  border: 1.5px dashed #cbd4e3;
+  border-radius: 15px;
+  background: #fafbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: .2s;
+  position: relative;
 }
 
 .upload:hover {
-    border-color: #2563eb;
-    background: #f8faff;
+  border-color: var(--blue);
+  background: #f5f8ff;
 }
 
-.upload input {
-    display: none;
-}
+.upload input { display: none; }
 
-.upload-content {
-    width: 100%;
-    height: 100%;
-
-    padding: 20px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+.upload-content { padding: 18px; }
 
 .upload-icon {
-    font-size: 42px;
-    margin-bottom: 10px;
+  font-size: 36px;
+  margin-bottom: 9px;
 }
 
 .upload-title {
-    font-weight: 750;
-    margin-bottom: 5px;
+  font-weight: 800;
+  font-size: 14px;
 }
 
 .upload-subtitle {
-    color: #6b7280;
-    font-size: 13px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
 }
 
-.upload img {
-    width: 100%;
-    height: 230px;
-
-    object-fit: contain;
-
-    padding: 15px;
+.checker {
+  background-color: #f8f9fc;
+  background-image:
+    linear-gradient(45deg, #e9edf4 25%, transparent 25%),
+    linear-gradient(-45deg, #e9edf4 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e9edf4 75%),
+    linear-gradient(-45deg, transparent 75%, #e9edf4 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
 }
 
+.upload-preview {
+  width: 100%;
+  height: 210px;
+  object-fit: contain;
+  padding: 12px;
+}
 
-/* ========================= */
-/* BUTTONS */
-/* ========================= */
+.status {
+  display: none;
+  margin-top: 10px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #f1f5ff;
+  color: #3656a6;
+}
+
+.status.error {
+  display: block;
+  color: #a33b3b;
+  background: #fff1f1;
+}
+
+.status.success {
+  display: block;
+  color: #16734b;
+  background: #eaf8f0;
+}
+
+.status.loading { display: block; }
+
+.progress {
+  height: 5px;
+  background: #dce5fa;
+  border-radius: 10px;
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--blue);
+  transition: width .3s;
+}
+
+.input, .textarea {
+  width: 100%;
+  border: 1px solid #dce2ec;
+  border-radius: 11px;
+  padding: 12px 13px;
+  outline: none;
+  color: var(--ink);
+  background: white;
+  font-size: 13px;
+}
+
+.input:focus, .textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(56,103,232,.09);
+}
+
+.textarea {
+  min-height: 115px;
+  resize: vertical;
+}
 
 .generate {
-    width: 100%;
-
-    margin-top: 20px;
-    padding: 15px;
-
-    border: 0;
-    border-radius: 13px;
-
-    background: #2563eb;
-    color: white;
-
-    font-weight: 750;
-
-    transition: .2s;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: var(--blue);
+  color: white;
+  font-weight: 800;
+  padding: 15px;
+  margin-top: 22px;
+  box-shadow: 0 7px 16px rgba(56,103,232,.2);
+  transition: .2s;
 }
 
-.generate:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
-}
+.generate:hover { background: #2855d0; }
+.generate:disabled { opacity: .55; cursor: wait; }
 
-.generate:disabled {
-    opacity: .6;
-    cursor: wait;
-}
-
-.preview-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.variant {
-    padding: 9px 13px;
-
-    border: 1px solid #dbe1ea;
-    border-radius: 10px;
-
-    background: white;
-
-    font-size: 13px;
-}
-
-.variant:hover {
-    background: #f4f6fa;
-}
-
-
-/* ========================= */
-/* PREVIEW */
-/* ========================= */
-
-.preview-panel {
-    min-height: 700px;
-}
+.preview-panel { min-height: 700px; }
 
 .preview-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
+.preview-title {
+  font-size: 17px;
+  font-weight: 800;
+}
 
-/* ========================= */
-/* EMPTY */
-/* ========================= */
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: white;
+  color: #465168;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.secondary:hover { background: #f5f7fb; }
 
 .empty {
-    min-height: 620px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 1px dashed #d5dbe5;
-    border-radius: 16px;
-
-    color: #9ca3af;
-
-    text-align: center;
+  min-height: 610px;
+  border: 1px dashed #d9dfeb;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  padding: 25px;
 }
 
-.empty-inner {
-    max-width: 300px;
-}
-
-.empty-icon {
-    font-size: 50px;
-    margin-bottom: 15px;
-}
-
-
-/* ========================= */
-/* CARD */
-/* ========================= */
+.empty-icon { font-size: 44px; margin-bottom: 15px; }
+.empty strong { color: #465168; font-size: 14px; }
+.empty p { font-size: 12px; line-height: 1.6; }
 
 .card-wrapper {
-    display: flex;
-    justify-content: center;
+  display: none;
+  justify-content: center;
+  padding: 10px;
 }
 
 .card {
-    width: min(450px, 100%);
-
-    aspect-ratio: 3 / 4;
-
-    position: relative;
-
-    overflow: hidden;
-
-    border-radius: 4px;
-
-    isolation: isolate;
-
-    --accent: #2563eb;
+  width: min(450px, 100%);
+  aspect-ratio: 3 / 4;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size;
+  color: #172033;
+  background: #f2f5fa;
 }
 
-
-/* ========================= */
-/* BACKGROUNDS */
-/* ========================= */
-
-.bg-light {
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #edf2f7
-        );
-}
-
-.bg-dark {
-    background:
-        linear-gradient(
-            135deg,
-            #111827,
-            #1f2937
-        );
-
-    color: white;
-}
-
-.bg-gradient {
-    background:
-        radial-gradient(
-            circle at 20% 10%,
-            #bfdbfe,
-            transparent 38%
-        ),
-        radial-gradient(
-            circle at 90% 90%,
-            #bae6fd,
-            transparent 35%
-        ),
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #e0f2fe
-        );
-}
-
-.bg-soft {
-    background:
-        radial-gradient(
-            circle at 80% 20%,
-            #e5e7eb,
-            transparent 35%
-        ),
-        #f8fafc;
-}
-
-.bg-accent {
-    background:
-        linear-gradient(
-            145deg,
-            #eff6ff,
-            #dbeafe
-        );
-}
-
-
-/* ========================= */
-/* ACCENTS */
-/* ========================= */
-
-.accent-blue {
-    --accent: #2563eb;
-}
-
-.accent-cyan {
-    --accent: #06b6d4;
-}
-
-.accent-green {
-    --accent: #16a34a;
-}
-
-.accent-orange {
-    --accent: #f97316;
-}
-
-.accent-violet {
-    --accent: #7c3aed;
-}
-
-.accent-red {
-    --accent: #ef4444;
-}
-
-.accent-none {
-    --accent: #111827;
-}
-
-
-/* ========================= */
-/* PRODUCT */
-/* ========================= */
-
-.product {
-    position: absolute;
-
-    object-fit: contain;
-
-    z-index: 5;
-}
-
-.product-shadow {
-    filter:
-        drop-shadow(
-            0 25px 22px rgba(0,0,0,.18)
-        );
-}
-
-.product-shadow-medium {
-    filter:
-        drop-shadow(
-            0 30px 28px rgba(0,0,0,.30)
-        );
-}
-
-
-/* ========================= */
-/* PRODUCT POSITIONS */
-/* ========================= */
-
-.pos-center {
-    left: 50%;
-    top: 50%;
-
-    transform: translate(-50%, -50%);
-}
-
-.pos-center-bottom {
-    left: 50%;
-    bottom: 4%;
-
-    transform: translateX(-50%);
-}
-
-.pos-center-top {
-    left: 50%;
-    top: 18%;
-
-    transform: translateX(-50%);
-}
-
-.pos-left {
-    left: 4%;
-    top: 50%;
-
-    transform: translateY(-50%);
-}
-
-.pos-right {
-    right: 4%;
-    top: 50%;
-
-    transform: translateY(-50%);
-}
-
-.pos-left-bottom {
-    left: 3%;
-    bottom: 5%;
-}
-
-.pos-right-bottom {
-    right: 3%;
-    bottom: 5%;
-}
-
-.pos-left-top {
-    left: 3%;
-    top: 10%;
-}
-
-.pos-right-top {
-    right: 3%;
-    top: 10%;
-}
-
-
-/* ========================= */
-/* TITLE */
-/* ========================= */
+.card.dark { color: white; }
 
 .card-title {
-    position: absolute;
-
-    z-index: 10;
-
-    margin: 0;
-
-    max-width: 80%;
-
-    font-size: 32px;
-    line-height: 1.02;
-
-    letter-spacing: -1.5px;
-
-    font-weight: 850;
+  position: absolute;
+  z-index: 5;
+  margin: 0;
+  max-width: 78%;
+  font-family: 'Onest', sans-serif;
+  font-weight: 800;
+  font-size: clamp(25px, 8cqw, 39px);
+  line-height: 1.02;
+  letter-spacing: -1.7px;
+  overflow-wrap: anywhere;
 }
 
-.title-top-left {
-    top: 8%;
-    left: 7%;
-}
-
-.title-top-center {
-    top: 8%;
-    left: 50%;
-
-    transform: translateX(-50%);
-
-    text-align: center;
-}
-
-.title-top-right {
-    top: 8%;
-    right: 7%;
-
-    text-align: right;
-}
-
-.title-middle-left {
-    left: 7%;
-    top: 40%;
-}
-
-.title-middle-right {
-    right: 7%;
-    top: 40%;
-
-    text-align: right;
-}
-
-.title-bottom-left {
-    left: 7%;
-    bottom: 8%;
-}
-
-
-/* ========================= */
-/* SUBTITLE */
-/* ========================= */
+.title-top { top: 8%; left: 7%; }
+.title-middle { top: 38%; left: 7%; }
+.title-bottom { bottom: 8%; left: 7%; }
 
 .card-subtitle {
-    position: absolute;
-
-    z-index: 10;
-
-    max-width: 65%;
-
-    font-size: 14px;
-    line-height: 1.4;
-
-    opacity: .7;
+  position: absolute;
+  z-index: 5;
+  left: 7%;
+  top: 19%;
+  max-width: 65%;
+  font-size: clamp(10px, 2.8cqw, 13px);
+  line-height: 1.45;
+  opacity: .72;
 }
 
+.product {
+  position: absolute;
+  z-index: 3;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 17px rgba(0,0,0,.17));
+}
 
-/* ========================= */
-/* FEATURES */
-/* ========================= */
+.product.center {
+  width: 70%;
+  max-height: 66%;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+}
+
+.product.left {
+  width: 59%;
+  max-height: 68%;
+  left: 3%;
+  top: 53%;
+  transform: translateY(-50%);
+}
+
+.product.right {
+  width: 59%;
+  max-height: 68%;
+  right: 3%;
+  top: 53%;
+  transform: translateY(-50%);
+}
 
 .features {
-    position: absolute;
-
-    z-index: 10;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 8px;
-
-    max-width: 45%;
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-width: 43%;
 }
+
+.features.bottom {
+  left: 7%;
+  right: 7%;
+  bottom: 6%;
+  max-width: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.features.left { left: 7%; bottom: 8%; }
+.features.right { right: 7%; bottom: 8%; }
 
 .feature {
-    padding: 9px 12px;
-
-    border-radius: 10px;
-
-    background: rgba(255,255,255,.78);
-
-    backdrop-filter: blur(8px);
-
-    font-size: 11px;
-    line-height: 1.3;
-
-    box-shadow:
-        0 5px 20px rgba(0,0,0,.06);
+  background: rgba(255,255,255,.88);
+  color: #26334a;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: clamp(9px, 2.3cqw, 11px);
+  font-weight: 700;
+  line-height: 1.3;
+  box-shadow: 0 4px 14px rgba(20,35,60,.06);
+  border-left: 3px solid var(--accent, #3867e8);
 }
 
-.dark-card .feature {
-    background: rgba(255,255,255,.1);
-}
-
-.features-left {
-    left: 7%;
-    bottom: 8%;
-}
-
-.features-right {
-    right: 7%;
-    bottom: 8%;
-}
-
-.features-bottom {
-    left: 50%;
-    bottom: 6%;
-
-    transform: translateX(-50%);
-
-    width: 84%;
-    max-width: none;
-
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-}
-
-.features-bottom-left {
-    left: 7%;
-    bottom: 7%;
-}
-
-.features-bottom-right {
-    right: 7%;
-    bottom: 7%;
-}
-
-.features-around {
-    left: 7%;
-    right: 7%;
-    bottom: 8%;
-}
-
-
-/* ========================= */
-/* DECORATIONS */
-/* ========================= */
-
-.decor {
-    position: absolute;
-
-    z-index: 1;
-
-    pointer-events: none;
-}
-
-.decor-line {
-    width: 180px;
-    height: 2px;
-
-    background: var(--accent);
-
-    opacity: .55;
-
-    transform: rotate(-25deg);
-}
-
-.decor-circle {
-    width: 150px;
-    height: 150px;
-
-    border-radius: 50%;
-
-    border: 2px solid var(--accent);
-
-    opacity: .2;
-}
-
-.decor-blob {
-    width: 230px;
-    height: 180px;
-
-    border-radius: 50%;
-
-    background: var(--accent);
-
-    opacity: .09;
-
-    filter: blur(2px);
-}
-
-.decor-grid {
-    width: 100%;
-    height: 100%;
-
-    opacity: .07;
-
-    background-image:
-        linear-gradient(
-            var(--accent) 1px,
-            transparent 1px
-        ),
-        linear-gradient(
-            90deg,
-            var(--accent) 1px,
-            transparent 1px
-        );
-
-    background-size: 25px 25px;
-}
-
-
-/* ========================= */
-/* SIX DESIGNS */
-/* ========================= */
-
-.design-hero .card-title {
-    font-size: 35px;
-}
-
-.design-hero .product {
-    width: 78%;
-}
-
-
-.design-split .card-title {
-    font-size: 31px;
-    max-width: 44%;
-}
-
-.design-split .product {
-    width: 54%;
-}
-
-
-.design-editorial .card-title {
-    font-size: 40px;
-    max-width: 75%;
-}
-
-.design-editorial .product {
-    width: 62%;
-}
-
-.design-editorial::after {
-    content: "";
-
-    position: absolute;
-
-    right: -60px;
-    top: 25%;
-
-    width: 180px;
-    height: 180px;
-
-    border-radius: 50%;
-
-    border: 35px solid var(--accent);
-
-    opacity: .08;
-}
-
-
-.design-dynamic .card-title {
-    font-size: 36px;
-    max-width: 70%;
-}
-
-.design-dynamic .product {
-    width: 68%;
-}
-
-.design-dynamic::before {
-    content: "";
-
-    position: absolute;
-
-    width: 150%;
-    height: 180px;
-
-    left: -25%;
-    top: 45%;
-
-    background: var(--accent);
-
-    opacity: .08;
-
-    transform: rotate(-14deg);
-}
-
-
-.design-info .card-title {
-    font-size: 29px;
-    max-width: 70%;
-}
-
-.design-info .product {
-    width: 58%;
-}
-
-.design-info .feature {
-    border-left: 3px solid var(--accent);
-}
-
-
-.design-premium {
-    background: #fafafa;
-}
-
-.design-premium .card-title {
-    font-size: 38px;
-    font-weight: 700;
-}
-
-.design-premium .product {
-    width: 76%;
-}
-
-.design-premium .feature {
-    background: rgba(255,255,255,.9);
-
-    border: 1px solid rgba(0,0,0,.07);
-
-    box-shadow: none;
-}
-
-
-/* ========================= */
-/* LABEL */
-/* ========================= */
+.card.dark .feature { background: rgba(255,255,255,.94); }
 
 .design-label {
-    position: absolute;
-
-    top: 14px;
-    left: 14px;
-
-    z-index: 20;
-
-    padding: 6px 9px;
-
-    border-radius: 7px;
-
-    background: rgba(255,255,255,.75);
-
-    backdrop-filter: blur(10px);
-
-    font-size: 9px;
-
-    font-weight: 750;
-
-    text-transform: uppercase;
-
-    letter-spacing: .5px;
-
-    color: #374151;
+  position: absolute;
+  z-index: 7;
+  top: 4%;
+  right: 6%;
+  font-size: 8px;
+  letter-spacing: 1.3px;
+  font-weight: 800;
+  opacity: .55;
 }
 
-
-/* ========================= */
-/* RESPONSIVE */
-/* ========================= */
-
-@media (max-width: 1000px) {
-
-    .workspace {
-        grid-template-columns: 1fr;
-    }
-
+.decor {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
 }
 
-@media (max-width: 600px) {
+.card.hero { background: linear-gradient(145deg,#fff,#eaf0fb); }
+.card.split { background: linear-gradient(110deg,#edf3ff 0 48%,#fff 48%); }
+.card.editorial { background: #f5f1e9; }
+.card.dynamic { background: linear-gradient(145deg,#e8f5f7,#f7fbff); }
+.card.info { background: #f2f5fa; }
+.card.premium { background: #f8f6f1; }
 
-    .main {
-        padding: 18px;
-    }
+.card.dark { background: linear-gradient(145deg,#172033,#263955); }
 
-    .header {
-        padding: 0 18px;
-    }
+.card.hero .product { width: 76%; }
+.card.editorial .product { width: 64%; }
+.card.dynamic .product { width: 68%; }
+.card.info .product { width: 61%; }
+.card.premium .product { width: 72%; }
 
-    .page-title h1 {
-        font-size: 26px;
-    }
+.card.split .card-title { max-width: 43%; font-size: clamp(22px,6.5cqw,32px); }
+.card.editorial .card-title { font-family: 'Manrope',sans-serif; font-weight: 700; }
+.card.premium .card-title { font-weight: 600; letter-spacing: -1px; }
 
+.accent-blue { --accent: #3867e8; }
+.accent-cyan { --accent: #0891b2; }
+.accent-green { --accent: #16845b; }
+.accent-orange { --accent: #e87932; }
+.accent-violet { --accent: #7954c8; }
+.accent-black { --accent: #26334a; }
+
+@media (max-width: 950px) {
+  .workspace { grid-template-columns: 1fr; }
+  .preview-panel { min-height: auto; }
+  .empty { min-height: 350px; }
 }
 
+@media (max-width: 560px) {
+  .main { padding: 25px 14px; }
+  .header { padding: 0 18px; }
+  .header-note { display: none; }
+  .panel, .preview-panel { padding: 17px; }
+  .preview-header { align-items: flex-start; flex-direction: column; }
+}
 </style>
-
 </head>
-
 
 <body>
 
-
 <header class="header">
-
-    <div class="logo">
-        Cardly <span>AI</span>
-    </div>
-
-    <div class="header-right">
-        AI генератор инфографики
-    </div>
-
+  <div class="logo">Cardly <span>AI</span></div>
+  <div class="header-note">Умная инфографика для маркетплейсов</div>
 </header>
 
-
 <main class="main">
-
-
-    <div class="page-title">
-
-        <h1>
-            Создайте карточку товара
-        </h1>
-
-        <p>
-            Загрузите товар — AI создаст
-            композицию и текст инфографики
-        </p>
-
-    </div>
-
-
-    <div class="workspace">
-
-
-        <!-- LEFT PANEL -->
-
-        <section class="panel">
-
-            <div class="panel-title">
-                Данные товара
-            </div>
-
-
-            <label class="label">
-                Фото товара
-            </label>
-
-
-            <label
-                class="upload"
-                id="uploadBox"
-            >
-
-                <input
-                    type="file"
-                    id="imageInput"
-                    accept="image/*"
-                >
-
-
-                <div
-                    class="upload-content"
-                    id="uploadContent"
-                >
-
-                    <div class="upload-icon">
-                        📦
-                    </div>
-
-                    <div class="upload-title">
-                        Загрузите фото
-                    </div>
-
-                    <div class="upload-subtitle">
-                        PNG, JPG или WEBP
-                    </div>
-
-                </div>
-
-            </label>
-
-
-            <div style="height:20px"></div>
-
-
-            <label class="label">
-                Название товара
-            </label>
-
-
-            <input
-                id="productName"
-                class="input"
-                placeholder="Например: Смеситель для кухни"
-            >
-
-
-            <div style="height:16px"></div>
-
-
-            <label class="label">
-                Характеристики
-            </label>
-
-
-            <textarea
-                id="featuresInput"
-                class="textarea"
-                placeholder="Например:
-Материал: нержавеющая сталь
-Высота: 35 см
-Цвет: чёрный
-Поворотный излив"
-            ></textarea>
-
-
-            <button
-                class="generate"
-                id="generateBtn"
-            >
-                ✨ Создать карточку
-            </button>
-
-        </section>
-
-
-        <!-- RIGHT PANEL -->
-
-        <section class="preview-panel">
-
-
-            <div class="preview-header">
-
-                <div class="preview-title">
-                    Предпросмотр
-                </div>
-
-
-                <div
-                    class="preview-actions"
-                >
-
-                    <button
-                        class="variant"
-                        id="variantBtn"
-                        style="display:none"
-                    >
-                        Другой вариант
-                    </button>
-
-
-                    <button
-                        class="variant"
-                        id="downloadBtn"
-                        style="display:none"
-                    >
-                        Скачать PNG
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="empty"
-                id="emptyPreview"
-            >
-
-                <div class="empty-inner">
-
-                    <div class="empty-icon">
-                        ✨
-                    </div>
-
-                    <strong>
-                        Здесь появится ваша инфографика
-                    </strong>
-
-                    <p>
-                        AI выберет композицию,
-                        расположение товара,
-                        фон и оформление.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="card-wrapper"
-                id="cardWrapper"
-                style="display:none"
-            >
-
-                <div
-                    class="card"
-                    id="card"
-                ></div>
-
-            </div>
-
-
-        </section>
-
-
-    </div>
-
-
+  <div class="intro">
+    <h1>Создайте карточку товара</h1>
+    <p>Загрузите фото — удалим фон и подготовим дизайн инфографики.</p>
+  </div>
+
+  <div class="workspace">
+    <section class="panel">
+      <div class="panel-heading">Данные товара</div>
+
+      <label class="label">Фотография товара</label>
+      <label class="upload checker" id="uploadBox">
+        <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp">
+        <div class="upload-content" id="uploadContent">
+          <div class="upload-icon">✦</div>
+          <div class="upload-title">Загрузите фотографию</div>
+          <div class="upload-subtitle">PNG, JPG или WEBP</div>
+        </div>
+      </label>
+
+      <div class="status" id="removeStatus">
+        <div id="statusText">Подготовка...</div>
+        <div class="progress"><span id="progressBar"></span></div>
+      </div>
+
+      <label class="label" for="productName">Название товара</label>
+      <input class="input" id="productName" placeholder="Например: Смеситель для кухни">
+
+      <label class="label" for="featuresInput">Характеристики</label>
+      <textarea class="textarea" id="featuresInput" placeholder="Материал: латунь&#10;Цвет: хром&#10;Тип установки: настенный"></textarea>
+
+      <button class="generate" id="generateBtn" disabled>✨ Создать карточку</button>
+    </section>
+
+    <section class="preview-panel">
+      <div class="preview-header">
+        <div class="preview-title">Предпросмотр</div>
+        <div class="actions">
+          <button class="secondary" id="variantBtn" style="display:none">Другой вариант</button>
+          <button class="secondary" id="downloadBtn" style="display:none">Скачать PNG</button>
+        </div>
+      </div>
+
+      <div class="empty" id="emptyPreview">
+        <div>
+          <div class="empty-icon">✧</div>
+          <strong>Здесь появится ваша инфографика</strong>
+          <p>Сначала загрузите фотографию товара.<br>Cardly AI удалит фон и подготовит изображение.</p>
+        </div>
+      </div>
+
+      <div class="card-wrapper" id="cardWrapper">
+        <div class="card" id="card"></div>
+      </div>
+    </section>
+  </div>
 </main>
 
-
-<script>
-
-
-/* ========================= */
-/* VARIABLES */
-/* ========================= */
-
-const imageInput =
-    document.getElementById(
-        "imageInput"
-    );
-
-const uploadContent =
-    document.getElementById(
-        "uploadContent"
-    );
-
-const productName =
-    document.getElementById(
-        "productName"
-    );
-
-const featuresInput =
-    document.getElementById(
-        "featuresInput"
-    );
-
-const generateBtn =
-    document.getElementById(
-        "generateBtn"
-    );
-
-const variantBtn =
-    document.getElementById(
-        "variantBtn"
-    );
-
-const downloadBtn =
-    document.getElementById(
-        "downloadBtn"
-    );
-
-const emptyPreview =
-    document.getElementById(
-        "emptyPreview"
-    );
-
-const cardWrapper =
-    document.getElementById(
-        "cardWrapper"
-    );
-
-const card =
-    document.getElementById(
-        "card"
-    );
-
-
-let uploadedImage = null;
-
-
-/* ========================= */
-/* IMAGE UPLOAD */
-/* ========================= */
-
-imageInput.addEventListener(
-    "change",
-    function () {
-
-        const file =
-            this.files[0];
-
-        if (!file) return;
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            function (e) {
-
-                uploadedImage =
-                    e.target.result;
-
-
-                uploadContent.innerHTML = `
-                    <img
-                        src="${uploadedImage}"
-                    >
-                `;
-
-            };
-
-
-        reader.readAsDataURL(file);
-
-    }
-);
-
-
-/* ========================= */
-/* GENERATE */
-/* ========================= */
-
-async function generateCard() {
-
-
-    if (!uploadedImage) {
-
-        alert(
-            "Сначала загрузите фото товара"
-        );
-
-        return;
-    }
-
-
-    if (!productName.value.trim()) {
-
-        alert(
-            "Введите название товара"
-        );
-
-        return;
-    }
-
-
-    generateBtn.disabled = true;
-
-    generateBtn.textContent =
-        "✨ AI создаёт дизайн...";
-
-
-    try {
-
-
-        const response =
-            await fetch(
-                "/api/generate",
-                {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        productName:
-                            productName.value,
-
-                        features:
-                            featuresInput.value
-
-                    })
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (data.error) {
-
-            throw new Error(
-                data.error
-            );
-
-        }
-
-
-        renderCard(data);
-
-
-        emptyPreview.style.display =
-            "none";
-
-
-        cardWrapper.style.display =
-            "flex";
-
-
-        variantBtn.style.display =
-            "block";
-
-
-        downloadBtn.style.display =
-            "block";
-
-
-    } catch (error) {
-
-        console.error(error);
-
-
-        alert(
-            "Ошибка: " +
-            error.message
-        );
-
-    }
-
-
-    generateBtn.disabled =
-        false;
-
-
-    generateBtn.textContent =
-        "✨ Создать карточку";
-
+<script type="module">
+import {
+  AutoModel,
+  AutoProcessor,
+  RawImage,
+  env
+} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+
+const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
+
+env.allowRemoteModels = true;
+env.remoteHost = window.location.origin + "/api/model/";
+env.remotePathTemplate = "{model}/resolve/{revision}/{file}";
+env.useBrowserCache = true;
+
+const imageInput = document.getElementById("imageInput");
+const uploadContent = document.getElementById("uploadContent");
+const uploadBox = document.getElementById("uploadBox");
+const removeStatus = document.getElementById("removeStatus");
+const statusText = document.getElementById("statusText");
+const progressBar = document.getElementById("progressBar");
+const productName = document.getElementById("productName");
+const featuresInput = document.getElementById("featuresInput");
+const generateBtn = document.getElementById("generateBtn");
+const variantBtn = document.getElementById("variantBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const emptyPreview = document.getElementById("emptyPreview");
+const cardWrapper = document.getElementById("cardWrapper");
+const card = document.getElementById("card");
+
+let originalImage = null;
+let cutoutImage = null;
+let modelPromise = null;
+let lastDesign = null;
+let isRemoving = false;
+
+function setStatus(message, type = "loading", progress = 0) {
+  removeStatus.className = "status " + type;
+  removeStatus.style.display = "block";
+  statusText.textContent = message;
+  progressBar.style.width = progress + "%";
 }
-
-
-/* ========================= */
-/* RENDER CARD */
-/* ========================= */
-
-function renderCard(data) {
-
-
-    const design =
-        data.design ||
-        "hero";
-
-
-    const background =
-        data.background ||
-        "light";
-
-
-    const accent =
-        data.accent ||
-        "blue";
-
-
-    const productPosition =
-        data.productPosition ||
-        "center-bottom";
-
-
-    const productScale =
-        Number(
-            data.productScale
-        ) || .8;
-
-
-    const titlePosition =
-        data.titlePosition ||
-        "top-left";
-
-
-    const featuresPosition =
-        data.featuresPosition ||
-        "bottom";
-
-
-    const shadow =
-        data.shadow ||
-        "soft";
-
-
-    const decoration =
-        data.decoration ||
-        "none";
-
-
-    /* CARD */
-
-    card.className =
-        `
-        card
-        design-${design}
-        bg-${background}
-        accent-${accent}
-        `;
-
-
-    if (background === "dark") {
-
-        card.classList.add(
-            "dark-card"
-        );
-
-    }
-
-
-    /* SHADOW */
-
-    let shadowClass = "";
-
-
-    if (shadow === "soft") {
-
-        shadowClass =
-            "product-shadow";
-
-    }
-
-
-    if (shadow === "medium") {
-
-        shadowClass =
-            "product-shadow-medium";
-
-    }
-
-
-    /* PRODUCT SCALE */
-
-    const productWidth =
-        Math.round(
-            productScale * 100
-        );
-
-
-    /* FEATURES */
-
-    const featureList =
-        Array.isArray(data.features)
-            ? data.features
-            : [];
-
-
-    const featuresHTML =
-        featureList
-            .slice(0, 4)
-            .map(
-                feature =>
-                    `
-                    <div class="feature">
-                        ${escapeHTML(feature)}
-                    </div>
-                    `
-            )
-            .join("");
-
-
-    /* DECORATION */
-
-    let decorationHTML =
-        "";
-
-
-    if (
-        decoration ===
-        "lines"
-    ) {
-
-        decorationHTML = `
-
-            <div
-                class="decor decor-line"
-                style="
-                    top:25%;
-                    right:0;
-                "
-            ></div>
-
-            <div
-                class="decor decor-line"
-                style="
-                    bottom:20%;
-                    left:-20px;
-                "
-            ></div>
-
-        `;
-
-    }
-
-
-    if (
-        decoration ===
-        "circles"
-    ) {
-
-        decorationHTML = `
-
-            <div
-                class="decor decor-circle"
-                style="
-                    top:-40px;
-                    right:-40px;
-                "
-            ></div>
-
-            <div
-                class="decor decor-circle"
-                style="
-                    bottom:40px;
-                    left:-60px;
-                "
-            ></div>
-
-        `;
-
-    }
-
-
-    if (
-        decoration ===
-        "blobs"
-    ) {
-
-        decorationHTML = `
-
-            <div
-                class="decor decor-blob"
-                style="
-                    top:-50px;
-                    right:-70px;
-                "
-            ></div>
-
-            <div
-                class="decor decor-blob"
-                style="
-                    bottom:-70px;
-                    left:-70px;
-                "
-            ></div>
-
-        `;
-
-    }
-
-
-    if (
-        decoration ===
-        "grid"
-    ) {
-
-        decorationHTML = `
-
-            <div
-                class="decor decor-grid"
-            ></div>
-
-        `;
-
-    }
-
-
-    if (
-        decoration ===
-        "diagonal"
-    ) {
-
-        decorationHTML = `
-
-            <div
-                class="decor"
-                style="
-                    width:150%;
-                    height:100px;
-                    left:-25%;
-                    top:40%;
-                    background:var(--accent);
-                    opacity:.08;
-                    transform:rotate(-18deg);
-                "
-            ></div>
-
-        `;
-
-    }
-
-
-    /* DESIGN NAME */
-
-    const designNames = {
-
-        hero:
-            "PRODUCT HERO",
-
-        split:
-            "SPLIT",
-
-        editorial:
-            "EDITORIAL",
-
-        dynamic:
-            "DYNAMIC",
-
-        info:
-            "INFOGRAPHIC",
-
-        premium:
-            "PREMIUM"
-
-    };
-
-
-    /* CARD HTML */
-
-    card.innerHTML = `
-
-        <div class="design-label">
-            ${
-                designNames[design]
-                || "CARDLY AI"
-            }
-        </div>
-
-
-        ${decorationHTML}
-
-
-        <h2
-            class="
-                card-title
-                title-${titlePosition}
-            "
-        >
-            ${
-                escapeHTML(
-                    data.title ||
-                    productName.value
-                )
-            }
-        </h2>
-
-
-        <div
-            class="card-subtitle"
-            style="
-                ${
-                    titlePosition.includes(
-                        "right"
-                    )
-                    ? "right:7%;"
-                    : "left:7%;"
-                }
-
-                ${
-                    titlePosition.includes(
-                        "top"
-                    )
-                    ? "top:18%;"
-                    : "top:55%;"
-                }
-            "
-        >
-
-            ${
-                escapeHTML(
-                    data.subtitle ||
-                    ""
-                )
-            }
-
-        </div>
-
-
-        <img
-            src="${uploadedImage}"
-
-            class="
-                product
-                pos-${productPosition}
-                ${shadowClass}
-            "
-
-            style="
-                width:${productWidth}%;
-            "
-        >
-
-
-        <div
-            class="
-                features
-                features-${featuresPosition}
-            "
-        >
-
-            ${featuresHTML}
-
-        </div>
-
-    `;
-
-}
-
-
-/* ========================= */
-/* OTHER VARIANT */
-/* ========================= */
-
-variantBtn.addEventListener(
-    "click",
-    async function () {
-
-
-        if (
-            !productName.value.trim()
-        ) {
-            return;
-        }
-
-
-        variantBtn.disabled =
-            true;
-
-
-        generateBtn.disabled =
-            true;
-
-
-        variantBtn.textContent =
-            "Создаю...";
-
-
-        try {
-
-
-            const response =
-                await fetch(
-                    "/api/generate",
-                    {
-
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            productName:
-                                productName.value,
-
-                            features:
-                                featuresInput.value
-
-                        })
-
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (data.error) {
-
-                throw new Error(
-                    data.error
-                );
-
-            }
-
-
-            renderCard(data);
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            alert(
-                "Ошибка: " +
-                error.message
-            );
-
-        }
-
-
-        variantBtn.disabled =
-            false;
-
-
-        generateBtn.disabled =
-            false;
-
-
-        variantBtn.textContent =
-            "Другой вариант";
-
-    }
-);
-
-
-/* ========================= */
-/* DOWNLOAD PNG */
-/* ========================= */
-
-downloadBtn.addEventListener(
-    "click",
-    async function () {
-
-
-        if (!uploadedImage) {
-
-            alert(
-                "Сначала создайте карточку"
-            );
-
-            return;
-        }
-
-
-        downloadBtn.disabled =
-            true;
-
-
-        downloadBtn.textContent =
-            "Создаю PNG...";
-
-
-        try {
-
-
-            const canvas =
-                await html2canvas(
-                    card,
-                    {
-
-                        width: 900,
-
-                        height: 1200,
-
-                        scale: 2,
-
-                        useCORS: true,
-
-                        backgroundColor:
-                            null
-
-                    }
-                );
-
-
-            const finalCanvas =
-                document.createElement(
-                    "canvas"
-                );
-
-
-            finalCanvas.width =
-                900;
-
-
-            finalCanvas.height =
-                1200;
-
-
-            const ctx =
-                finalCanvas.getContext(
-                    "2d"
-                );
-
-
-            ctx.drawImage(
-                canvas,
-                0,
-                0,
-                900,
-                1200
-            );
-
-
-            const link =
-                document.createElement(
-                    "a"
-                );
-
-
-            link.download =
-                "cardly-ai-900x1200.png";
-
-
-            link.href =
-                finalCanvas.toDataURL(
-                    "image/png"
-                );
-
-
-            link.click();
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            alert(
-                "Не удалось создать PNG"
-            );
-
-        }
-
-
-        downloadBtn.disabled =
-            false;
-
-
-        downloadBtn.textContent =
-            "Скачать PNG";
-
-    }
-);
-
-
-/* ========================= */
-/* ESCAPE HTML */
-/* ========================= */
 
 function escapeHTML(value) {
-
-    return String(
-        value || ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Не удалось открыть фотографию"));
+    image.src = src;
+  });
+}
 
-/* ========================= */
-/* GENERATE BUTTON */
-/* ========================= */
+async function getModel() {
+  if (!navigator.gpu) {
+    throw new Error(
+      "Для удаления фона нужен браузер с поддержкой WebGPU. Откройте сайт в актуальном Google Chrome."
+    );
+  }
 
-generateBtn.addEventListener(
-    "click",
-    generateCard
-);
+  if (!modelPromise) {
+    modelPromise = (async () => {
+      setStatus("Загружаем модель BiRefNet. При первом запуске это может занять несколько минут…", "loading", 8);
 
+      const processor = await AutoProcessor.from_pretrained(MODEL_ID);
 
+      const model = await AutoModel.from_pretrained(MODEL_ID, {
+        dtype: "fp16",
+        device: "webgpu",
+        progress_callback: (event) => {
+          if (event.status === "progress" && event.total) {
+            const percent = Math.round((event.loaded / event.total) * 75);
+            setStatus("Загрузка модели BiRefNet… " + percent + "%", "loading", Math.max(8, percent));
+          }
+        }
+      });
+
+      return { model, processor };
+    })().catch(error => {
+      modelPromise = null;
+      throw error;
+    });
+  }
+
+  return modelPromise;
+}
+
+async function removeBackground(file) {
+  if (isRemoving) return;
+
+  isRemoving = true;
+  generateBtn.disabled = true;
+
+  try {
+    setStatus("Подготавливаем фотографию…", "loading", 5);
+
+    const sourceUrl = URL.createObjectURL(file);
+    const sourceImage = await loadImage(sourceUrl);
+
+    if (sourceImage.width > 5000 || sourceImage.height > 5000) {
+      URL.revokeObjectURL(sourceUrl);
+      throw new Error("Слишком большое изображение. Используйте фото до 5000 пикселей по каждой стороне.");
+    }
+
+    const { model, processor } = await getModel();
+
+    setStatus("AI анализирует изображение и выделяет товар…", "loading", 85);
+
+    const rawImage = await RawImage.fromURL(sourceUrl);
+    const { pixel_values } = await processor(rawImage);
+    const { output_image } = await model({ input_image: pixel_values });
+
+    const mask = await RawImage.fromTensor(
+      output_image[0].sigmoid().mul(255).to("uint8")
+    ).resize(sourceImage.width, sourceImage.height);
+
+    setStatus("Создаём PNG с прозрачным фоном…", "loading", 94);
+
+    const width = sourceImage.width;
+    const height = sourceImage.height;
+
+    const resultCanvas = document.createElement("canvas");
+    resultCanvas.width = width;
+    resultCanvas.height = height;
+
+    const ctx = resultCanvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(sourceImage, 0, 0, width, height);
+
+    const maskCanvas = document.createElement("canvas");
+    maskCanvas.width = width;
+    maskCanvas.height = height;
+
+    const maskCtx = maskCanvas.getContext("2d");
+    const maskPixels = maskCtx.createImageData(width, height);
+
+    const channels = mask.channels || Math.max(1, Math.round(mask.data.length / (width * height)));
+
+    for (let i = 0; i < width * height; i++) {
+      const alpha = mask.data[i * channels];
+      const p = i * 4;
+      maskPixels.data[p] = 255;
+      maskPixels.data[p + 1] = 255;
+      maskPixels.data[p + 2] = 255;
+      maskPixels.data[p + 3] = alpha;
+    }
+
+    maskCtx.putImageData(maskPixels, 0, 0);
+
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.drawImage(maskCanvas, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+
+    cutoutImage = resultCanvas.toDataURL("image/png");
+    originalImage = cutoutImage;
+
+    URL.revokeObjectURL(sourceUrl);
+
+    uploadContent.innerHTML = "";
+    const preview = document.createElement("img");
+    preview.className = "upload-preview";
+    preview.src = cutoutImage;
+    preview.alt = "Товар без фона";
+    uploadContent.appendChild(preview);
+
+    uploadBox.classList.add("checker");
+
+    setStatus("Фон удалён. Товар готов к оформлению.", "success", 100);
+    generateBtn.disabled = false;
+
+  } catch (error) {
+    console.error("BACKGROUND REMOVAL ERROR:", error);
+    setStatus("Не удалось удалить фон: " + error.message, "error", 0);
+    generateBtn.disabled = true;
+  } finally {
+    isRemoving = false;
+  }
+}
+
+imageInput.addEventListener("change", async () => {
+  const file = imageInput.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    setStatus("Выберите файл изображения.", "error");
+    return;
+  }
+
+  cutoutImage = null;
+  originalImage = null;
+  generateBtn.disabled = true;
+
+  uploadContent.innerHTML = '<div class="upload-content"><div class="upload-icon">◌</div><div class="upload-title">Обрабатываем фото…</div></div>';
+
+  await removeBackground(file);
+});
+
+async function requestDesign() {
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      productName: productName.value.trim(),
+      characteristics: featuresInput.value.trim()
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || data.error) {
+    throw new Error(data.error || "Не удалось создать дизайн");
+  }
+
+  return data;
+}
+
+function renderCard(data) {
+  const designOptions = ["hero", "split", "editorial", "dynamic", "info", "premium"];
+  const backgroundOptions = ["light", "dark", "soft", "gradient", "accent"];
+  const accentOptions = ["blue", "cyan", "green", "orange", "violet", "black"];
+  const positionOptions = ["left", "center", "right"];
+  const titleOptions = ["top", "middle", "bottom"];
+  const featureOptions = ["left", "right", "bottom"];
+
+  const design = designOptions.includes(data.design) ? data.design : "hero";
+  const background = backgroundOptions.includes(data.background) ? data.background : "light";
+  const accent = accentOptions.includes(data.accent) ? data.accent : "blue";
+  const productPosition = positionOptions.includes(data.productPosition) ? data.productPosition : "center";
+  const titlePosition = titleOptions.includes(data.titlePosition) ? data.titlePosition : "top";
+  const featuresPosition = featureOptions.includes(data.featuresPosition) ? data.featuresPosition : "bottom";
+
+  const title = escapeHTML(data.title || productName.value);
+  const subtitle = escapeHTML(data.subtitle || "");
+  const features = Array.isArray(data.features) ? data.features.slice(0, 4) : [];
+
+  card.className = `card ${design} ${background === "dark" ? "dark" : ""} accent-${accent}`;
+
+  const backgroundStyles = {
+    light: "",
+    dark: "",
+    soft: "background:linear-gradient(145deg,#f7f7f5,#e9edf2);",
+    gradient: "background:radial-gradient(circle at 80% 15%,#d8e8ff,transparent 40%),linear-gradient(145deg,#fff,#e9f0fb);",
+    accent: "background:linear-gradient(145deg,#eaf0ff,#d9e5ff);"
+  };
+
+  card.style.background = "";
+  if (backgroundStyles[background]) {
+    card.setAttribute("style", backgroundStyles[background]);
+  } else {
+    card.removeAttribute("style");
+  }
+
+  const featureHTML = features.map(item =>
+    `<div class="feature">${escapeHTML(item)}</div>`
+  ).join("");
+
+  const labels = {
+    hero: "PRODUCT FOCUS",
+    split: "MODERN LAYOUT",
+    editorial: "EDITORIAL",
+    dynamic: "DYNAMIC",
+    info: "PRODUCT DETAILS",
+    premium: "PREMIUM"
+  };
+
+  card.innerHTML = `
+    <div class="design-label">${labels[design]}</div>
+    <h2 class="card-title title-${titlePosition}">${title}</h2>
+    ${subtitle ? `<div class="card-subtitle">${subtitle}</div>` : ""}
+    <img class="product ${productPosition}" src="${cutoutImage}" alt="Товар">
+    <div class="features ${featuresPosition}">${featureHTML}</div>
+  `;
+
+  lastDesign = data;
+  emptyPreview.style.display = "none";
+  cardWrapper.style.display = "flex";
+  variantBtn.style.display = "inline-block";
+  downloadBtn.style.display = "inline-block";
+}
+
+async function generateCard() {
+  if (!cutoutImage) {
+    alert("Сначала загрузите фото и дождитесь удаления фона.");
+    return;
+  }
+
+  if (!productName.value.trim()) {
+    alert("Введите название товара.");
+    return;
+  }
+
+  generateBtn.disabled = true;
+  generateBtn.textContent = "Создаём дизайн…";
+
+  try {
+    const data = await requestDesign();
+    renderCard(data);
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  } finally {
+    generateBtn.disabled = false;
+    generateBtn.textContent = "✨ Создать карточку";
+  }
+}
+
+generateBtn.addEventListener("click", generateCard);
+
+variantBtn.addEventListener("click", async () => {
+  variantBtn.disabled = true;
+  variantBtn.textContent = "Создаём…";
+
+  try {
+    const data = await requestDesign();
+    renderCard(data);
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  } finally {
+    variantBtn.disabled = false;
+    variantBtn.textContent = "Другой вариант";
+  }
+});
+
+downloadBtn.addEventListener("click", async () => {
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = "Готовим PNG…";
+
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null
+    });
+
+    const finalCanvas = document.createElement("canvas");
+    finalCanvas.width = 900;
+    finalCanvas.height = 1200;
+
+    const ctx = finalCanvas.getContext("2d");
+    ctx.drawImage(canvas, 0, 0, 900, 1200);
+
+    const link = document.createElement("a");
+    link.download = "cardly-ai-900x1200.png";
+    link.href = finalCanvas.toDataURL("image/png");
+    link.click();
+  } catch (error) {
+    alert("Не удалось сохранить PNG: " + error.message);
+  } finally {
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = "Скачать PNG";
+  }
+});
 </script>
-
 </body>
-
 </html>
