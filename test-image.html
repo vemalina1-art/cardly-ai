@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardly AI — Image Test</title>
+<style>
+body {
+  margin: 0;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+  background: #f3f5f9;
+  color: #172033;
+}
+.container {
+  max-width: 750px;
+  margin: auto;
+}
+textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 15px;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15px;
+}
+button {
+  margin-top: 15px;
+  padding: 14px 25px;
+  border: 0;
+  border-radius: 10px;
+  background: #2864e8;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: .5;
+}
+#status {
+  margin: 18px 0;
+}
+img {
+  display: block;
+  max-width: 100%;
+  border-radius: 14px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Cardly AI — тест генерации</h1>
+<p>Опиши рекламное окружение без самого товара.</p>
+<textarea id="prompt">Photorealistic premium modern bathroom interior, elegant natural stone countertop, soft daylight coming from the side, realistic reflections and subtle water droplets, sophisticated blue and white color palette, professional luxury product advertising photography, beautiful depth and lighting, clean composition with empty space for placing a product, absolutely no products, no text, no letters, no logos.</textarea>
+<br>
+<button id="generate">Создать изображение</button>
+<div id="status"></div>
+<img id="result" hidden>
+</div>
+<script>
+const button = document.getElementById("generate");
+const status = document.getElementById("status");
+const image = document.getElementById("result");
 
+button.addEventListener("click", async () => {
+  button.disabled = true;
+  image.hidden = true;
+  status.textContent = "Генерируем изображение. Это может занять некоторое время...";
+
+  try {
+    const response = await fetch("/api/test-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: document.getElementById("prompt").value,
+        steps: 4
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Ошибка генерации");
+    }
+
+    const blob = await response.blob();
+    image.src = URL.createObjectURL(blob);
+    image.hidden = false;
+    status.textContent = "Изображение успешно создано!";
+  } catch (error) {
+    status.textContent = "Ошибка: " + error.message;
+  }
+
+  button.disabled = false;
+});
+</script>
+</body>
+</html>
