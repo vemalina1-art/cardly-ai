@@ -10,22 +10,27 @@ export default {
       "Access-Control-Expose-Headers": "*"
     };
 
-    const jsonResponse = (data, status = 200) =>
-      new Response(JSON.stringify(data), {
+    const jsonResponse = (data, status = 200) => {
+      return new Response(JSON.stringify(data), {
         status,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json; charset=utf-8"
         }
       });
+    };
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+      });
     }
 
-    // =========================================
-    // BIRE FNET MODEL FILE PROXY
-    // =========================================
+    // ==========================================
+    // 1. BIRE FNET MODEL FILE PROXY
+    // НЕ ИЗМЕНЯЕМ РАБОТАЮЩЕЕ УДАЛЕНИЕ ФОНА
+    // ==========================================
 
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
@@ -46,7 +51,9 @@ export default {
         ];
 
         if (!modelPath.startsWith(allowedPrefix)) {
-          return jsonResponse({ error: "Model path not allowed" }, 403);
+          return jsonResponse({
+            error: "Model path not allowed"
+          }, 403);
         }
 
         const filePath = modelPath.slice(allowedPrefix.length);
@@ -58,7 +65,10 @@ export default {
           }, 403);
         }
 
-        const hfUrl = new URL("https://huggingface.co/" + modelPath);
+        const hfUrl = new URL(
+          "https://huggingface.co/" + modelPath
+        );
+
         hfUrl.search = url.search;
 
         const headers = new Headers();
@@ -71,7 +81,10 @@ export default {
           "Accept"
         ]) {
           const value = request.headers.get(name);
-          if (value) headers.set(name, value);
+
+          if (value) {
+            headers.set(name, value);
+          }
         }
 
         const hfResponse = await fetch(hfUrl.toString(), {
@@ -98,6 +111,7 @@ export default {
             headers: responseHeaders
           }
         );
+
       } catch (error) {
         console.error("MODEL PROXY ERROR:", error);
 
@@ -108,9 +122,9 @@ export default {
       }
     }
 
-    // =========================================
-    // TEST MODEL FILE
-    // =========================================
+    // ==========================================
+    // 2. TEST MODEL FILE
+    // ==========================================
 
     if (url.pathname === "/api/test-model") {
       try {
@@ -126,36 +140,112 @@ export default {
           status: response.status,
           response: (await response.text()).slice(0, 2000)
         });
+
       } catch (error) {
-        return jsonResponse({ error: error.message }, 500);
+        return jsonResponse({
+          error: error.message
+        }, 500);
       }
     }
 
-    // =========================================
-    // TEST CLOUDFLARE AI
-    // =========================================
+    // ==========================================
+    // 3. TEST CLOUDFLARE AI — LLAMA
+    // ==========================================
 
     if (url.pathname === "/api/test-ai") {
       try {
         const result = await env.AI.run(
           "@cf/meta/llama-3.1-8b-instruct-fp8",
           {
-            messages: [{
-              role: "user",
-              content: "Ответь одним словом: работает"
-            }]
+            messages: [
+              {
+                role: "user",
+                content: "Ответь одним словом: работает"
+              }
+            ]
           }
         );
 
         return jsonResponse(result);
+
       } catch (error) {
-        return jsonResponse({ error: error.message }, 500);
+        return jsonResponse({
+          error: error.message
+        }, 500);
       }
     }
 
-    // =========================================
-    // GENERATE CARD DESIGN
-    // =========================================
+    // ==========================================
+    // 4. NEW IMAGE GENERATION — FLUX
+    // ОТДЕЛЬНО ОТ BIRE FNET
+    // ==========================================
+
+    if (
+      url.pathname === "/api/test-image" &&
+      request.method === "POST"
+    ) {
+      try {
+        const body = await request.json();
+
+        const prompt = String(body.prompt || "")
+          .trim()
+          .slice(0, 2048);
+
+        const steps = Math.min(
+          8,
+          Math.max(4, Number(body.steps) || 4)
+        );
+
+        if (!prompt) {
+          return jsonResponse({
+            error: "Введите описание сцены"
+          }, 400);
+        }
+
+        const result = await env.AI.run(
+          "@cf/black-forest-labs/flux-1-schnell",
+          {
+            prompt,
+            steps
+          }
+        );
+
+        if (!result || !result.image) {
+          throw new Error(
+            "Модель не вернула изображение"
+          );
+        }
+
+        const binary = atob(result.image);
+
+        const bytes = Uint8Array.from(
+          binary,
+          char => char.charCodeAt(0)
+        );
+
+        return new Response(bytes, {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "image/jpeg",
+            "Cache-Control": "no-store"
+          }
+        });
+
+      } catch (error) {
+        console.error(
+          "IMAGE GENERATION ERROR:",
+          error
+        );
+
+        return jsonResponse({
+          error: error.message || "Ошибка генерации изображения"
+        }, 500);
+      }
+    }
+
+    // ==========================================
+    // 5. GENERATE CARD DESIGN — СТАРАЯ СИСТЕМА
+    // ==========================================
 
     if (
       url.pathname === "/api/generate" &&
@@ -164,87 +254,58 @@ export default {
       try {
         const body = await request.json();
 
-        const productName = String(body.productName || "")
-          .trim()
-          .slice(0, 160);
+        const productName = String(
+          body.productName || ""
+        ).slice(0, 160);
 
         const characteristics = String(
           body.characteristics || body.features || ""
-        ).trim().slice(0, 2000);
+        ).slice(0, 2000);
 
-        if (!productName) {
+        if (!productName.trim()) {
           return jsonResponse({
             error: "Введите название товара"
           }, 400);
         }
 
-        // Характеристики берём непосредственно из формы.
-        // Они не зависят от того, вернёт ли их нейросеть.
-
-        const userFeatures = characteristics
-          .split(/\n|;|•/)
-          .map(item => item
-            .replace(/^[\s\-–—*•\d.)]+/, "")
-            .trim()
-          )
-          .filter(item => item.length > 1)
-          .slice(0, 4);
-
-        const defaults = {
-          title: productName,
-          subtitle: "Особенности и преимущества",
-          design: "hero",
-          productPosition: "center",
-          titlePosition: "top",
-          featuresPosition: "bottom",
-          background: "gradient",
-          accent: "blue",
-          shadow: "soft",
-          decoration: "circles"
-        };
-
-        let aiData = {};
-
         const prompt = `
-Ты профессиональный арт-директор сервиса инфографики для Wildberries и Ozon.
-
-Создай дизайн карточки товара 900x1200.
+Ты арт-директор профессионального сервиса инфографики для Wildberries и Ozon.
+Создай только структуру дизайна карточки 900x1200.
+Не выдумывай характеристики товара.
+Используй только факты из входных данных.
 
 Название товара:
 ${productName}
 
-Характеристики товара:
-${characteristics || "Не указаны"}
+Характеристики:
+${characteristics}
 
-Верни только JSON без Markdown.
+Верни только корректный JSON без Markdown и комментариев.
 
 Формат:
 {
-  "title": "короткий заголовок",
+  "title": "короткий выразительный заголовок",
   "subtitle": "короткое пояснение",
+  "features": ["преимущество 1", "преимущество 2"],
   "design": "hero",
   "productPosition": "center",
   "titlePosition": "top",
   "featuresPosition": "bottom",
-  "background": "gradient",
+  "background": "light",
   "accent": "blue",
   "shadow": "soft",
-  "decoration": "circles"
+  "decoration": "none"
 }
 
 Правила:
-- Заголовок максимум 5 слов.
-- Не выдумывай свойства и преимущества.
-- Не меняй смысл названия товара.
-- Не помещай характеристики в заголовок.
-- Не добавляй неподтверждённые рекламные обещания.
-- Выбирай выразительный, современный дизайн.
-- Чередуй стили, не используй постоянно один вариант.
-- Для товара оставляй достаточно свободного пространства.
-- Выбирай контрастные, гармоничные цвета.
+- Заголовок короткий, максимум 5 слов.
+- Не добавляй рекламных обещаний, которых нет во входных данных.
+- В features добавляй только подтверждённые характеристики.
+- Не повторяй одно и то же в заголовке и преимуществах.
+- Максимум 4 преимущества.
+- Не используй длинные предложения.
 
 Допустимые значения:
-
 design: hero, split, editorial, dynamic, info, premium
 productPosition: left, center, right
 titlePosition: top, middle, bottom
@@ -252,94 +313,133 @@ featuresPosition: left, right, bottom
 background: light, dark, soft, gradient, accent
 accent: blue, cyan, green, orange, violet, black
 shadow: soft, medium, none
-decoration: circles, waves, geometric, glow, lines
+decoration: none
 `;
 
-        // Если AI вернёт ошибку или некорректный JSON,
-        // карточка всё равно сможет создаться.
-
-        try {
-          const result = await env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct-fp8",
-            {
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "Ты арт-директор. Возвращай только корректный JSON."
-                },
-                {
-                  role: "user",
-                  content: prompt
-                }
-              ]
-            }
-          );
-
-          let answer = String(
-            result.response || result.text || ""
-          );
-
-          answer = answer
-            .replace(/```json/gi, "")
-            .replace(/```/g, "")
-            .trim();
-
-          const start = answer.indexOf("{");
-          const end = answer.lastIndexOf("}");
-
-          if (start !== -1 && end > start) {
-            aiData = JSON.parse(answer.slice(start, end + 1));
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fp8",
+          {
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Ты профессиональный арт-директор. Возвращай только валидный JSON. Не добавляй Markdown."
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ]
           }
-        } catch (aiError) {
-          console.error("AI DESIGN ERROR:", aiError);
+        );
+
+        let answer = result.response || result.text || "";
+
+        answer = answer
+          .replace(/```json/gi, "")
+          .replace(/```/g, "")
+          .trim();
+
+        const start = answer.indexOf("{");
+        const end = answer.lastIndexOf("}");
+
+        if (start === -1 || end === -1) {
+          throw new Error("AI не вернул корректный JSON");
         }
+
+        const data = JSON.parse(
+          answer.slice(start, end + 1)
+        );
 
         const allowed = {
           design: [
-            "hero", "split", "editorial",
-            "dynamic", "info", "premium"
+            "hero",
+            "split",
+            "editorial",
+            "dynamic",
+            "info",
+            "premium"
           ],
-          productPosition: ["left", "center", "right"],
-          titlePosition: ["top", "middle", "bottom"],
-          featuresPosition: ["left", "right", "bottom"],
-          background: ["light", "dark", "soft", "gradient", "accent"],
-          accent: ["blue", "cyan", "green", "orange", "violet", "black"],
-          shadow: ["soft", "medium", "none"],
-          decoration: ["circles", "waves", "geometric", "glow", "lines"]
+
+          productPosition: [
+            "left",
+            "center",
+            "right"
+          ],
+
+          titlePosition: [
+            "top",
+            "middle",
+            "bottom"
+          ],
+
+          featuresPosition: [
+            "left",
+            "right",
+            "bottom"
+          ],
+
+          background: [
+            "light",
+            "dark",
+            "soft",
+            "gradient",
+            "accent"
+          ],
+
+          accent: [
+            "blue",
+            "cyan",
+            "green",
+            "orange",
+            "violet",
+            "black"
+          ],
+
+          shadow: [
+            "soft",
+            "medium",
+            "none"
+          ],
+
+          decoration: [
+            "none"
+          ]
         };
 
-        const resultData = { ...defaults };
+        const defaults = {
+          design: "hero",
+          productPosition: "center",
+          titlePosition: "top",
+          featuresPosition: "bottom",
+          background: "light",
+          accent: "blue",
+          shadow: "soft",
+          decoration: "none"
+        };
 
         for (const [key, values] of Object.entries(allowed)) {
-          if (values.includes(aiData[key])) {
-            resultData[key] = aiData[key];
+          if (!values.includes(data[key])) {
+            data[key] = defaults[key];
           }
         }
 
-        resultData.title = String(
-          aiData.title || productName
+        data.title = String(
+          data.title || productName
         ).slice(0, 100);
 
-        resultData.subtitle = String(
-          aiData.subtitle || defaults.subtitle
+        data.subtitle = String(
+          data.subtitle || ""
         ).slice(0, 150);
 
-        // Приоритет у характеристик, введённых пользователем.
-        // AI не может случайно удалить их.
-
-        const aiFeatures = Array.isArray(aiData.features)
-          ? aiData.features
+        data.features = Array.isArray(data.features)
+          ? data.features
               .filter(item => typeof item === "string")
-              .map(item => item.trim())
-              .filter(item => item.length > 1)
+              .slice(0, 4)
+              .map(item => item.slice(0, 90))
           : [];
 
-        resultData.features = (
-          userFeatures.length ? userFeatures : aiFeatures
-        ).slice(0, 4).map(item => item.slice(0, 90));
-
-        return jsonResponse(resultData);
+        return jsonResponse(data);
 
       } catch (error) {
         console.error("GENERATE ERROR:", error);
@@ -350,9 +450,9 @@ decoration: circles, waves, geometric, glow, lines
       }
     }
 
-    // =========================================
-    // STATIC WEBSITE FILES
-    // =========================================
+    // ==========================================
+    // 6. STATIC WEBSITE FILES
+    // ==========================================
 
     return env.ASSETS.fetch(request);
   }
