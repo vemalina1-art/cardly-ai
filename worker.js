@@ -1,4 +1,3 @@
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -46,7 +45,7 @@ export default {
         const allowedFiles = [
           "config.json",
           "preprocessor_config.json",
-          "onnx/model_fp16.onnx"
+          "onnx/model.onnx"
         ];
 
         if (!modelPath.startsWith(allowedPrefix)) {
@@ -104,6 +103,7 @@ export default {
         );
       } catch (error) {
         console.error("MODEL PROXY ERROR:", error);
+
         return jsonResponse({
           error: "Model proxy failed",
           message: error.message
@@ -176,7 +176,9 @@ export default {
         ).slice(0, 2000);
 
         if (!productName.trim()) {
-          return jsonResponse({ error: "Введите название товара" }, 400);
+          return jsonResponse({
+            error: "Введите название товара"
+          }, 400);
         }
 
         const prompt = `
@@ -270,7 +272,10 @@ decoration: none
         const data = JSON.parse(answer.slice(start, end + 1));
 
         const allowed = {
-          design: ["hero", "split", "editorial", "dynamic", "info", "premium"],
+          design: [
+            "hero", "split", "editorial",
+            "dynamic", "info", "premium"
+          ],
           productPosition: ["left", "center", "right"],
           titlePosition: ["top", "middle", "bottom"],
           featuresPosition: ["left", "right", "bottom"],
@@ -280,18 +285,20 @@ decoration: none
           decoration: ["none"]
         };
 
+        const defaults = {
+          design: "hero",
+          productPosition: "center",
+          titlePosition: "top",
+          featuresPosition: "bottom",
+          background: "light",
+          accent: "blue",
+          shadow: "soft",
+          decoration: "none"
+        };
+
         for (const [key, values] of Object.entries(allowed)) {
           if (!values.includes(data[key])) {
-            data[key] = {
-              design: "hero",
-              productPosition: "center",
-              titlePosition: "top",
-              featuresPosition: "bottom",
-              background: "light",
-              accent: "blue",
-              shadow: "soft",
-              decoration: "none"
-            }[key];
+            data[key] = defaults[key];
           }
         }
 
@@ -306,6 +313,7 @@ decoration: none
           : [];
 
         return jsonResponse(data);
+
       } catch (error) {
         console.error("GENERATE ERROR:", error);
 
