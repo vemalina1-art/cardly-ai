@@ -1,3 +1,4 @@
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -9,21 +10,17 @@ export default {
       "Access-Control-Expose-Headers": "*"
     };
 
-    const jsonResponse = (data, status = 200) => {
-      return new Response(JSON.stringify(data), {
+    const jsonResponse = (data, status = 200) =>
+      new Response(JSON.stringify(data), {
         status,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json; charset=utf-8"
         }
       });
-    };
 
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders
-      });
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     // =========================================
@@ -61,10 +58,7 @@ export default {
           }, 403);
         }
 
-        const hfUrl = new URL(
-          "https://huggingface.co/" + modelPath
-        );
-
+        const hfUrl = new URL("https://huggingface.co/" + modelPath);
         hfUrl.search = url.search;
 
         const headers = new Headers();
@@ -89,7 +83,10 @@ export default {
         const responseHeaders = new Headers(hfResponse.headers);
 
         responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        responseHeaders.set(
+          "Access-Control-Allow-Methods",
+          "GET, HEAD, OPTIONS"
+        );
         responseHeaders.set("Access-Control-Allow-Headers", "*");
         responseHeaders.set("Access-Control-Expose-Headers", "*");
 
@@ -143,12 +140,10 @@ export default {
         const result = await env.AI.run(
           "@cf/meta/llama-3.1-8b-instruct-fp8",
           {
-            messages: [
-              {
-                role: "user",
-                content: "Ответь одним словом: работает"
-              }
-            ]
+            messages: [{
+              role: "user",
+              content: "Ответь одним словом: работает"
+            }]
           }
         );
 
@@ -169,107 +164,136 @@ export default {
       try {
         const body = await request.json();
 
-        const productName = String(body.productName || "").slice(0, 160);
+        const productName = String(body.productName || "")
+          .trim()
+          .slice(0, 160);
 
         const characteristics = String(
           body.characteristics || body.features || ""
-        ).slice(0, 2000);
+        ).trim().slice(0, 2000);
 
-        if (!productName.trim()) {
+        if (!productName) {
           return jsonResponse({
             error: "Введите название товара"
           }, 400);
         }
 
-        const prompt = `
-Ты арт-директор профессионального сервиса инфографики для Wildberries и Ozon.
+        // Характеристики берём непосредственно из формы.
+        // Они не зависят от того, вернёт ли их нейросеть.
 
-Создай только структуру дизайна карточки 900x1200.
-Не выдумывай характеристики товара.
-Используй только факты из входных данных.
+        const userFeatures = characteristics
+          .split(/\n|;|•/)
+          .map(item => item
+            .replace(/^[\s\-–—*•\d.)]+/, "")
+            .trim()
+          )
+          .filter(item => item.length > 1)
+          .slice(0, 4);
+
+        const defaults = {
+          title: productName,
+          subtitle: "Особенности и преимущества",
+          design: "hero",
+          productPosition: "center",
+          titlePosition: "top",
+          featuresPosition: "bottom",
+          background: "gradient",
+          accent: "blue",
+          shadow: "soft",
+          decoration: "circles"
+        };
+
+        let aiData = {};
+
+        const prompt = `
+Ты профессиональный арт-директор сервиса инфографики для Wildberries и Ozon.
+
+Создай дизайн карточки товара 900x1200.
 
 Название товара:
 ${productName}
 
-Характеристики:
-${characteristics}
+Характеристики товара:
+${characteristics || "Не указаны"}
 
-Верни только корректный JSON без Markdown и комментариев.
+Верни только JSON без Markdown.
 
 Формат:
 {
-  "title": "короткий выразительный заголовок",
+  "title": "короткий заголовок",
   "subtitle": "короткое пояснение",
-  "features": ["преимущество 1", "преимущество 2"],
   "design": "hero",
   "productPosition": "center",
   "titlePosition": "top",
   "featuresPosition": "bottom",
-  "background": "light",
+  "background": "gradient",
   "accent": "blue",
   "shadow": "soft",
-  "decoration": "none"
+  "decoration": "circles"
 }
 
 Правила:
-- Заголовок короткий, максимум 5 слов.
-- Не добавляй рекламных обещаний, которых нет во входных данных.
-- В features добавляй только подтверждённые характеристики.
-- Не повторяй одно и то же в заголовке и преимуществах.
-- Максимум 4 преимущества.
-- Не используй длинные предложения.
+- Заголовок максимум 5 слов.
+- Не выдумывай свойства и преимущества.
+- Не меняй смысл названия товара.
+- Не помещай характеристики в заголовок.
+- Не добавляй неподтверждённые рекламные обещания.
+- Выбирай выразительный, современный дизайн.
+- Чередуй стили, не используй постоянно один вариант.
+- Для товара оставляй достаточно свободного пространства.
+- Выбирай контрастные, гармоничные цвета.
 
 Допустимые значения:
 
 design: hero, split, editorial, dynamic, info, premium
-
 productPosition: left, center, right
-
 titlePosition: top, middle, bottom
-
 featuresPosition: left, right, bottom
-
 background: light, dark, soft, gradient, accent
-
 accent: blue, cyan, green, orange, violet, black
-
 shadow: soft, medium, none
-
-decoration: none
+decoration: circles, waves, geometric, glow, lines
 `;
 
-        const result = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          {
-            messages: [
-              {
-                role: "system",
-                content:
-                  "Ты профессиональный арт-директор. Возвращай только валидный JSON. Не добавляй Markdown."
-              },
-              {
-                role: "user",
-                content: prompt
-              }
-            ]
+        // Если AI вернёт ошибку или некорректный JSON,
+        // карточка всё равно сможет создаться.
+
+        try {
+          const result = await env.AI.run(
+            "@cf/meta/llama-3.1-8b-instruct-fp8",
+            {
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "Ты арт-директор. Возвращай только корректный JSON."
+                },
+                {
+                  role: "user",
+                  content: prompt
+                }
+              ]
+            }
+          );
+
+          let answer = String(
+            result.response || result.text || ""
+          );
+
+          answer = answer
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .trim();
+
+          const start = answer.indexOf("{");
+          const end = answer.lastIndexOf("}");
+
+          if (start !== -1 && end > start) {
+            aiData = JSON.parse(answer.slice(start, end + 1));
           }
-        );
-
-        let answer = result.response || result.text || "";
-
-        answer = answer
-          .replace(/```json/gi, "")
-          .replace(/```/g, "")
-          .trim();
-
-        const start = answer.indexOf("{");
-        const end = answer.lastIndexOf("}");
-
-        if (start === -1 || end === -1) {
-          throw new Error("AI не вернул корректный JSON");
+        } catch (aiError) {
+          console.error("AI DESIGN ERROR:", aiError);
         }
-
-        const data = JSON.parse(answer.slice(start, end + 1));
 
         const allowed = {
           design: [
@@ -282,37 +306,40 @@ decoration: none
           background: ["light", "dark", "soft", "gradient", "accent"],
           accent: ["blue", "cyan", "green", "orange", "violet", "black"],
           shadow: ["soft", "medium", "none"],
-          decoration: ["none"]
+          decoration: ["circles", "waves", "geometric", "glow", "lines"]
         };
 
-        const defaults = {
-          design: "hero",
-          productPosition: "center",
-          titlePosition: "top",
-          featuresPosition: "bottom",
-          background: "light",
-          accent: "blue",
-          shadow: "soft",
-          decoration: "none"
-        };
+        const resultData = { ...defaults };
 
         for (const [key, values] of Object.entries(allowed)) {
-          if (!values.includes(data[key])) {
-            data[key] = defaults[key];
+          if (values.includes(aiData[key])) {
+            resultData[key] = aiData[key];
           }
         }
 
-        data.title = String(data.title || productName).slice(0, 100);
-        data.subtitle = String(data.subtitle || "").slice(0, 150);
+        resultData.title = String(
+          aiData.title || productName
+        ).slice(0, 100);
 
-        data.features = Array.isArray(data.features)
-          ? data.features
+        resultData.subtitle = String(
+          aiData.subtitle || defaults.subtitle
+        ).slice(0, 150);
+
+        // Приоритет у характеристик, введённых пользователем.
+        // AI не может случайно удалить их.
+
+        const aiFeatures = Array.isArray(aiData.features)
+          ? aiData.features
               .filter(item => typeof item === "string")
-              .slice(0, 4)
-              .map(item => item.slice(0, 90))
+              .map(item => item.trim())
+              .filter(item => item.length > 1)
           : [];
 
-        return jsonResponse(data);
+        resultData.features = (
+          userFeatures.length ? userFeatures : aiFeatures
+        ).slice(0, 4).map(item => item.slice(0, 90));
+
+        return jsonResponse(resultData);
 
       } catch (error) {
         console.error("GENERATE ERROR:", error);
