@@ -1,326 +1,112 @@
-````javascript
+```javascript
 export default {
   async fetch(request, env) {
-
     const url = new URL(request.url);
-
-
-    /* =====================================================
-       CORS
-    ===================================================== */
 
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
       "Access-Control-Allow-Headers": "*",
       "Access-Control-Expose-Headers": "*"
     };
 
-
-    /* =====================================================
-       OPTIONS
-    ===================================================== */
+    const jsonResponse = (data, status = 200) => {
+      return new Response(JSON.stringify(data), {
+        status,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      });
+    };
 
     if (request.method === "OPTIONS") {
-
       return new Response(null, {
         status: 204,
         headers: corsHeaders
       });
-
     }
 
-
-    /* =====================================================
-       HUGGING FACE MODEL PROXY
-       
-       Example:
-       
-       /api/model/
-       onnx-community/
-       BiRefNet_512x512-ONNX/
-       resolve/
-       main/
-       preprocessor_config.json
-       
-       becomes:
-       
-       https://huggingface.co/
-       onnx-community/
-       BiRefNet_512x512-ONNX/
-       resolve/
-       main/
-       preprocessor_config.json
-    ===================================================== */
+    /* =========================================
+       HUGGING FACE PROXY
+       ========================================= */
 
     if (url.pathname.startsWith("/api/model/")) {
+      if (!["GET", "HEAD"].includes(request.method)) {
+        return jsonResponse({
+          error: "Method not allowed"
+        }, 405);
+      }
 
       try {
+        let modelPath = url.pathname.slice(
+          "/api/model/".length
+        );
 
-        let modelPath =
-          url.pathname.substring(
-            "/api/model/".length
-          );
+        modelPath = decodeURIComponent(modelPath);
 
-
-        modelPath =
-          decodeURIComponent(modelPath);
-
-
-        /*
-         * Убираем случайные начальные /
-         */
-
-        modelPath =
-          modelPath.replace(/^\/+/, "");
-
-
-        /*
-         * Если Transformers.js каким-то образом
-         * передал {file}, убираем его.
-         */
-
-        modelPath =
-          modelPath.replace(
-            /\{file\}\//g,
-            ""
-          );
-
-
-        /*
-         * Защита от попыток выйти из пути.
-         */
-
-        if (
-          modelPath.includes("..") ||
-          modelPath.includes("\\")
-        ) {
-
-          return new Response(
-            JSON.stringify({
-              error: "Invalid model path"
-            }),
-            {
-              status: 400,
-              headers: {
-                ...corsHeaders,
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
-
-        }
-
-
-        /*
-         * Разрешаем только Hugging Face model paths.
-         */
+        modelPath = modelPath.replace(/^\/+/, "");
 
         if (
           !modelPath ||
-          !modelPath.includes("/")
+          modelPath.includes("..") ||
+          modelPath.includes("\\") ||
+          modelPath.includes("\0")
         ) {
-
-          return new Response(
-            JSON.stringify({
-              error: "Invalid Hugging Face model path",
-              received: modelPath
-            }),
-            {
-              status: 400,
-              headers: {
-                ...corsHeaders,
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
-
+          return jsonResponse({
+            error: "Invalid model file path",
+            received: modelPath
+          }, 400);
         }
 
-
-        /*
-         * Формируем URL Hugging Face.
-         */
-
-        const hfUrl =
-          "https://huggingface.co/" +
-          modelPath;
-
-
-        console.log(
-          "HF PROXY:",
-          hfUrl
+        const hfUrl = new URL(
+          "https://huggingface.co/" + modelPath
         );
 
-
-        /* =================================================
-           HEADERS
-        ================================================= */
-
-        const headers =
-          new Headers();
-
-
-        /*
-         * Передаём Range.
-         *
-         * Это особенно важно для больших
-         * ONNX-файлов.
-         */
-
-        const range =
-          request.headers.get(
-            "Range"
-          );
-
-        if (range) {
-
-          headers.set(
-            "Range",
-            range
-          );
-
+        // Не разрешаем менять домен назначения.
+        if (hfUrl.hostname !== "huggingface.co") {
+          return jsonResponse({
+            error: "Invalid destination"
+          }, 400);
         }
 
+        // Передаём параметры запроса, если они есть.
+        hfUrl.search = url.search;
 
-        /*
-         * Передаём Accept.
-         */
+        const headers = new Headers();
 
-        const accept =
-          request.headers.get(
-            "Accept"
-          );
-
-        if (accept) {
-
-          headers.set(
-            "Accept",
-            accept
-          );
-
-        }
-
-
-        /* =================================================
-           FETCH HUGGING FACE
-        ================================================= */
-
-        const hfResponse =
-          await fetch(
-            hfUrl,
-            {
-              method: "GET",
-              headers
-            }
-          );
-
-
-        console.log(
-          "HF STATUS:",
-          hfResponse.status,
-          hfUrl
-        );
-
-
-        /*
-         * Если Hugging Face сам вернул ошибку,
-         * показываем её.
-         */
-
-        if (!hfResponse.ok) {
-
-          const errorText =
-            await hfResponse.text();
-
-
-          return new Response(
-            JSON.stringify({
-              error:
-                "Hugging Face request failed",
-              status:
-                hfResponse.status,
-              url:
-                hfUrl,
-              response:
-                errorText.substring(
-                  0,
-                  2000
-                )
-            }),
-            {
-              status:
-                hfResponse.status,
-              headers: {
-                ...corsHeaders,
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
-
-        }
-
-
-        /* =================================================
-           RETURN FILE
-        ================================================= */
-
-        const responseHeaders =
-          new Headers();
-
-
-        /*
-         * Сохраняем основные заголовки Hugging Face.
-         */
-
-        const headersToCopy = [
-
-          "Content-Type",
-
-          "Content-Length",
-
-          "Content-Range",
-
-          "Accept-Ranges",
-
-          "Cache-Control",
-
-          "ETag",
-
-          "Last-Modified"
-
+        const headersToForward = [
+          "Range",
+          "If-Range",
+          "If-None-Match",
+          "If-Modified-Since",
+          "Accept"
         ];
 
-
-        for (
-          const headerName
-          of headersToCopy
-        ) {
-
-          const value =
-            hfResponse.headers.get(
-              headerName
-            );
-
+        for (const name of headersToForward) {
+          const value = request.headers.get(name);
 
           if (value) {
-
-            responseHeaders.set(
-              headerName,
-              value
-            );
-
+            headers.set(name, value);
           }
-
         }
 
+        const hfResponse = await fetch(hfUrl.toString(), {
+          method: request.method,
+          headers,
+          redirect: "follow"
+        });
 
-        /*
-         * CORS
-         */
+        console.log(
+          "HUGGING FACE:",
+          hfResponse.status,
+          hfUrl.pathname
+        );
+
+        // Передаём ответ Hugging Face без подмены ошибки.
+        const responseHeaders = new Headers(
+          hfResponse.headers
+        );
 
         responseHeaders.set(
           "Access-Control-Allow-Origin",
@@ -329,7 +115,7 @@ export default {
 
         responseHeaders.set(
           "Access-Control-Allow-Methods",
-          "GET, OPTIONS"
+          "GET, HEAD, OPTIONS"
         );
 
         responseHeaders.set(
@@ -342,216 +128,147 @@ export default {
           "*"
         );
 
-
         return new Response(
-          hfResponse.body,
+          request.method === "HEAD"
+            ? null
+            : hfResponse.body,
           {
-            status:
-              hfResponse.status,
-            headers:
-              responseHeaders
+            status: hfResponse.status,
+            statusText: hfResponse.statusText,
+            headers: responseHeaders
           }
         );
-
 
       } catch (error) {
+        console.error("MODEL PROXY ERROR:", error);
 
-        console.error(
-          "MODEL PROXY ERROR:",
-          error
-        );
-
-
-        return new Response(
-          JSON.stringify({
-            error:
-              error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
-          }
-        );
-
+        return jsonResponse({
+          error: "Model proxy failed",
+          message: error.message
+        }, 500);
       }
-
     }
 
+    /* =========================================
+       TEST HUGGING FACE DIRECTLY
+       ========================================= */
 
-    /* =====================================================
-       TEST HUGGING FACE
-    ===================================================== */
-
-    if (
-      url.pathname ===
-      "/api/test-huggingface"
-    ) {
-
+    if (url.pathname === "/api/test-huggingface") {
       try {
-
         const testUrl =
-          "https://huggingface.co/" +
-          "onnx-community/" +
-          "BiRefNet_512x512-ONNX/" +
-          "resolve/main/" +
+          "https://huggingface.co/onnx-community/" +
+          "BiRefNet_512x512-ONNX/resolve/main/" +
           "preprocessor_config.json";
 
+        const response = await fetch(testUrl);
 
-        const response =
-          await fetch(testUrl);
+        const body = await response.text();
 
-
-        const text =
-          await response.text();
-
-
-        return new Response(
-          JSON.stringify({
-            status:
-              response.status,
-            url:
-              testUrl,
-            response:
-              text.substring(
-                0,
-                3000
-              )
-          }),
-          {
-            status: 200,
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
-          }
-        );
-
+        return jsonResponse({
+          status: response.status,
+          url: testUrl,
+          response: body.slice(0, 3000)
+        });
 
       } catch (error) {
-
-        return new Response(
-          JSON.stringify({
-            error:
-              error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
-          }
-        );
-
+        return jsonResponse({
+          error: error.message
+        }, 500);
       }
-
     }
 
+    /* =========================================
+       TEST MODEL THROUGH OUR PROXY
+       ========================================= */
 
-    /* =====================================================
-       AI GENERATION
-    ===================================================== */
-
-    if (
-      url.pathname ===
-      "/api/test-ai"
-    ) {
-
+    if (url.pathname === "/api/test-model-proxy") {
       try {
-
-        const result =
-          await env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct-fp8",
-            {
-              messages: [
-                {
-                  role: "user",
-                  content:
-                    "Ответь одним словом: работает"
-                }
-              ]
-            }
+        const testUrl =
+          new URL(
+            "/api/model/onnx-community/" +
+            "BiRefNet_512x512-ONNX/resolve/main/" +
+            "preprocessor_config.json",
+            url.origin
           );
 
+        const response = await fetch(testUrl);
 
-        return new Response(
-          JSON.stringify(result),
-          {
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
-          }
-        );
+        const body = await response.text();
 
+        return jsonResponse({
+          status: response.status,
+          url: testUrl.toString(),
+          response: body.slice(0, 3000)
+        });
 
       } catch (error) {
+        return jsonResponse({
+          error: error.message
+        }, 500);
+      }
+    }
 
-        return new Response(
-          JSON.stringify({
-            error:
-              error.message
-          }),
+    /* =========================================
+       TEST CLOUDFLARE AI
+       ========================================= */
+
+    if (url.pathname === "/api/test-ai") {
+      try {
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fp8",
           {
-            status: 500,
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
+            messages: [
+              {
+                role: "user",
+                content: "Ответь одним словом: работает"
+              }
+            ]
           }
         );
 
-      }
+        return jsonResponse(result);
 
+      } catch (error) {
+        return jsonResponse({
+          error: error.message
+        }, 500);
+      }
     }
 
-
-    /* =====================================================
-       CARDLY AI GENERATION
-    ===================================================== */
+    /* =========================================
+       GENERATE CARD DESIGN
+       ========================================= */
 
     if (
-      url.pathname ===
-      "/api/generate" &&
+      url.pathname === "/api/generate" &&
       request.method === "POST"
     ) {
-
       try {
+        const body = await request.json();
 
-        const body =
-          await request.json();
+        const productName = String(
+          body.productName || ""
+        );
 
-
-        const productName =
-          body.productName || "";
-
-
-        const characteristics =
-          body.characteristics || "";
-
+        const characteristics = String(
+          body.characteristics || ""
+        );
 
         const prompt = `
-Ты дизайнер инфографики для маркетплейсов.
+Ты профессиональный дизайнер инфографики
+для Wildberries и Ozon.
 
-Создай структуру карточки товара 900x1200.
+Создай структуру карточки товара размером 900x1200.
 
-Товар:
+Название товара:
 ${productName}
 
 Характеристики:
 ${characteristics}
 
-Верни ТОЛЬКО JSON.
+Верни только JSON без Markdown.
 
-Формат:
+Используй следующую структуру:
 
 {
   "title": "",
@@ -568,177 +285,86 @@ ${characteristics}
   "decoration": "none"
 }
 
-Правила:
+Допустимые значения:
 
-design должен быть одним из:
-
-hero
-split
-editorial
-dynamic
-info
-premium
+design:
+hero, split, editorial, dynamic, info, premium
 
 productPosition:
-
-left
-center
-right
+left, center, right
 
 titlePosition:
-
-top
-center
-bottom
+top, center, bottom
 
 featuresPosition:
+top, middle, bottom
 
-top
-middle
-bottom
+features:
+массив максимум из четырёх коротких преимуществ.
 
-features — массив максимум из 4 коротких преимуществ.
+productScale:
+число от 40 до 100.
+
+background и accent:
+цвета в HEX.
 `;
 
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fp8",
+          {
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Ты профессиональный дизайнер маркетплейсов. Возвращай только корректный JSON."
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ]
+          }
+        );
 
-        const result =
-          await env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct-fp8",
-            {
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "Ты профессиональный дизайнер маркетплейсов. Возвращай только JSON без Markdown."
-                },
-                {
-                  role: "user",
-                  content:
-                    prompt
-                }
-              ]
-            }
-          );
-
-
-        let text =
+        let answer =
           result.response ||
           result.text ||
           "";
 
+        answer = answer
+          .replace(/```json/gi, "")
+          .replace(/```/g, "")
+          .trim();
 
-        /*
-         * Убираем Markdown fences,
-         * если модель их всё-таки добавила.
-         */
+        const start = answer.indexOf("{");
+        const end = answer.lastIndexOf("}");
 
-        text =
-          text
-            .replace(
-              /```json/gi,
-              ""
-            )
-            .replace(
-              /```/g,
-              ""
-            )
-            .trim();
-
-
-        let data;
-
-
-        try {
-
-          data =
-            JSON.parse(text);
-
-        } catch {
-
-          /*
-           * Пытаемся найти JSON
-           * внутри ответа.
-           */
-
-          const start =
-            text.indexOf("{");
-
-          const end =
-            text.lastIndexOf("}");
-
-
-          if (
-            start !== -1 &&
-            end !== -1
-          ) {
-
-            data =
-              JSON.parse(
-                text.substring(
-                  start,
-                  end + 1
-                )
-              );
-
-          } else {
-
-            throw new Error(
-              "AI вернул некорректный JSON"
-            );
-
-          }
-
+        if (start === -1 || end === -1) {
+          throw new Error(
+            "AI не вернул JSON"
+          );
         }
 
-
-        return new Response(
-          JSON.stringify(data),
-          {
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
-          }
+        const data = JSON.parse(
+          answer.slice(start, end + 1)
         );
 
+        return jsonResponse(data);
 
       } catch (error) {
+        console.error("GENERATE ERROR:", error);
 
-        console.error(
-          "GENERATE ERROR:",
-          error
-        );
-
-
-        return new Response(
-          JSON.stringify({
-            error:
-              error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              ...corsHeaders,
-              "Content-Type":
-                "application/json"
-            }
-          }
-        );
-
+        return jsonResponse({
+          error: error.message
+        }, 500);
       }
-
     }
 
+    /* =========================================
+       STATIC WEBSITE FILES
+       ========================================= */
 
-    /* =====================================================
-       STATIC FILES
-    ===================================================== */
-
-    return env.ASSETS.fetch(
-      request
-    );
-
+    return env.ASSETS.fetch(request);
   }
 };
-````
+```
