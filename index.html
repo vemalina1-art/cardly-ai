@@ -279,7 +279,10 @@ function getModelInput(processed){
     processed?.images;
 
   if(!input){
-    throw new Error("AutoProcessor не вернул входное изображение.");
+    throw new Error(
+      "AutoProcessor не вернул входное изображение. " +
+      "Проверьте консоль браузера."
+    );
   }
 
   return input;
@@ -328,64 +331,104 @@ function trimTransparentEdges(sourceCanvas){
   return result;
 }
 
-// Исправленная функция преобразования маски в Canvas.
-function rawImageToCanvas(rawImage){
-  const width = Number(rawImage.width);
-  const height = Number(rawImage.height);
+/*
+  Преобразует выходной тензор BiRefNet в Canvas-маску.
+  Размеры берутся из tensor.dims, а не из RawImage.
+*/
+function createMaskCanvas(maskTensor,originalWidth,originalHeight){
+  if(!maskTensor || !maskTensor.dims){
+    throw new Error("BiRefNet вернул результат без размерностей.");
+  }
 
-  if (
-    !Number.isFinite(width) ||
-    !Number.isFinite(height) ||
-    width <= 0 ||
-    height <= 0
-  ) {
+  const dims=Array.from(maskTensor.dims).map(Number);
+
+  if(dims.length<2){
     throw new Error(
-      "Некорректный размер маски: " + width + " × " + height
+      "Неподдерживаемая форма маски: "+JSON.stringify(dims)
     );
   }
 
-  const w = Math.floor(width);
-  const h = Math.floor(height);
+  const maskHeight=dims[dims.length-2];
+  const maskWidth=dims[dims.length-1];
 
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-
-  const ctx = canvas.getContext("2d", {
-    willReadFrequently: true
-  });
-
-  const imageData = ctx.createImageData(w, h);
-  const source = rawImage.data;
-
-  const pixelCount = w * h;
-  const channels = Number(rawImage.channels) ||
-    Math.round(source.length / pixelCount);
-
-  if (
-    !source ||
-    !Number.isInteger(channels) ||
-    channels < 1 ||
-    source.length < pixelCount * channels
-  ) {
+  if(
+    !Number.isInteger(maskWidth)||
+    !Number.isInteger(maskHeight)||
+    maskWidth<=0||
+    maskHeight<=0
+  ){
     throw new Error(
-      "Некорректные данные маски. Каналы: " + channels +
-      ", размер данных: " + (source?.length || 0)
+      "Некорректные размерности маски: "+JSON.stringify(dims)
     );
   }
 
-  for (let i = 0; i < pixelCount; i++) {
-    const value = source[i * channels] ?? 0;
-    const index = i * 4;
+  const width=Math.floor(Number(originalWidth));
+  const height=Math.floor(Number(originalHeight));
 
-    imageData.data[index] = value;
-    imageData.data[index + 1] = value;
-    imageData.data[index + 2] = value;
-    imageData.data[index + 3] = 255;
+  if(
+    !Number.isInteger(width)||
+    !Number.isInteger(height)||
+    width<=0||
+    height<=0
+  ){
+    throw new Error("Некорректный размер исходного изображения.");
   }
 
-  ctx.putImageData(imageData, 0, 0);
+  // Для маски BiRefNet обычно имеет форму [1, 1, H, W].
+  // Получаем плоские значения без преобразования через RawImage.
+  let probabilityTensor;
 
+  try{
+    probabilityTensor=maskTensor.sigmoid();
+  }catch(error){
+    throw new Error("Не удалось обработать значения маски: "+error.message);
+  }
+
+  const values=probabilityTensor.data;
+
+  if(!values || values.length<maskWidth*maskHeight){
+    throw new Error(
+      "Недостаточно данных в маске. Форма: "+
+      JSON.stringify(dims)+
+      ", элементов: "+(values?.length||0)
+    );
+  }
+
+  const canvas=document.createElement("canvas");
+  canvas.width=width;
+  canvas.height=height;
+
+  const ctx=canvas.getContext("2d",{willReadFrequently:true});
+  const imageData=ctx.createImageData(width,height);
+
+  for(let y=0;y<height;y++){
+    const sourceY=Math.min(
+      maskHeight-1,
+      Math.floor(y*maskHeight/height)
+    );
+
+    for(let x=0;x<width;x++){
+      const sourceX=Math.min(
+        maskWidth-1,
+        Math.floor(x*maskWidth/width)
+      );
+
+      const sourceIndex=sourceY*maskWidth+sourceX;
+      const alpha=Math.max(
+        0,
+        Math.min(255,Math.round(Number(values[sourceIndex])*255))
+      );
+
+      const targetIndex=(y*width+x)*4;
+
+      imageData.data[targetIndex]=255;
+      imageData.data[targetIndex+1]=255;
+      imageData.data[targetIndex+2]=255;
+      imageData.data[targetIndex+3]=alpha;
+    }
+  }
+
+  ctx.putImageData(imageData,0,0);
   return canvas;
 }
 
@@ -404,98 +447,118 @@ async function removeBackground(file){
     const originalHeight=originalImage.naturalHeight;
     const maxDimension=1800;
 
-    const ratio=Math.min(1,maxDimension/Math.max(originalWidth,originalHeight));
+    const ratio=Math.min(
+      1,
+      maxDimension/Math.max(originalWidth,originalHeight)
+    );
+
     const width=Math.round(originalWidth*ratio);
     const height=Math.round(originalHeight*ratio);
 
     const inputCanvas=document.createElement("canvas");
     inputCanvas.width=width;
     inputCanvas.height=height;
-    inputCanvas.getContext("2d").drawImage(originalImage,0,0,width,height);
 
-    const modelImage=await RawImage.fromURL(inputCanvas.toDataURL("image/png"));
+    inputCanvas.getContext("2d").drawImage(
+      originalImage,0,0,width,height
+    );
 
-    setRemoveStatus("AI анализирует изображение и удаляет фон...","loading");
+    const modelImage=await RawImage.fromURL(
+      inputCanvas.toDataURL("image/png")
+    );
+
+    setRemoveStatus(
+      "AI анализирует изображение и удаляет фон...",
+      "loading"
+    );
 
     const {processor,model}=await loadSegmentationModel();
+
     const processed=await processor(modelImage);
     const inputImage=getModelInput(processed);
 
-    const output=await model({input_image:inputImage});
-
-    let maskTensor=
-      output.output||
-      output.logits||
-      output[Object.keys(output)[0]];
-
-    if(!maskTensor){
-      throw new Error("Модель не вернула маску изображения");
-    }
+    // Входное имя input_image сохранено для текущей ONNX-модели.
+    const output=await model({
+      input_image:inputImage
+    });
 
     console.log("BIRE FNET MODEL OUTPUT:",output);
-    console.log("MASK TENSOR SHAPE:",maskTensor.dims);
 
-    let mask=maskTensor;
+    let maskTensor=
+      output?.output||
+      output?.logits||
+      output?.[Object.keys(output||{})[0]];
 
-    while(mask.dims && mask.dims.length>3){
-      mask=mask.squeeze(0);
-    }
-
-    if(mask.dims && mask.dims.length===2){
-      mask=mask.unsqueeze(0);
-    }
-
-    if(!mask.dims || mask.dims.length!==3){
+    if(!maskTensor || !maskTensor.dims){
       throw new Error(
-        "Неожиданный формат маски: "+JSON.stringify(mask.dims)
+        "Модель не вернула подходящий тензор маски."
       );
     }
 
-    const maskForImage=mask.sigmoid().mul(255).to("uint8");
-    const maskImage=await RawImage.fromTensor(maskForImage);
+    console.log("MASK TENSOR SHAPE:",maskTensor.dims);
 
-    const resizedMask=maskImage.resize(width,height);
-
-    console.log("RESIZED MASK:",resizedMask);
-    console.log("RESIZED MASK CHANNELS:",resizedMask.channels);
-    console.log("RESIZED MASK DATA LENGTH:",resizedMask.data?.length);
-
-    const maskCanvas=rawImageToCanvas(resizedMask);
-    const maskContext=maskCanvas.getContext("2d",{willReadFrequently:true});
-    const maskPixels=maskContext.getImageData(0,0,width,height);
+    const maskCanvas=createMaskCanvas(
+      maskTensor,
+      width,
+      height
+    );
 
     const resultCanvas=document.createElement("canvas");
     resultCanvas.width=width;
     resultCanvas.height=height;
 
-    const resultContext=resultCanvas.getContext("2d",{willReadFrequently:true});
+    const resultContext=resultCanvas.getContext(
+      "2d",
+      {willReadFrequently:true}
+    );
+
+    // Рисуем исходный товар.
     resultContext.drawImage(inputCanvas,0,0,width,height);
 
-    const resultPixels=resultContext.getImageData(0,0,width,height);
+    // Применяем альфа-канал маски.
+    const resultPixels=resultContext.getImageData(
+      0,0,width,height
+    );
+
+    const maskPixels=maskCanvas.getContext(
+      "2d",
+      {willReadFrequently:true}
+    ).getImageData(0,0,width,height);
 
     for(let i=0;i<resultPixels.data.length;i+=4){
-      resultPixels.data[i+3]=maskPixels.data[i];
+      resultPixels.data[i+3]=maskPixels.data[i+3];
     }
 
     resultContext.putImageData(resultPixels,0,0);
 
     const trimmedCanvas=trimTransparentEdges(resultCanvas);
+
     cutoutImage=trimmedCanvas.toDataURL("image/png");
 
     uploadedImage.src=cutoutImage;
     uploadedPreview.style.display="block";
 
-    setRemoveStatus("Фон удалён. Исходный товар готов к размещению.","success");
+    setRemoveStatus(
+      "Фон удалён. Исходный товар готов к размещению.",
+      "success"
+    );
+
     renderProductPreview();
 
   }catch(error){
     console.error("BACKGROUND REMOVAL ERROR:",error);
 
-    setRemoveStatus("Не удалось удалить фон: "+error.message,"error");
+    setRemoveStatus(
+      "Не удалось удалить фон: "+error.message,
+      "error"
+    );
 
+    // Оставляем исходную фотографию, чтобы пользователь
+    // мог продолжить работу с карточкой.
     cutoutImage=await fileToDataURL(file);
     uploadedImage.src=cutoutImage;
     uploadedPreview.style.display="block";
+
     renderProductPreview();
 
   }finally{
@@ -506,8 +569,10 @@ async function removeBackground(file){
 
 function renderProductPreview(){
   if(!cutoutImage)return;
+
   cardProduct.src=cutoutImage;
   cardProduct.style.display="block";
+
   hasGeneratedCard=true;
   downloadButton.disabled=false;
 }
@@ -515,7 +580,12 @@ function renderProductPreview(){
 async function makeVisionImage(imageSource){
   const img=await loadImage(imageSource);
   const maxSide=768;
-  const ratio=Math.min(1,maxSide/Math.max(img.width,img.height));
+
+  const ratio=Math.min(
+    1,
+    maxSide/Math.max(img.width,img.height)
+  );
+
   const width=Math.round(img.width*ratio);
   const height=Math.round(img.height*ratio);
 
@@ -533,6 +603,7 @@ async function makeVisionImage(imageSource){
 
 async function requestDesign(){
   const name=productName.value.trim();
+
   if(!name)throw new Error("Введите название товара");
 
   const response=await fetch(API_BASE+"/api/generate",{
@@ -545,12 +616,18 @@ async function requestDesign(){
   });
 
   const data=await response.json();
-  if(!response.ok)throw new Error(data.error||"Не удалось создать дизайн");
+
+  if(!response.ok){
+    throw new Error(data.error||"Не удалось создать дизайн");
+  }
+
   return data;
 }
 
 async function requestAIScene(){
-  if(!cutoutImage)throw new Error("Сначала загрузите фотографию товара");
+  if(!cutoutImage){
+    throw new Error("Сначала загрузите фотографию товара");
+  }
 
   const analysisImage=await makeVisionImage(cutoutImage);
 
@@ -567,26 +644,53 @@ async function requestAIScene(){
 
   if(!response.ok){
     let message="Не удалось создать AI-фон";
+
     try{
       const data=await response.json();
       message=data.error||message;
     }catch(e){}
+
     throw new Error(message);
   }
 
   const blob=await response.blob();
 
   const position=response.headers.get("X-Cardly-Position")||"center";
-  const scale=Math.max(50,Math.min(78,Number(response.headers.get("X-Cardly-Scale"))||68));
-  const vertical=Math.max(43,Math.min(62,Number(response.headers.get("X-Cardly-Vertical"))||55));
 
-  return {blob,layout:{position,scale,vertical}};
+  const scale=Math.max(
+    50,
+    Math.min(
+      78,
+      Number(response.headers.get("X-Cardly-Scale"))||68
+    )
+  );
+
+  const vertical=Math.max(
+    43,
+    Math.min(
+      62,
+      Number(response.headers.get("X-Cardly-Vertical"))||55
+    )
+  );
+
+  return {
+    blob,
+    layout:{position,scale,vertical}
+  };
 }
 
 function applyProductLayout(layout){
   const position=layout?.position||"center";
-  const scale=Math.max(50,Math.min(78,Number(layout?.scale)||68));
-  const vertical=Math.max(43,Math.min(62,Number(layout?.vertical)||55));
+
+  const scale=Math.max(
+    50,
+    Math.min(78,Number(layout?.scale)||68)
+  );
+
+  const vertical=Math.max(
+    43,
+    Math.min(62,Number(layout?.vertical)||55)
+  );
 
   cardProduct.style.width=scale+"%";
   cardProduct.style.maxHeight="70%";
@@ -611,7 +715,9 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
   cardSubtitle.textContent=data.subtitle||"";
   cardFeatures.innerHTML="";
 
-  const features=Array.isArray(data.features)?data.features.slice(0,4):[];
+  const features=Array.isArray(data.features)
+    ?data.features.slice(0,4)
+    :[];
 
   features.forEach(text=>{
     const feature=document.createElement("div");
@@ -622,16 +728,48 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
 
   card.className="";
 
-  const designs=["premium","editorial","showcase","lifestyle","infographic","cinematic"];
-  const design=designs.includes(styleSelect.value)?styleSelect.value:"premium";
+  const designs=[
+    "premium",
+    "editorial",
+    "showcase",
+    "lifestyle",
+    "infographic",
+    "cinematic"
+  ];
+
+  const design=designs.includes(styleSelect.value)
+    ?styleSelect.value
+    :"premium";
+
   card.classList.add("design-"+design);
 
-  const backgrounds=["light","dark","soft","gradient","accent"];
-  const background=backgrounds.includes(data.background)?data.background:"light";
+  const backgrounds=[
+    "light",
+    "dark",
+    "soft",
+    "gradient",
+    "accent"
+  ];
+
+  const background=backgrounds.includes(data.background)
+    ?data.background
+    :"light";
+
   card.classList.add("background-"+background);
 
-  const accents=["blue","cyan","green","orange","violet","black"];
-  const accent=accents.includes(data.accent)?data.accent:"blue";
+  const accents=[
+    "blue",
+    "cyan",
+    "green",
+    "orange",
+    "violet",
+    "black"
+  ];
+
+  const accent=accents.includes(data.accent)
+    ?data.accent
+    :"blue";
+
   card.classList.add("accent-"+accent);
 
   const titlePosition=data.titlePosition||"top";
@@ -658,6 +796,7 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
   if(cutoutImage){
     cardProduct.src=cutoutImage;
     cardProduct.style.display="block";
+
     applyProductLayout(sceneLayout||{
       position:data.productPosition||"center",
       scale:68,
@@ -700,18 +839,34 @@ async function generateAIComposition(){
   try{
     const design=await requestDesign();
 
-    setStatus("Шаг 2 из 2: Vision анализирует товар, FLUX создаёт окружение...","loading");
+    setStatus(
+      "Шаг 2 из 2: Vision анализирует товар, FLUX создаёт окружение...",
+      "loading"
+    );
 
     const scene=await requestAIScene();
+
     revokeSceneUrl();
+
     sceneObjectUrl=URL.createObjectURL(scene.blob);
 
-    await renderCard(design,sceneObjectUrl,scene.layout);
-    setStatus("AI-композиция готова. Можно скачать карточку.","success");
+    await renderCard(
+      design,
+      sceneObjectUrl,
+      scene.layout
+    );
+
+    setStatus(
+      "AI-композиция готова. Можно скачать карточку.",
+      "success"
+    );
 
   }catch(error){
     console.error("COMPOSITION ERROR:",error);
-    setStatus(error.message||"Не удалось создать композицию","error");
+    setStatus(
+      error.message||"Не удалось создать композицию",
+      "error"
+    );
   }finally{
     setLoading(false);
   }
@@ -733,17 +888,26 @@ async function generateSimpleCard(){
 
   try{
     const design=await requestDesign();
+
     revokeSceneUrl();
 
     const cardBackground=document.getElementById("cardBackground");
     cardBackground.style.backgroundImage="";
 
     await renderCard(design);
-    setStatus("Карточка готова. Можно скачать изображение.","success");
+
+    setStatus(
+      "Карточка готова. Можно скачать изображение.",
+      "success"
+    );
 
   }catch(error){
     console.error("SIMPLE GENERATION ERROR:",error);
-    setStatus(error.message||"Не удалось создать карточку","error");
+
+    setStatus(
+      error.message||"Не удалось создать карточку",
+      "error"
+    );
   }finally{
     setLoading(false);
   }
@@ -771,16 +935,21 @@ async function downloadCard(){
     exportCanvas.width=900;
     exportCanvas.height=1200;
 
-    exportCanvas.getContext("2d").drawImage(canvas,0,0,900,1200);
+    exportCanvas.getContext("2d").drawImage(
+      canvas,0,0,900,1200
+    );
 
     const blob=await new Promise(resolve=>{
       exportCanvas.toBlob(resolve,"image/png");
     });
 
-    if(!blob)throw new Error("Не удалось подготовить PNG");
+    if(!blob){
+      throw new Error("Не удалось подготовить PNG");
+    }
 
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");
+
     link.href=url;
     link.download="cardly-ai-900x1200.png";
 
@@ -789,11 +958,16 @@ async function downloadCard(){
     link.remove();
 
     setTimeout(()=>URL.revokeObjectURL(url),1500);
+
     setStatus("Изображение скачано.","success");
 
   }catch(error){
     console.error("DOWNLOAD ERROR:",error);
-    setStatus("Ошибка скачивания: "+error.message,"error");
+
+    setStatus(
+      "Ошибка скачивания: "+error.message,
+      "error"
+    );
   }finally{
     downloadButton.disabled=false;
     downloadButton.textContent="↓ Скачать PNG";
@@ -803,37 +977,56 @@ async function downloadCard(){
 async function handleFile(file){
   if(!file)return;
 
-  const allowedTypes=["image/png","image/jpeg","image/webp"];
+  const allowedTypes=[
+    "image/png",
+    "image/jpeg",
+    "image/webp"
+  ];
 
   if(!allowedTypes.includes(file.type)){
-    setStatus("Поддерживаются только PNG, JPG и WEBP.","error");
+    setStatus(
+      "Поддерживаются только PNG, JPG и WEBP.",
+      "error"
+    );
     return;
   }
 
   if(file.size>15*1024*1024){
-    setStatus("Размер файла не должен превышать 15 МБ.","error");
+    setStatus(
+      "Размер файла не должен превышать 15 МБ.",
+      "error"
+    );
     return;
   }
 
   cutoutImage=null;
   hasGeneratedCard=false;
+
   revokeSceneUrl();
 
   cardProduct.style.display="none";
   cardProduct.removeAttribute("src");
+
   downloadButton.disabled=true;
 
   const previewUrl=await fileToDataURL(file);
+
   uploadedImage.src=previewUrl;
   uploadedPreview.style.display="block";
 
-  setRemoveStatus("Фотография загружена. Начинаем удаление фона...","loading");
+  setRemoveStatus(
+    "Фотография загружена. Начинаем удаление фона...",
+    "loading"
+  );
+
   await removeBackground(file);
 }
 
 fileInput.addEventListener("change",async event=>{
   const file=event.target.files?.[0];
+
   await handleFile(file);
+
   fileInput.value="";
 });
 
@@ -848,14 +1041,28 @@ uploadArea.addEventListener("dragleave",()=>{
 
 uploadArea.addEventListener("drop",async event=>{
   event.preventDefault();
+
   uploadArea.classList.remove("dragover");
+
   const file=event.dataTransfer.files?.[0];
+
   await handleFile(file);
 });
 
-generateButton.addEventListener("click",generateAIComposition);
-simpleButton.addEventListener("click",generateSimpleCard);
-downloadButton.addEventListener("click",downloadCard);
+generateButton.addEventListener(
+  "click",
+  generateAIComposition
+);
+
+simpleButton.addEventListener(
+  "click",
+  generateSimpleCard
+);
+
+downloadButton.addEventListener(
+  "click",
+  downloadCard
+);
 
 setStatus("Загрузите товар, чтобы начать создание карточки.");
 </script>
