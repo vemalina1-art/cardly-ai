@@ -495,11 +495,6 @@
             <img class="card-product" id="cardProduct" alt="Товар" style="display:none">
             <div class="card-features" id="cardFeatures"></div>
           </div>
-
-          <div class="preview-empty" id="emptyPreview" style="display:none">
-            <div class="empty-icon">🎨</div>
-            <p>Предпросмотр вашей карточки появится здесь.</p>
-          </div>
         </div>
 
         <div class="preview-actions">
@@ -530,7 +525,6 @@
 
     env.allowLocalModels = false;
     env.allowRemoteModels = true;
-
     env.remoteHost = API_BASE + "/api/model/";
     env.remotePathTemplate = "{model}/resolve/{revision}/";
 
@@ -562,7 +556,7 @@
     const cardFeatures = document.getElementById("cardFeatures");
 
     // --------------------------------------------------
-    // СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+    // СОСТОЯНИЕ
     // --------------------------------------------------
 
     let cutoutImage = null;
@@ -622,7 +616,7 @@
     }
 
     // --------------------------------------------------
-    // ЗАГРУЗКА BIRE FNET
+    // ЗАГРУЗКА МОДЕЛИ
     // --------------------------------------------------
 
     async function loadSegmentationModel() {
@@ -632,10 +626,6 @@
 
           const processor = await AutoProcessor.from_pretrained(MODEL_ID);
 
-          // ВАЖНО:
-          // fp32 загружает onnx/model.onnx.
-          // Без этого параметра WASM выбирает q8 и запрашивает
-          // отсутствующий onnx/model_quantized.onnx.
           const model = await AutoModel.from_pretrained(
             MODEL_ID,
             {
@@ -646,13 +636,33 @@
 
           return { processor, model };
         })().catch(error => {
-          // Если загрузка не удалась, разрешаем повторную попытку.
           modelPromise = null;
           throw error;
         });
       }
 
       return modelPromise;
+    }
+
+    // --------------------------------------------------
+    // ПОЛУЧЕНИЕ ВХОДНОГО ТЕНЗОРА
+    // --------------------------------------------------
+
+    function getModelInput(processed) {
+      console.log("BIRE FNET PROCESSOR OUTPUT:", processed);
+
+      const input =
+        processed?.input_image ||
+        processed?.pixel_values ||
+        processed?.images;
+
+      if (!input) {
+        throw new Error(
+          "AutoProcessor не вернул входное изображение. Проверьте конфигурацию модели."
+        );
+      }
+
+      return input;
     }
 
     // --------------------------------------------------
@@ -700,8 +710,16 @@
         );
 
         const { processor, model } = await loadSegmentationModel();
-        const inputs = await processor(modelImage);
-        const output = await model(inputs);
+
+        // Подготавливаем изображение процессором.
+        const processed = await processor(modelImage);
+
+        // Передаём тензор с именем, ожидаемым ONNX-моделью.
+        const inputImage = getModelInput(processed);
+
+        const output = await model({
+          input_image: inputImage
+        });
 
         let maskTensor =
           output.output ||
@@ -770,6 +788,7 @@
           "error"
         );
 
+        // При ошибке показываем исходное фото.
         cutoutImage = await fileToDataURL(file);
         uploadedImage.src = cutoutImage;
         uploadedPreview.style.display = "block";
@@ -963,7 +982,7 @@
     }
 
     // --------------------------------------------------
-    // ПРИМЕНЕНИЕ ПОЗИЦИИ ТОВАРА
+    // ПОЗИЦИЯ ТОВАРА
     // --------------------------------------------------
 
     function applyProductLayout(layout) {
@@ -1093,7 +1112,7 @@
     }
 
     // --------------------------------------------------
-    // ПОЛНАЯ AI-КОМПОЗИЦИЯ
+    // AI-КОМПОЗИЦИЯ
     // --------------------------------------------------
 
     async function generateAIComposition() {
@@ -1137,7 +1156,7 @@
     }
 
     // --------------------------------------------------
-    // ОБЫЧНАЯ ГЕНЕРАЦИЯ КАРТОЧКИ
+    // ОБЫЧНАЯ КАРТОЧКА
     // --------------------------------------------------
 
     async function generateSimpleCard() {
@@ -1175,7 +1194,7 @@
     }
 
     // --------------------------------------------------
-    // СКАЧИВАНИЕ PNG 900 × 1200
+    // СКАЧИВАНИЕ PNG
     // --------------------------------------------------
 
     async function downloadCard() {
@@ -1240,7 +1259,7 @@
     }
 
     // --------------------------------------------------
-    // ЗАГРУЗКА ФОТОГРАФИИ
+    // ЗАГРУЗКА ФОТО
     // --------------------------------------------------
 
     async function handleFile(file) {
@@ -1286,7 +1305,7 @@
     }
 
     // --------------------------------------------------
-    // СОБЫТИЯ ИНТЕРФЕЙСА
+    // СОБЫТИЯ
     // --------------------------------------------------
 
     fileInput.addEventListener("change", async event => {
@@ -1315,10 +1334,6 @@
     generateButton.addEventListener("click", generateAIComposition);
     simpleButton.addEventListener("click", generateSimpleCard);
     downloadButton.addEventListener("click", downloadCard);
-
-    // --------------------------------------------------
-    // СТАРТОВОЕ СОСТОЯНИЕ
-    // --------------------------------------------------
 
     setStatus("Загрузите товар, чтобы начать создание карточки.");
   </script>
