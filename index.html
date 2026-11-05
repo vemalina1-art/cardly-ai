@@ -137,7 +137,6 @@ textarea{min-height:95px;resize:vertical;line-height:1.5}
   <div class="divider"></div>
   <button class="primary-button" id="generateButton" type="button">✨ Создать AI-композицию</button>
   <button class="secondary-button" id="simpleButton" type="button">Создать обычную карточку</button>
-
   <div class="status" id="mainStatus">Загрузите товар, укажите его название и нажмите «Создать AI-композицию».</div>
   <div class="small-note">AI анализирует загруженный товар, подбирает окружение и создаёт фон. Исходное изображение товара сохраняется и накладывается поверх фона.</div>
 </section>
@@ -251,7 +250,6 @@ function loadImage(src){
   });
 }
 
-// Загрузка модели
 async function loadSegmentationModel(){
   if(!modelPromise){
     modelPromise=(async()=>{
@@ -272,7 +270,6 @@ async function loadSegmentationModel(){
   return modelPromise;
 }
 
-// Получение входа модели
 function getModelInput(processed){
   console.log("BIRE FNET PROCESSOR OUTPUT:",processed);
 
@@ -288,7 +285,6 @@ function getModelInput(processed){
   return input;
 }
 
-// Обрезка прозрачных краёв
 function trimTransparentEdges(sourceCanvas){
   const ctx=sourceCanvas.getContext("2d",{willReadFrequently:true});
   const width=sourceCanvas.width;
@@ -332,7 +328,38 @@ function trimTransparentEdges(sourceCanvas){
   return result;
 }
 
-// Удаление фона
+// Создаём Canvas из RawImage, не используя toCanvas().
+function rawImageToCanvas(rawImage){
+  const canvas=document.createElement("canvas");
+  canvas.width=rawImage.width;
+  canvas.height=rawImage.height;
+
+  const ctx=canvas.getContext("2d",{willReadFrequently:true});
+  const imageData=ctx.createImageData(rawImage.width,rawImage.height);
+
+  const source=rawImage.data;
+  const pixelCount=rawImage.width*rawImage.height;
+  const channels=rawImage.channels || Math.round(source.length/pixelCount);
+
+  if(!channels || source.length<pixelCount){
+    throw new Error("Не удалось определить формат данных маски");
+  }
+
+  for(let i=0;i<pixelCount;i++){
+    const sourceIndex=i*channels;
+    const value=source[sourceIndex] ?? 0;
+    const targetIndex=i*4;
+
+    imageData.data[targetIndex]=value;
+    imageData.data[targetIndex+1]=value;
+    imageData.data[targetIndex+2]=value;
+    imageData.data[targetIndex+3]=255;
+  }
+
+  ctx.putImageData(imageData,0,0);
+  return canvas;
+}
+
 async function removeBackground(file){
   if(isRemoving)return;
   isRemoving=true;
@@ -379,33 +406,32 @@ async function removeBackground(file){
     console.log("BIRE FNET MODEL OUTPUT:",output);
     console.log("MASK TENSOR SHAPE:",maskTensor.dims);
 
-    // Приводим маску к формату [1, высота, ширина].
     let mask=maskTensor;
 
-    // Убираем только лишние первые размерности.
     while(mask.dims && mask.dims.length>3){
       mask=mask.squeeze(0);
     }
 
-    // Если модель вернула [высота, ширина],
-    // добавляем размерность канала.
     if(mask.dims && mask.dims.length===2){
       mask=mask.unsqueeze(0);
     }
 
     if(!mask.dims || mask.dims.length!==3){
       throw new Error(
-        "Неожиданный формат маски модели: "+
-        JSON.stringify(mask.dims)
+        "Неожиданный формат маски: "+JSON.stringify(mask.dims)
       );
     }
 
-    // RawImage.fromTensor требует 3D-тензор [C,H,W].
     const maskForImage=mask.sigmoid().mul(255).to("uint8");
     const maskImage=await RawImage.fromTensor(maskForImage);
 
     const resizedMask=maskImage.resize(width,height);
-    const maskCanvas=resizedMask.toCanvas();
+
+    console.log("RESIZED MASK:",resizedMask);
+    console.log("RESIZED MASK CHANNELS:",resizedMask.channels);
+    console.log("RESIZED MASK DATA LENGTH:",resizedMask.data?.length);
+
+    const maskCanvas=rawImageToCanvas(resizedMask);
     const maskContext=maskCanvas.getContext("2d",{willReadFrequently:true});
     const maskPixels=maskContext.getImageData(0,0,width,height);
 
@@ -716,9 +742,7 @@ async function downloadCard(){
     exportCanvas.width=900;
     exportCanvas.height=1200;
 
-    exportCanvas.getContext("2d").drawImage(
-      canvas,0,0,900,1200
-    );
+    exportCanvas.getContext("2d").drawImage(canvas,0,0,900,1200);
 
     const blob=await new Promise(resolve=>{
       exportCanvas.toBlob(resolve,"image/png");
