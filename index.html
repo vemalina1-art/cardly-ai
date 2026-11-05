@@ -5,13 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cardly AI — создание инфографики</title>
-
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -20,13 +17,8 @@
       color: #172033;
     }
 
-    button, input, textarea, select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
 
     .app {
       max-width: 1280px;
@@ -49,14 +41,8 @@
       color: #1769e8;
     }
 
-    .logo span {
-      color: #172033;
-    }
-
-    .header-caption {
-      color: #7a879b;
-      font-size: 13px;
-    }
+    .logo span { color: #172033; }
+    .header-caption { color: #7a879b; font-size: 13px; }
 
     .main-grid {
       display: grid;
@@ -73,14 +59,8 @@
       box-shadow: 0 8px 30px rgba(28, 48, 80, .045);
     }
 
-    .panel h2 {
-      font-size: 18px;
-      margin: 0 0 20px;
-    }
-
-    .field {
-      margin-bottom: 17px;
-    }
+    .panel h2 { font-size: 18px; margin: 0 0 20px; }
+    .field { margin-bottom: 17px; }
 
     .field label {
       display: block;
@@ -90,9 +70,7 @@
       color: #344158;
     }
 
-    input[type="text"],
-    textarea,
-    select {
+    input[type="text"], textarea, select {
       display: block;
       width: 100%;
       border: 1px solid #dce3ed;
@@ -104,18 +82,12 @@
       transition: border .2s, box-shadow .2s;
     }
 
-    input[type="text"]:focus,
-    textarea:focus,
-    select:focus {
+    input[type="text"]:focus, textarea:focus, select:focus {
       border-color: #4388f5;
       box-shadow: 0 0 0 3px rgba(67, 136, 245, .12);
     }
 
-    textarea {
-      min-height: 95px;
-      resize: vertical;
-      line-height: 1.5;
-    }
+    textarea { min-height: 95px; resize: vertical; line-height: 1.5; }
 
     .upload-area {
       border: 2px dashed #cbd7e8;
@@ -131,22 +103,9 @@
       background: #eef5ff;
     }
 
-    .upload-icon {
-      font-size: 30px;
-      margin-bottom: 9px;
-    }
-
-    .upload-area p {
-      margin: 5px 0;
-      font-size: 13px;
-      color: #7a879b;
-    }
-
-    .upload-area strong {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-    }
+    .upload-icon { font-size: 30px; margin-bottom: 9px; }
+    .upload-area p { margin: 5px 0; font-size: 13px; color: #7a879b; }
+    .upload-area strong { display: block; margin-bottom: 5px; font-size: 14px; }
 
     .upload-button {
       display: inline-block;
@@ -160,15 +119,8 @@
       cursor: pointer;
     }
 
-    #fileInput {
-      display: none;
-    }
-
-    .uploaded-preview {
-      display: none;
-      margin-top: 14px;
-      text-align: center;
-    }
+    #fileInput { display: none; }
+    .uploaded-preview { display: none; margin-top: 14px; text-align: center; }
 
     .uploaded-preview img {
       max-width: 100%;
@@ -184,27 +136,12 @@
       background-position: 0 0, 0 8px, 8px -8px, -8px 0;
     }
 
-    .status {
-      margin-top: 10px;
-      color: #718096;
-      font-size: 12px;
-      line-height: 1.45;
-    }
+    .status { margin-top: 10px; color: #718096; font-size: 12px; line-height: 1.45; }
+    .status.success { color: #16834c; }
+    .status.error { color: #d13c3c; }
+    .status.loading { color: #1769e8; }
 
-    .status.success {
-      color: #16834c;
-    }
-
-    .status.error {
-      color: #d13c3c;
-    }
-
-    .status.loading {
-      color: #1769e8;
-    }
-
-    .primary-button,
-    .secondary-button {
+    .primary-button, .secondary-button {
       display: block;
       width: 100%;
       border: 0;
@@ -226,32 +163,17 @@
       box-shadow: 0 9px 20px rgba(31, 105, 225, .25);
     }
 
-    .primary-button:disabled,
-    .secondary-button:disabled {
+    .primary-button:disabled, .secondary-button:disabled {
       opacity: .55;
       cursor: not-allowed;
       transform: none;
     }
 
-    .secondary-button {
-      margin-top: 10px;
-      color: #1769e8;
-      background: #edf4ff;
-    }
+    .secondary-button { margin-top: 10px; color: #1769e8; background: #edf4ff; }
+    .secondary-button:hover { background: #e1edff; }
 
-    .secondary-button:hover {
-      background: #e1edff;
-    }
-
-    .divider {
-      height: 1px;
-      background: #edf0f5;
-      margin: 20px 0;
-    }
-
-    .preview-panel {
-      min-height: 650px;
-    }
+    .divider { height: 1px; background: #edf0f5; margin: 20px 0; }
+    .preview-panel { min-height: 650px; }
 
     .preview-heading {
       display: flex;
@@ -261,9 +183,7 @@
       margin-bottom: 20px;
     }
 
-    .preview-heading h2 {
-      margin: 0;
-    }
+    .preview-heading h2 { margin: 0; }
 
     .preview-tag {
       padding: 6px 10px;
@@ -395,50 +315,18 @@
       background: #2678e9;
     }
 
-    #card.accent-cyan .card-accent {
-      background: #16b8d5;
-    }
+    #card.accent-cyan .card-accent { background: #16b8d5; }
+    #card.accent-green .card-accent { background: #20a477; }
+    #card.accent-orange .card-accent { background: #f18a32; }
+    #card.accent-violet .card-accent { background: #8561dc; }
+    #card.accent-black .card-accent { background: #202735; }
 
-    #card.accent-green .card-accent {
-      background: #20a477;
-    }
-
-    #card.accent-orange .card-accent {
-      background: #f18a32;
-    }
-
-    #card.accent-violet .card-accent {
-      background: #8561dc;
-    }
-
-    #card.accent-black .card-accent {
-      background: #202735;
-    }
-
-    #card.background-dark {
-      color: #fff;
-      background: #182538;
-    }
-
-    #card.background-dark .card-background {
-      background: linear-gradient(145deg, #17283d, #30445e);
-    }
-
-    #card.background-dark .card-subtitle {
-      color: #d4dfed;
-    }
-
-    #card.background-soft .card-background {
-      background: linear-gradient(145deg, #f4f1ed, #e7edf2);
-    }
-
-    #card.background-gradient .card-background {
-      background: linear-gradient(135deg, #d9edff, #eef5ff 55%, #dce8f6);
-    }
-
-    #card.background-accent .card-background {
-      background: linear-gradient(145deg, #d9eaff, #a9cdf6);
-    }
+    #card.background-dark { color: #fff; background: #182538; }
+    #card.background-dark .card-background { background: linear-gradient(145deg, #17283d, #30445e); }
+    #card.background-dark .card-subtitle { color: #d4dfed; }
+    #card.background-soft .card-background { background: linear-gradient(145deg, #f4f1ed, #e7edf2); }
+    #card.background-gradient .card-background { background: linear-gradient(135deg, #d9edff, #eef5ff 55%, #dce8f6); }
+    #card.background-accent .card-background { background: linear-gradient(145deg, #d9eaff, #a9cdf6); }
 
     #card.design-editorial .card-title {
       font-family: Georgia, serif;
@@ -448,21 +336,10 @@
       letter-spacing: -1px;
     }
 
-    #card.design-showcase .card-product {
-      filter: drop-shadow(0 20px 18px rgba(20, 35, 55, .26));
-    }
-
-    #card.design-lifestyle .card-background {
-      background-color: #e9f0ed;
-    }
-
-    #card.design-infographic .feature {
-      border-radius: 4px;
-    }
-
-    #card.design-cinematic .card-product {
-      filter: drop-shadow(0 18px 25px rgba(0, 0, 0, .3));
-    }
+    #card.design-showcase .card-product { filter: drop-shadow(0 20px 18px rgba(20, 35, 55, .26)); }
+    #card.design-lifestyle .card-background { background-color: #e9f0ed; }
+    #card.design-infographic .feature { border-radius: 4px; }
+    #card.design-cinematic .card-product { filter: drop-shadow(0 18px 25px rgba(0, 0, 0, .3)); }
 
     .preview-empty {
       text-align: center;
@@ -471,32 +348,12 @@
       color: #9aa6b8;
     }
 
-    .preview-empty .empty-icon {
-      font-size: 42px;
-      margin-bottom: 12px;
-    }
+    .preview-empty .empty-icon { font-size: 42px; margin-bottom: 12px; }
+    .preview-empty p { font-size: 13px; line-height: 1.5; }
 
-    .preview-empty p {
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .preview-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .preview-actions button {
-      flex: 1;
-    }
-
-    .small-note {
-      margin-top: 12px;
-      color: #8a96a8;
-      font-size: 11px;
-      line-height: 1.5;
-    }
+    .preview-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .preview-actions button { flex: 1; }
+    .small-note { margin-top: 12px; color: #8a96a8; font-size: 11px; line-height: 1.5; }
 
     .progress-line {
       display: none;
@@ -522,40 +379,17 @@
     }
 
     @media (max-width: 850px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .preview-panel {
-        min-height: auto;
-      }
-
-      .preview-workspace {
-        min-height: 470px;
-      }
+      .main-grid { grid-template-columns: 1fr; }
+      .preview-panel { min-height: auto; }
+      .preview-workspace { min-height: 470px; }
     }
 
     @media (max-width: 520px) {
-      .app {
-        padding: 18px 12px 35px;
-      }
-
-      header {
-        margin-bottom: 20px;
-      }
-
-      .header-caption {
-        display: none;
-      }
-
-      .panel {
-        padding: 17px;
-      }
-
-      .preview-workspace {
-        padding: 8px;
-        min-height: auto;
-      }
+      .app { padding: 18px 12px 35px; }
+      header { margin-bottom: 20px; }
+      .header-caption { display: none; }
+      .panel { padding: 17px; }
+      .preview-workspace { padding: 8px; min-height: auto; }
 
       #card {
         width: min(100%, 360px);
@@ -570,42 +404,22 @@
         font-size: clamp(19px, 6vw, 27px);
       }
 
-      .card-subtitle {
-        top: 19%;
-        left: 7%;
-        right: 7%;
-        font-size: 11px;
-      }
-
-      .card-features {
-        left: 7%;
-        right: 7%;
-        bottom: 5%;
-      }
-
-      .feature {
-        font-size: 10px;
-        padding: 6px 8px;
-      }
+      .card-subtitle { top: 19%; left: 7%; right: 7%; font-size: 11px; }
+      .card-features { left: 7%; right: 7%; bottom: 5%; }
+      .feature { font-size: 10px; padding: 6px 8px; }
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-
     <header>
       <div class="logo">Cardly<span> AI</span></div>
-      <div class="header-caption">
-        Создание инфографики для Wildberries и Ozon
-      </div>
+      <div class="header-caption">Создание инфографики для Wildberries и Ozon</div>
     </header>
 
     <main class="main-grid">
-
-      <!-- ЛЕВАЯ ПАНЕЛЬ -->
       <section class="panel">
-
         <h2>Создание карточки</h2>
 
         <div class="field">
@@ -616,45 +430,26 @@
             <strong>Загрузите фотографию товара</strong>
             <p>PNG, JPG или WEBP</p>
             <p>Рекомендуется изображение на простом фоне</p>
-
-            <label class="upload-button" for="fileInput">
-              Выбрать фотографию
-            </label>
-
-            <input
-              type="file"
-              id="fileInput"
-              accept="image/png,image/jpeg,image/webp"
-            >
+            <label class="upload-button" for="fileInput">Выбрать фотографию</label>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp">
           </div>
 
           <div class="uploaded-preview" id="uploadedPreview">
             <img id="uploadedImage" alt="Загруженный товар">
-            <div class="status" id="removeStatus">
-              Фотография загружена
-            </div>
+            <div class="status" id="removeStatus">Фотография загружена</div>
           </div>
 
-          <div class="progress-line" id="progressLine">
-            <span></span>
-          </div>
+          <div class="progress-line" id="progressLine"><span></span></div>
         </div>
 
         <div class="field">
           <label for="productName">Название товара</label>
-          <input
-            type="text"
-            id="productName"
-            placeholder="Например: Смеситель для кухни"
-          >
+          <input type="text" id="productName" placeholder="Например: Смеситель для кухни">
         </div>
 
         <div class="field">
           <label for="characteristics">Характеристики и преимущества</label>
-          <textarea
-            id="characteristics"
-            placeholder="Укажите материал, назначение, особенности и преимущества товара..."
-          ></textarea>
+          <textarea id="characteristics" placeholder="Укажите материал, назначение, особенности и преимущества товара..."></textarea>
         </div>
 
         <div class="field">
@@ -671,21 +466,8 @@
 
         <div class="divider"></div>
 
-        <button
-          class="primary-button"
-          id="generateButton"
-          type="button"
-        >
-          ✨ Создать AI-композицию
-        </button>
-
-        <button
-          class="secondary-button"
-          id="simpleButton"
-          type="button"
-        >
-          Создать обычную карточку
-        </button>
+        <button class="primary-button" id="generateButton" type="button">✨ Создать AI-композицию</button>
+        <button class="secondary-button" id="simpleButton" type="button">Создать обычную карточку</button>
 
         <div class="status" id="mainStatus">
           Загрузите товар, укажите его название и нажмите «Создать AI-композицию».
@@ -695,68 +477,39 @@
           AI анализирует загруженный товар, подбирает окружение и создаёт фон.
           Исходное изображение товара сохраняется и накладывается поверх фона.
         </div>
-
       </section>
 
-      <!-- ПРАВАЯ ПАНЕЛЬ -->
       <section class="panel preview-panel">
-
         <div class="preview-heading">
           <h2>Предпросмотр</h2>
           <span class="preview-tag">900 × 1200</span>
         </div>
 
         <div class="preview-workspace">
-
           <div id="card" class="background-light accent-blue design-premium">
-
             <div class="card-background" id="cardBackground"></div>
             <div class="scene-overlay"></div>
             <div class="card-accent"></div>
-
-            <h1 class="card-title" id="cardTitle">
-              ВАШ ТОВАР
-            </h1>
-
-            <div class="card-subtitle" id="cardSubtitle">
-              Здесь появится описание товара
-            </div>
-
-            <img
-              class="card-product"
-              id="cardProduct"
-              alt="Товар"
-              style="display:none"
-            >
-
+            <h1 class="card-title" id="cardTitle">ВАШ ТОВАР</h1>
+            <div class="card-subtitle" id="cardSubtitle">Здесь появится описание товара</div>
+            <img class="card-product" id="cardProduct" alt="Товар" style="display:none">
             <div class="card-features" id="cardFeatures"></div>
-
           </div>
 
           <div class="preview-empty" id="emptyPreview" style="display:none">
             <div class="empty-icon">🎨</div>
             <p>Предпросмотр вашей карточки появится здесь.</p>
           </div>
-
         </div>
 
         <div class="preview-actions">
-          <button
-            class="secondary-button"
-            id="downloadButton"
-            type="button"
-            disabled
-          >
-            ↓ Скачать PNG
-          </button>
+          <button class="secondary-button" id="downloadButton" type="button" disabled>↓ Скачать PNG</button>
         </div>
 
         <div class="small-note">
           Итоговое изображение сохраняется в формате PNG размером 900 × 1200 пикселей.
         </div>
-
       </section>
-
     </main>
   </div>
 
@@ -773,7 +526,6 @@
     // --------------------------------------------------
 
     const API_BASE = window.location.origin;
-
     const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
 
     env.allowLocalModels = false;
@@ -788,7 +540,6 @@
 
     const fileInput = document.getElementById("fileInput");
     const uploadArea = document.getElementById("uploadArea");
-
     const uploadedPreview = document.getElementById("uploadedPreview");
     const uploadedImage = document.getElementById("uploadedImage");
 
@@ -798,7 +549,6 @@
 
     const removeStatus = document.getElementById("removeStatus");
     const mainStatus = document.getElementById("mainStatus");
-
     const progressLine = document.getElementById("progressLine");
 
     const generateButton = document.getElementById("generateButton");
@@ -817,10 +567,8 @@
 
     let cutoutImage = null;
     let originalFile = null;
-
     let modelPromise = null;
     let isRemoving = false;
-
     let sceneObjectUrl = null;
     let hasGeneratedCard = false;
 
@@ -841,7 +589,6 @@
     function setLoading(isLoading, message = "") {
       generateButton.disabled = isLoading;
       simpleButton.disabled = isLoading;
-
       progressLine.style.display = isLoading ? "block" : "none";
 
       if (message) {
@@ -859,12 +606,8 @@
     function fileToDataURL(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-
         reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(
-          new Error("Не удалось прочитать файл")
-        );
-
+        reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
         reader.readAsDataURL(file);
       });
     }
@@ -872,12 +615,8 @@
     function loadImage(src) {
       return new Promise((resolve, reject) => {
         const img = new Image();
-
         img.onload = () => resolve(img);
-        img.onerror = () => reject(
-          new Error("Не удалось загрузить изображение")
-        );
-
+        img.onerror = () => reject(new Error("Не удалось загрузить изображение"));
         img.src = src;
       });
     }
@@ -891,22 +630,26 @@
         modelPromise = (async () => {
           setRemoveStatus("Загружаем AI-модель удаления фона...", "loading");
 
-          const processor = await AutoProcessor.from_pretrained(
-            MODEL_ID
-          );
+          const processor = await AutoProcessor.from_pretrained(MODEL_ID);
 
+          // ВАЖНО:
+          // fp32 загружает onnx/model.onnx.
+          // Без этого параметра WASM выбирает q8 и запрашивает
+          // отсутствующий onnx/model_quantized.onnx.
           const model = await AutoModel.from_pretrained(
             MODEL_ID,
             {
-              device: "wasm"
+              device: "wasm",
+              dtype: "fp32"
             }
           );
 
-          return {
-            processor,
-            model
-          };
-        })();
+          return { processor, model };
+        })().catch(error => {
+          // Если загрузка не удалась, разрешаем повторную попытку.
+          modelPromise = null;
+          throw error;
+        });
       }
 
       return modelPromise;
@@ -920,21 +663,16 @@
       if (isRemoving) return;
 
       isRemoving = true;
-
       progressLine.style.display = "block";
 
       try {
-        setRemoveStatus(
-          "Подготавливаем фотографию...",
-          "loading"
-        );
+        setRemoveStatus("Подготавливаем фотографию...", "loading");
 
         const imageData = await fileToDataURL(file);
         const originalImage = await loadImage(imageData);
 
         const originalWidth = originalImage.naturalWidth;
         const originalHeight = originalImage.naturalHeight;
-
         const maxDimension = 1800;
 
         const resizeRatio = Math.min(
@@ -950,14 +688,7 @@
         inputCanvas.height = height;
 
         const inputContext = inputCanvas.getContext("2d");
-
-        inputContext.drawImage(
-          originalImage,
-          0,
-          0,
-          width,
-          height
-        );
+        inputContext.drawImage(originalImage, 0, 0, width, height);
 
         const modelImage = await RawImage.fromURL(
           inputCanvas.toDataURL("image/png")
@@ -968,11 +699,8 @@
           "loading"
         );
 
-        const { processor, model } =
-          await loadSegmentationModel();
-
+        const { processor, model } = await loadSegmentationModel();
         const inputs = await processor(modelImage);
-
         const output = await model(inputs);
 
         let maskTensor =
@@ -984,8 +712,6 @@
           throw new Error("Модель не вернула маску изображения");
         }
 
-        // BiRefNet возвращает карту вероятностей.
-        // Переводим её в изображение-маску.
         let mask = maskTensor[0];
 
         if (mask.dims && mask.dims.length === 3) {
@@ -993,25 +719,17 @@
         }
 
         const maskImage = await RawImage.fromTensor(
-          mask.sigmoid()
-            .mul(255)
-            .to("uint8")
+          mask.sigmoid().mul(255).to("uint8")
         );
 
         const resizedMask = maskImage.resize(width, height);
-
         const maskCanvas = resizedMask.toCanvas();
 
         const maskContext = maskCanvas.getContext("2d", {
           willReadFrequently: true
         });
 
-        const maskPixels = maskContext.getImageData(
-          0,
-          0,
-          width,
-          height
-        );
+        const maskPixels = maskContext.getImageData(0, 0, width, height);
 
         const resultCanvas = document.createElement("canvas");
         resultCanvas.width = width;
@@ -1021,33 +739,17 @@
           willReadFrequently: true
         });
 
-        resultContext.drawImage(
-          inputCanvas,
-          0,
-          0,
-          width,
-          height
-        );
+        resultContext.drawImage(inputCanvas, 0, 0, width, height);
 
-        const resultPixels = resultContext.getImageData(
-          0,
-          0,
-          width,
-          height
-        );
+        const resultPixels = resultContext.getImageData(0, 0, width, height);
 
-        // Маску переводим в прозрачность исходного изображения.
         for (let i = 0; i < resultPixels.data.length; i += 4) {
-          const maskValue = maskPixels.data[i];
-
-          resultPixels.data[i + 3] = maskValue;
+          resultPixels.data[i + 3] = maskPixels.data[i];
         }
 
         resultContext.putImageData(resultPixels, 0, 0);
 
-        // Обрезаем пустые прозрачные края.
         const trimmedCanvas = trimTransparentEdges(resultCanvas);
-
         cutoutImage = trimmedCanvas.toDataURL("image/png");
 
         uploadedImage.src = cutoutImage;
@@ -1068,9 +770,7 @@
           "error"
         );
 
-        // При ошибке оставляем исходную фотографию.
         cutoutImage = await fileToDataURL(file);
-
         uploadedImage.src = cutoutImage;
         uploadedPreview.style.display = "block";
 
@@ -1093,21 +793,13 @@
 
       const width = sourceCanvas.width;
       const height = sourceCanvas.height;
-
-      const imageData = ctx.getImageData(
-        0,
-        0,
-        width,
-        height
-      );
-
+      const imageData = ctx.getImageData(0, 0, width, height);
       const pixels = imageData.data;
 
       let minX = width;
       let minY = height;
       let maxX = 0;
       let maxY = 0;
-
       let found = false;
 
       for (let y = 0; y < height; y++) {
@@ -1116,27 +808,20 @@
 
           if (alpha > 12) {
             found = true;
-
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
-
             maxX = Math.max(maxX, x);
             maxY = Math.max(maxY, y);
           }
         }
       }
 
-      if (!found) {
-        return sourceCanvas;
-      }
+      if (!found) return sourceCanvas;
 
-      const padding = Math.round(
-        Math.min(width, height) * 0.025
-      );
+      const padding = Math.round(Math.min(width, height) * 0.025);
 
       minX = Math.max(0, minX - padding);
       minY = Math.max(0, minY - padding);
-
       maxX = Math.min(width - 1, maxX + padding);
       maxY = Math.min(height - 1, maxY + padding);
 
@@ -1144,20 +829,13 @@
       const cropHeight = maxY - minY + 1;
 
       const result = document.createElement("canvas");
-
       result.width = cropWidth;
       result.height = cropHeight;
 
       result.getContext("2d").drawImage(
         sourceCanvas,
-        minX,
-        minY,
-        cropWidth,
-        cropHeight,
-        0,
-        0,
-        cropWidth,
-        cropHeight
+        minX, minY, cropWidth, cropHeight,
+        0, 0, cropWidth, cropHeight
       );
 
       return result;
@@ -1172,7 +850,6 @@
 
       cardProduct.src = cutoutImage;
       cardProduct.style.display = "block";
-
       hasGeneratedCard = true;
       downloadButton.disabled = false;
     }
@@ -1183,7 +860,6 @@
 
     async function makeVisionImage(imageSource) {
       const img = await loadImage(imageSource);
-
       const maxSide = 768;
 
       const ratio = Math.min(
@@ -1195,17 +871,12 @@
       const height = Math.round(img.height * ratio);
 
       const canvas = document.createElement("canvas");
-
       canvas.width = width;
       canvas.height = height;
 
       const ctx = canvas.getContext("2d");
-
-      // Для Vision используем нейтральный фон.
-      // Оригинальный PNG товара не меняем.
       ctx.fillStyle = "#f4f5f7";
       ctx.fillRect(0, 0, width, height);
-
       ctx.drawImage(img, 0, 0, width, height);
 
       return canvas.toDataURL("image/jpeg", 0.82);
@@ -1218,30 +889,21 @@
     async function requestDesign() {
       const name = productName.value.trim();
 
-      if (!name) {
-        throw new Error("Введите название товара");
-      }
+      if (!name) throw new Error("Введите название товара");
 
-      const response = await fetch(
-        API_BASE + "/api/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            productName: name,
-            characteristics: characteristics.value.trim()
-          })
-        }
-      );
+      const response = await fetch(API_BASE + "/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: name,
+          characteristics: characteristics.value.trim()
+        })
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error || "Не удалось создать дизайн"
-        );
+        throw new Error(data.error || "Не удалось создать дизайн");
       }
 
       return data;
@@ -1258,21 +920,16 @@
 
       const analysisImage = await makeVisionImage(cutoutImage);
 
-      const response = await fetch(
-        API_BASE + "/api/generate-scene",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            productName: productName.value.trim(),
-            characteristics: characteristics.value.trim(),
-            style: styleSelect.value,
-            image: analysisImage
-          })
-        }
-      );
+      const response = await fetch(API_BASE + "/api/generate-scene", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: productName.value.trim(),
+          characteristics: characteristics.value.trim(),
+          style: styleSelect.value,
+          image: analysisImage
+        })
+      });
 
       if (!response.ok) {
         let message = "Не удалось создать AI-фон";
@@ -1287,37 +944,21 @@
 
       const blob = await response.blob();
 
-      const position = response.headers.get(
-        "X-Cardly-Position"
-      ) || "center";
+      const position = response.headers.get("X-Cardly-Position") || "center";
 
       const scale = Math.max(
         50,
-        Math.min(
-          78,
-          Number(
-            response.headers.get("X-Cardly-Scale")
-          ) || 68
-        )
+        Math.min(78, Number(response.headers.get("X-Cardly-Scale")) || 68)
       );
 
       const vertical = Math.max(
         43,
-        Math.min(
-          62,
-          Number(
-            response.headers.get("X-Cardly-Vertical")
-          ) || 55
-        )
+        Math.min(62, Number(response.headers.get("X-Cardly-Vertical")) || 55)
       );
 
       return {
         blob,
-        layout: {
-          position,
-          scale,
-          vertical
-        }
+        layout: { position, scale, vertical }
       };
     }
 
@@ -1346,11 +987,9 @@
       if (position === "left") {
         cardProduct.style.left = "8%";
         cardProduct.style.right = "auto";
-        cardProduct.style.transform = "translateY(-50%)";
       } else if (position === "right") {
         cardProduct.style.left = "auto";
         cardProduct.style.right = "8%";
-        cardProduct.style.transform = "translateY(-50%)";
       } else {
         cardProduct.style.left = "50%";
         cardProduct.style.right = "auto";
@@ -1367,7 +1006,6 @@
 
       cardTitle.textContent = title;
       cardSubtitle.textContent = data.subtitle || "";
-
       cardFeatures.innerHTML = "";
 
       const features = Array.isArray(data.features)
@@ -1376,59 +1014,37 @@
 
       features.forEach(featureText => {
         const feature = document.createElement("div");
-
         feature.className = "feature";
         feature.textContent = featureText;
-
         cardFeatures.appendChild(feature);
       });
 
-      // Сбрасываем классы дизайна.
       card.className = "";
 
       const design = [
-        "premium",
-        "editorial",
-        "showcase",
-        "lifestyle",
-        "infographic",
-        "cinematic"
-      ].includes(styleSelect.value)
-        ? styleSelect.value
-        : "premium";
+        "premium", "editorial", "showcase",
+        "lifestyle", "infographic", "cinematic"
+      ].includes(styleSelect.value) ? styleSelect.value : "premium";
 
       card.classList.add("design-" + design);
 
       const background = [
-        "light",
-        "dark",
-        "soft",
-        "gradient",
-        "accent"
-      ].includes(data.background)
-        ? data.background
-        : "light";
+        "light", "dark", "soft", "gradient", "accent"
+      ].includes(data.background) ? data.background : "light";
 
       card.classList.add("background-" + background);
 
       const accent = [
-        "blue",
-        "cyan",
-        "green",
-        "orange",
-        "violet",
-        "black"
-      ].includes(data.accent)
-        ? data.accent
-        : "blue";
+        "blue", "cyan", "green", "orange", "violet", "black"
+      ].includes(data.accent) ? data.accent : "blue";
 
       card.classList.add("accent-" + accent);
 
-      // Позиция и оформление заголовка.
       const titlePosition = data.titlePosition || "top";
 
       if (titlePosition === "middle") {
         cardTitle.style.top = "38%";
+        cardTitle.style.bottom = "auto";
       } else if (titlePosition === "bottom") {
         cardTitle.style.top = "auto";
         cardTitle.style.bottom = "23%";
@@ -1437,15 +1053,14 @@
         cardTitle.style.bottom = "auto";
       }
 
-      // Описание располагается под заголовком.
       if (titlePosition === "top") {
         cardSubtitle.style.top = "19%";
+        cardSubtitle.style.bottom = "auto";
       } else {
         cardSubtitle.style.top = "auto";
         cardSubtitle.style.bottom = "17%";
       }
 
-      // Обычная позиция товара.
       if (cutoutImage) {
         cardProduct.src = cutoutImage;
         cardProduct.style.display = "block";
@@ -1459,22 +1074,15 @@
         );
       }
 
-      // Фон от FLUX.
-      const cardBackground = document.getElementById(
-        "cardBackground"
-      );
+      const cardBackground = document.getElementById("cardBackground");
 
       if (sceneUrl) {
         card.classList.add("scene-composition");
-
-        cardBackground.style.backgroundImage =
-          `url("${sceneUrl}")`;
-
+        cardBackground.style.backgroundImage = `url("${sceneUrl}")`;
         cardBackground.style.backgroundSize = "cover";
         cardBackground.style.backgroundPosition = "center";
       } else {
         card.classList.remove("scene-composition");
-
         cardBackground.style.backgroundImage = "";
         cardBackground.style.backgroundSize = "";
         cardBackground.style.backgroundPosition = "";
@@ -1500,10 +1108,7 @@
         return;
       }
 
-      setLoading(
-        true,
-        "Шаг 1 из 2: создаём структуру карточки..."
-      );
+      setLoading(true, "Шаг 1 из 2: создаём структуру карточки...");
 
       try {
         const design = await requestDesign();
@@ -1516,27 +1121,15 @@
         const scene = await requestAIScene();
 
         revokeSceneUrl();
-
         sceneObjectUrl = URL.createObjectURL(scene.blob);
 
-        await renderCard(
-          design,
-          sceneObjectUrl,
-          scene.layout
-        );
+        await renderCard(design, sceneObjectUrl, scene.layout);
 
-        setStatus(
-          "AI-композиция готова. Можно скачать карточку.",
-          "success"
-        );
+        setStatus("AI-композиция готова. Можно скачать карточку.", "success");
 
       } catch (error) {
         console.error("COMPOSITION ERROR:", error);
-
-        setStatus(
-          error.message || "Не удалось создать композицию",
-          "error"
-        );
+        setStatus(error.message || "Не удалось создать композицию", "error");
 
       } finally {
         setLoading(false);
@@ -1563,29 +1156,18 @@
 
       try {
         const design = await requestDesign();
-
         revokeSceneUrl();
 
-        const cardBackground = document.getElementById(
-          "cardBackground"
-        );
-
+        const cardBackground = document.getElementById("cardBackground");
         cardBackground.style.backgroundImage = "";
 
         await renderCard(design);
 
-        setStatus(
-          "Карточка готова. Можно скачать изображение.",
-          "success"
-        );
+        setStatus("Карточка готова. Можно скачать изображение.", "success");
 
       } catch (error) {
         console.error("SIMPLE GENERATION ERROR:", error);
-
-        setStatus(
-          error.message || "Не удалось создать карточку",
-          "error"
-        );
+        setStatus(error.message || "Не удалось создать карточку", "error");
 
       } finally {
         setLoading(false);
@@ -1615,7 +1197,6 @@
         });
 
         const exportCanvas = document.createElement("canvas");
-
         exportCanvas.width = 900;
         exportCanvas.height = 1200;
 
@@ -1623,25 +1204,18 @@
 
         context.drawImage(
           canvas,
-          0,
-          0,
+          0, 0,
           exportCanvas.width,
           exportCanvas.height
         );
 
         const blob = await new Promise(resolve => {
-          exportCanvas.toBlob(
-            resolve,
-            "image/png"
-          );
+          exportCanvas.toBlob(resolve, "image/png");
         });
 
-        if (!blob) {
-          throw new Error("Не удалось подготовить PNG");
-        }
+        if (!blob) throw new Error("Не удалось подготовить PNG");
 
         const downloadUrl = URL.createObjectURL(blob);
-
         const link = document.createElement("a");
 
         link.href = downloadUrl;
@@ -1651,19 +1225,13 @@
         link.click();
         link.remove();
 
-        setTimeout(() => {
-          URL.revokeObjectURL(downloadUrl);
-        }, 1500);
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1500);
 
         setStatus("Изображение скачано.", "success");
 
       } catch (error) {
         console.error("DOWNLOAD ERROR:", error);
-
-        setStatus(
-          "Ошибка скачивания: " + error.message,
-          "error"
-        );
+        setStatus("Ошибка скачивания: " + error.message, "error");
 
       } finally {
         downloadButton.disabled = false;
@@ -1685,23 +1253,16 @@
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        setStatus(
-          "Поддерживаются только PNG, JPG и WEBP.",
-          "error"
-        );
+        setStatus("Поддерживаются только PNG, JPG и WEBP.", "error");
         return;
       }
 
       if (file.size > 15 * 1024 * 1024) {
-        setStatus(
-          "Размер файла не должен превышать 15 МБ.",
-          "error"
-        );
+        setStatus("Размер файла не должен превышать 15 МБ.", "error");
         return;
       }
 
       originalFile = file;
-
       cutoutImage = null;
       hasGeneratedCard = false;
 
@@ -1709,7 +1270,6 @@
 
       cardProduct.style.display = "none";
       cardProduct.removeAttribute("src");
-
       downloadButton.disabled = true;
 
       const previewUrl = await fileToDataURL(file);
@@ -1731,10 +1291,7 @@
 
     fileInput.addEventListener("change", async event => {
       const file = event.target.files?.[0];
-
       await handleFile(file);
-
-      // Позволяет повторно выбрать тот же файл.
       fileInput.value = "";
     });
 
@@ -1749,37 +1306,21 @@
 
     uploadArea.addEventListener("drop", async event => {
       event.preventDefault();
-
       uploadArea.classList.remove("dragover");
 
       const file = event.dataTransfer.files?.[0];
-
       await handleFile(file);
     });
 
-    generateButton.addEventListener(
-      "click",
-      generateAIComposition
-    );
-
-    simpleButton.addEventListener(
-      "click",
-      generateSimpleCard
-    );
-
-    downloadButton.addEventListener(
-      "click",
-      downloadCard
-    );
+    generateButton.addEventListener("click", generateAIComposition);
+    simpleButton.addEventListener("click", generateSimpleCard);
+    downloadButton.addEventListener("click", downloadCard);
 
     // --------------------------------------------------
     // СТАРТОВОЕ СОСТОЯНИЕ
     // --------------------------------------------------
 
-    setStatus(
-      "Загрузите товар, чтобы начать создание карточки."
-    );
-
+    setStatus("Загрузите товар, чтобы начать создание карточки.");
   </script>
 </body>
 </html>
