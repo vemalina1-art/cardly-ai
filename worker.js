@@ -1,3 +1,4 @@
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -20,18 +21,24 @@ export default {
     };
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+      });
     }
 
     // 1. BIRE FNET MODEL FILE PROXY — НЕ ИЗМЕНЯЕМ
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
-        return jsonResponse({ error: "Method not allowed" }, 405);
+        return jsonResponse({
+          error: "Method not allowed"
+        }, 405);
       }
 
       try {
         const prefix = "/api/model/";
         const modelPath = url.pathname.slice(prefix.length);
+
         const allowedPrefix =
           "onnx-community/BiRefNet_512x512-ONNX/resolve/main/";
 
@@ -42,7 +49,9 @@ export default {
         ];
 
         if (!modelPath.startsWith(allowedPrefix)) {
-          return jsonResponse({ error: "Model path not allowed" }, 403);
+          return jsonResponse({
+            error: "Model path not allowed"
+          }, 403);
         }
 
         const filePath = modelPath.slice(allowedPrefix.length);
@@ -54,7 +63,10 @@ export default {
           }, 403);
         }
 
-        const hfUrl = new URL("https://huggingface.co/" + modelPath);
+        const hfUrl = new URL(
+          "https://huggingface.co/" + modelPath
+        );
+
         hfUrl.search = url.search;
 
         const headers = new Headers();
@@ -76,15 +88,29 @@ export default {
           redirect: "follow"
         });
 
-        const responseHeaders = new Headers(hfResponse.headers);
+        const responseHeaders = new Headers(
+          hfResponse.headers
+        );
 
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
+        responseHeaders.set(
+          "Access-Control-Allow-Origin",
+          "*"
+        );
+
         responseHeaders.set(
           "Access-Control-Allow-Methods",
           "GET, HEAD, OPTIONS"
         );
-        responseHeaders.set("Access-Control-Allow-Headers", "*");
-        responseHeaders.set("Access-Control-Expose-Headers", "*");
+
+        responseHeaders.set(
+          "Access-Control-Allow-Headers",
+          "*"
+        );
+
+        responseHeaders.set(
+          "Access-Control-Expose-Headers",
+          "*"
+        );
 
         return new Response(
           request.method === "HEAD" ? null : hfResponse.body,
@@ -122,7 +148,9 @@ export default {
         });
 
       } catch (error) {
-        return jsonResponse({ error: error.message }, 500);
+        return jsonResponse({
+          error: error.message
+        }, 500);
       }
     }
 
@@ -142,7 +170,9 @@ export default {
         return jsonResponse(result);
 
       } catch (error) {
-        return jsonResponse({ error: error.message }, 500);
+        return jsonResponse({
+          error: error.message
+        }, 500);
       }
     }
 
@@ -171,11 +201,16 @@ export default {
 
         const result = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
-          { prompt, steps }
+          {
+            prompt,
+            steps
+          }
         );
 
         if (!result || !result.image) {
-          throw new Error("Модель не вернула изображение");
+          throw new Error(
+            "Модель не вернула изображение"
+          );
         }
 
         const binary = atob(result.image);
@@ -197,12 +232,13 @@ export default {
         console.error("IMAGE GENERATION ERROR:", error);
 
         return jsonResponse({
-          error: error.message || "Ошибка генерации изображения"
+          error: error.message ||
+            "Ошибка генерации изображения"
         }, 500);
       }
     }
 
-    // 5. AI ADVERTISING SCENE — CATEGORY-AWARE BACKGROUND
+    // 5. AI ADVERTISING SCENE — SMART PRODUCT MATCHING
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
@@ -228,177 +264,159 @@ export default {
           }, 400);
         }
 
-        const styleDescriptions = {
-          premium: "premium luxury advertising photography",
-          editorial: "high-end editorial magazine photography",
-          showcase: "professional product showcase photography",
-          lifestyle: "realistic lifestyle interior photography",
-          infographic: "modern clean commercial advertising photography",
-          cinematic: "cinematic dramatic commercial photography"
-        };
-
-        const selectedStyle =
-          styleDescriptions[style] || styleDescriptions.premium;
-
-        // Определяем категорию товара.
         const productText = (
           productName + " " + characteristics
         ).toLowerCase();
 
-        const categoryRules = [
+        // Визуальные стили рекламной сцены.
+        const styleDescriptions = {
+          premium:
+            "premium commercial advertising photography, refined materials, elegant architectural lighting, sophisticated composition",
+
+          editorial:
+            "high-end editorial photography, natural directional light, artistic but realistic composition, subtle textures",
+
+          showcase:
+            "professional product showcase, clean architectural environment, clear visual hierarchy, balanced studio lighting",
+
+          lifestyle:
+            "realistic contemporary lifestyle interior, natural daylight, believable environment, calm atmosphere",
+
+          infographic:
+            "modern commercial advertising background, clean geometric architecture, structured composition, controlled colors",
+
+          cinematic:
+            "cinematic commercial photography, directional lighting, rich but natural contrast, realistic depth"
+        };
+
+        const selectedStyle =
+          styleDescriptions[style] ||
+          styleDescriptions.premium;
+
+        // Определяем категорию товара и подходящее окружение.
+        const categories = [
           {
-            test: /(ролик|ролики|душев|душ[а-яё]* каб|душ[а-яё]* двер|кабин[а-яё]*|стеклянн[а-яё]* двер)/i,
-            name: "shower enclosure hardware",
-            scene:
-              "A premium modern bathroom with a frameless glass shower enclosure, " +
-              "clear glass panels, subtle chrome shower-door rails and fittings, " +
-              "large-format light stone or porcelain wall tiles, a clean shower " +
-              "floor and a few subtle water droplets on glass. The scene must " +
-              "clearly read as a shower cabin environment. No bathroom vanity, " +
-              "no washbasin, no kitchen, no city view, no skyline, no decorative " +
-              "bowl and no unrelated furniture."
+            test: /(ролик|ролики|каретк|дверн.*душ|душев.*двер|душев.*кабин|кабин.*душ)/i,
+            name: "shower enclosure rollers and hardware",
+            environment:
+              "A realistic frameless glass shower enclosure. Large transparent glass panels, elegant chrome profiles, light grey stone porcelain tiles and a clean shower area. The camera sees the glass structure and its architectural details. The background must clearly communicate shower enclosure hardware."
+          },
+          {
+            test: /(кухонн.*смесител|смесител.*кухн|кран.*кухн)/i,
+            name: "kitchen faucet",
+            environment:
+              "A contemporary designer kitchen sink area. A refined stone countertop, a simple backsplash, subtle cabinetry and realistic kitchen lighting. The scene must clearly look like a kitchen, not a bathroom."
           },
           {
             test: /(смесител|кран|излив|аэратор)/i,
-            name: "bathroom or kitchen faucet",
-            scene:
-              "A refined contemporary bathroom or kitchen sink zone, selected " +
-              "to match the product name, with a clean stone countertop, " +
-              "subtle water details and restrained tile or backsplash materials. " +
-              "Keep the sink area believable and uncluttered. No city skyline."
+            name: "bathroom faucet",
+            environment:
+              "A modern bathroom washbasin area. A refined ceramic basin, light natural stone countertop, elegant wall tiles and subtle mirror reflections. The scene must clearly look like a bathroom vanity, not a kitchen."
           },
           {
-            test: /(шланг|лейк[аиу]|душ[еваяой]* систем|верхн[ийяе]* душ)/i,
-            name: "shower hose and shower accessories",
-            scene:
-              "A contemporary shower enclosure with glass, large-format " +
-              "porcelain tiles, a discreet shower wall and subtle water droplets. " +
-              "The environment should feel like a real shower area, not a sink zone."
+            test: /(лейк|верхн.*душ|душев.*систем|душев.*гарнитур)/i,
+            name: "shower head and shower system",
+            environment:
+              "A modern shower area with large-format porcelain wall tiles, a glass shower screen, a discreet shower niche and realistic water details. The scene must clearly communicate a shower installation."
           },
           {
-            test: /(дозатор|диспенсер|мыл[оа])/i,
+            test: /(шланг)/i,
+            name: "shower hose",
+            environment:
+              "A clean contemporary shower enclosure with glass panels, a chrome shower connection area, stone porcelain tiles and subtle realistic reflections. Keep the scene simple and clearly recognizable as a shower."
+          },
+          {
+            test: /(дозатор|диспенсер|мыл)/i,
             name: "soap dispenser",
-            scene:
-              "A tasteful bathroom vanity with a clean stone countertop, " +
-              "simple tiled backsplash and restrained bathroom accessories. " +
-              "Leave a clear counter area for the real product. No clutter."
+            environment:
+              "A refined bathroom vanity with a light stone countertop, elegant tiled backsplash, ceramic basin partially visible and soft natural daylight. Leave a clean countertop display area."
           },
           {
             test: /(сифон|слив|трап)/i,
-            name: "drainage and plumbing",
-            scene:
-              "A clean modern bathroom wet area with stone or porcelain tile, " +
-              "a realistic shower floor and subtle water details. Avoid unrelated " +
-              "decorative objects."
+            name: "bathroom drainage and plumbing",
+            environment:
+              "A realistic modern shower floor with large-format stone porcelain tiles, a visible drainage area, subtle water reflections and clean architectural details. No unrelated bathroom accessories."
           },
           {
-            test: /(еда|продукт питания|кофе|чай|сладост|шоколад|печень|фрукт|ягод)/i,
-            name: "food and beverage",
-            scene:
-              "A refined food photography setting with a suitable natural " +
-              "ingredient-inspired surface and restrained ingredient accents. " +
-              "No bathroom, plumbing or household fixtures."
+            test: /(держател|крючок|полк|мыльниц|стакан.*ванн)/i,
+            name: "bathroom accessories",
+            environment:
+              "A modern coordinated bathroom interior with elegant wall tiles, a stone surface, subtle chrome details and restrained bathroom decor. Keep the environment realistic and uncluttered."
           },
           {
             test: /(наушник|телефон|смартфон|заряд|электрон|гаджет)/i,
             name: "consumer electronics",
-            scene:
-              "A minimal contemporary technology studio with premium matte " +
-              "surfaces, subtle architectural lighting and clean geometric depth. " +
-              "No bathroom, kitchen or unrelated household props."
-          },
-          {
-            test: /(домашн|интерьер|декор|мебел|текстил|посуда)/i,
-            name: "home and interior goods",
-            scene:
-              "A calm contemporary interior with coordinated natural materials, " +
-              "soft daylight and restrained decor appropriate to the product. " +
-              "Keep the main display area uncluttered."
+            environment:
+              "A contemporary technology studio with refined matte surfaces, architectural geometry, subtle reflections and controlled studio lighting. No household interiors."
           }
         ];
 
-        const matchedCategory = categoryRules.find(rule =>
+        const matched = categories.find(category =>
+          category.test.test(productText)
+        );
+
+        const categoryName = matched
+          ? matched.name
+          : "general consumer product";
+
+        const environment = matched
+          ? matched.environment
+          : "A contemporary commercial display environment with materials and surroundings logically suited to the named product. Avoid random interiors and unrelated objects.";
+
+        // Учитываем цвет и материал, если они указаны.
+        const materialColorRules = [
+          {
+            test: /(хром|хромирован|серебрист|нержавеющ.*сталь)/i,
+            value:
+              "Use a coordinated cool neutral palette with silver-grey details, white stone and restrained reflections."
+          },
+          {
+            test: /(чёрн|черн|матов.*чёрн|матов.*черн)/i,
+            value:
+              "Use a sophisticated neutral palette with graphite, charcoal and light stone contrast. Do not make the entire scene black."
+          },
+          {
+            test: /(белый|белая|белое|белые)/i,
+            value:
+              "Use balanced medium-tone surroundings so a white product remains visually distinct and clearly visible."
+          },
+          {
+            test: /(золот|латун)/i,
+            value:
+              "Use warm neutral stone and restrained warm metallic accents, without excessive gold decoration."
+          }
+        ];
+
+        const materialRule = materialColorRules.find(rule =>
           rule.test.test(productText)
         );
 
-        const categoryName = matchedCategory
-          ? matchedCategory.name
-          : "general consumer product";
+        const colorDirection = materialRule
+          ? materialRule.value
+          : "Use a balanced natural color palette that complements the product category.";
 
-        const categoryScene = matchedCategory
-          ? matchedCategory.scene
-          : "A tasteful contemporary commercial setting chosen specifically " +
-            "for the named product category. Do not use a random room or unrelated props.";
-
-        // Llama уточняет художественное описание сцены.
-        const artDirection = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          {
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a senior commercial advertising art director. " +
-                  "Write a concise English image-generation prompt for the " +
-                  "BACKGROUND ENVIRONMENT ONLY. The real product will be " +
-                  "placed over it later as an unchanged transparent PNG. " +
-                  "Never depict the product, a duplicate product, product " +
-                  "parts, text, labels, logos or watermarks. Follow the " +
-                  "provided category scene literally. Do not replace it with " +
-                  "a generic luxury room or a city view. Describe surfaces, " +
-                  "lighting, perspective and composition. Keep the central " +
-                  "lower area visually calm and unobstructed. Return only " +
-                  "the scene description in English, maximum 90 words."
-              },
-              {
-                role: "user",
-                content:
-                  "Product: " + productName +
-                  "\nCharacteristics: " + characteristics +
-                  "\nDetected category: " + categoryName +
-                  "\nRequired environment: " + categoryScene +
-                  "\nVisual style: " + selectedStyle +
-                  "\nThe required environment is mandatory. Create a coherent " +
-                  "vertical advertising background with a clear lower-central " +
-                  "space for a real product overlay."
-              }
-            ]
-          }
-        );
-
-        const sceneDescription = String(
-          artDirection.response || artDirection.text || ""
-        ).trim();
-
-        if (!sceneDescription) {
-          throw new Error(
-            "AI не смог подготовить описание рекламной сцены"
-          );
-        }
-
-        // Финальный промпт для FLUX.
-        const finalPrompt = (
-          "Photorealistic vertical 3:4 commercial advertising BACKGROUND. " +
-          "MANDATORY PRODUCT CATEGORY: " + categoryName + ". " +
-          "MANDATORY ENVIRONMENT: " + categoryScene + " " +
-          "Additional art direction: " + sceneDescription + ". " +
-          "Style: " + selectedStyle + ". " +
-          "Professional realistic architectural photography, coherent " +
-          "perspective, believable materials, soft directional lighting, " +
-          "natural ambient shadows, restrained reflections, refined color " +
-          "grading. Leave a clean, unobstructed lower-central display area " +
-          "for overlaying the actual product photo. " +
-          "The environment must match the category; do not invent another room. " +
-          "Background only. Absolutely no product, no product replica, no " +
-          "floating objects, no text, no letters, no typography, no logos, " +
-          "no watermark."
-        ).slice(0, 2048);
+        // Формируем единое описание без противоречащих инструкций.
+        const finalPrompt = [
+          "Create a photorealistic vertical 3:4 commercial advertising background.",
+          "PRODUCT CATEGORY: " + categoryName + ".",
+          "ENVIRONMENT: " + environment,
+          "COLOR DIRECTION: " + colorDirection,
+          "VISUAL STYLE: " + selectedStyle + ".",
+          "Composition: professional architectural advertising photography, coherent perspective, realistic materials, natural depth, believable lighting and subtle ambient shadows.",
+          "Reserve a visually calm, unobstructed area in the lower center for placing the real product photograph later.",
+          "Keep the upper area relatively clean for a headline.",
+          "The environment must look specifically designed for this product category.",
+          "Do not create a generic luxury interior.",
+          "Do not mix bathroom, kitchen and unrelated environments.",
+          "BACKGROUND ONLY: do not show the actual product, its replica, similar products, product parts or floating objects.",
+          "No text, no letters, no typography, no logos, no labels, no watermark."
+        ].join(" ");
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
           {
-            prompt: finalPrompt,
-            steps: 4
+            prompt: finalPrompt.slice(0, 2048),
+            steps: 6
           }
         );
 
@@ -531,7 +549,9 @@ decoration: none
         const end = answer.lastIndexOf("}");
 
         if (start === -1 || end === -1) {
-          throw new Error("AI не вернул корректный JSON");
+          throw new Error(
+            "AI не вернул корректный JSON"
+          );
         }
 
         const data = JSON.parse(
