@@ -4,111 +4,605 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cardly AI</title>
+<title>Cardly AI — Product Design Studio</title>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --blue:#2868dc;
+  --ink:#172337;
+  --muted:#8190a5;
+  --line:#e6ebf2;
+  --surface:#fff;
+  --bg:#f3f6fa;
+}
+
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:#f3f6fb;color:#172033}
+
+body{
+  margin:0;
+  font-family:'DM Sans',Arial,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+}
+
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-.app{max-width:1280px;margin:auto;padding:28px 20px 60px}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:30px}
-.logo{font-size:27px;font-weight:850;letter-spacing:-1.2px;color:#1769e8}
-.logo span{color:#172033}
-.header-caption{color:#7a879b;font-size:13px}
-.main-grid{display:grid;grid-template-columns:minmax(300px,430px) minmax(320px,1fr);gap:24px;align-items:start}
-.panel{background:#fff;border:1px solid #e6ebf2;border-radius:20px;padding:23px;box-shadow:0 8px 30px rgba(28,48,80,.045)}
-.panel h2{font-size:18px;margin:0 0 20px}
-.field{margin-bottom:17px}
-.field label{display:block;margin-bottom:8px;font-size:13px;font-weight:700;color:#344158}
-input[type=text],textarea,select{display:block;width:100%;border:1px solid #dce3ed;border-radius:11px;padding:12px 13px;outline:none;color:#172033;background:#fff}
-input[type=text]:focus,textarea:focus,select:focus{border-color:#4388f5;box-shadow:0 0 0 3px rgba(67,136,245,.12)}
-textarea{min-height:95px;resize:vertical;line-height:1.5}
-.upload-area{border:2px dashed #cbd7e8;border-radius:15px;padding:24px 15px;text-align:center;background:#f9fbfe}
-.upload-area.dragover{border-color:#2877ed;background:#eef5ff}
-.upload-icon{font-size:30px;margin-bottom:9px}
-.upload-area p{margin:5px 0;font-size:13px;color:#7a879b}
-.upload-area strong{display:block;margin-bottom:5px;font-size:14px}
-.upload-button{display:inline-block;margin-top:12px;padding:10px 16px;background:#eaf2ff;color:#1769e8;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+
+.app{
+  max-width:1340px;
+  margin:auto;
+  padding:30px 24px 65px;
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.logo{
+  font-family:'Manrope',sans-serif;
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:-1.5px;
+  color:#2467db;
+}
+
+.logo span{color:#19283d}
+
+.header-caption{
+  color:#8592a5;
+  font-size:13px;
+}
+
+.main-grid{
+  display:grid;
+  grid-template-columns:minmax(300px,420px) minmax(0,1fr);
+  gap:25px;
+  align-items:start;
+}
+
+.panel{
+  background:#fff;
+  border:1px solid #e8edf4;
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 12px 40px rgba(31,49,76,.045);
+}
+
+.panel h2{
+  font-family:'Manrope',sans-serif;
+  font-size:18px;
+  font-weight:800;
+  margin:0 0 22px;
+  letter-spacing:-.4px;
+}
+
+.field{margin-bottom:19px}
+
+.field label{
+  display:block;
+  margin-bottom:9px;
+  font-size:13px;
+  font-weight:700;
+  color:#34445b;
+}
+
+input[type=text],textarea,select{
+  display:block;
+  width:100%;
+  border:1px solid #e0e6ef;
+  border-radius:12px;
+  padding:13px 14px;
+  outline:none;
+  color:#172337;
+  background:#fff;
+  transition:.2s;
+}
+
+input[type=text]:focus,textarea:focus,select:focus{
+  border-color:#5b91e9;
+  box-shadow:0 0 0 4px rgba(55,119,224,.09);
+}
+
+textarea{
+  min-height:100px;
+  resize:vertical;
+  line-height:1.55;
+}
+
+.upload-area{
+  border:1.5px dashed #cbd6e5;
+  border-radius:16px;
+  padding:26px 15px;
+  text-align:center;
+  background:#f9fbfe;
+  transition:.2s;
+}
+
+.upload-area.dragover{
+  border-color:#3478e6;
+  background:#eff5ff;
+}
+
+.upload-icon{
+  font-size:30px;
+  margin-bottom:9px;
+}
+
+.upload-area p{
+  margin:5px 0;
+  font-size:12px;
+  color:#8592a5;
+}
+
+.upload-area strong{
+  display:block;
+  margin-bottom:5px;
+  font-size:14px;
+}
+
+.upload-button{
+  display:inline-block;
+  margin-top:13px;
+  padding:10px 17px;
+  background:#eaf2ff;
+  color:#2467d8;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
 #fileInput{display:none}
-.uploaded-preview{display:none;margin-top:14px;text-align:center}
-.uploaded-preview img{max-width:100%;max-height:190px;object-fit:contain;border-radius:10px;background:#edf1f6}
-.status{margin-top:10px;color:#718096;font-size:12px;line-height:1.45}
+
+.uploaded-preview{
+  display:none;
+  margin-top:14px;
+  text-align:center;
+}
+
+.uploaded-preview img{
+  max-width:100%;
+  max-height:180px;
+  object-fit:contain;
+  border-radius:10px;
+  background:#f0f3f7;
+}
+
+.status{
+  margin-top:12px;
+  color:#78879b;
+  font-size:12px;
+  line-height:1.55;
+}
+
 .status.success{color:#16834c}
 .status.error{color:#d13c3c}
-.status.loading{color:#1769e8}
-.primary-button,.secondary-button{display:block;width:100%;border:0;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:750}
-.primary-button{color:#fff;background:linear-gradient(135deg,#2478ef,#155bd0);box-shadow:0 6px 15px rgba(31,105,225,.2)}
-.secondary-button{margin-top:10px;color:#1769e8;background:#edf4ff}
-.primary-button:disabled,.secondary-button:disabled{opacity:.55;cursor:not-allowed}
-.divider{height:1px;background:#edf0f5;margin:20px 0}
-.preview-panel{min-height:650px}
-.preview-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.status.loading{color:#2868dc}
+
+.primary-button,.secondary-button{
+  display:block;
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:15px 16px;
+  font-size:14px;
+  font-weight:750;
+  transition:transform .2s,box-shadow .2s;
+}
+
+.primary-button{
+  color:#fff;
+  background:linear-gradient(120deg,#347ff0,#2059c7);
+  box-shadow:0 7px 18px rgba(39,105,219,.2);
+}
+
+.primary-button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 23px rgba(39,105,219,.25);
+}
+
+.secondary-button{
+  margin-top:10px;
+  color:#2467d8;
+  background:#edf4ff;
+}
+
+.primary-button:disabled,.secondary-button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.divider{
+  height:1px;
+  background:#edf0f5;
+  margin:21px 0;
+}
+
+.preview-panel{min-height:690px}
+
+.preview-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:20px;
+}
+
 .preview-heading h2{margin:0}
-.preview-tag{padding:6px 10px;border-radius:20px;background:#edf4ff;color:#1769e8;font-size:11px;font-weight:750}
-.preview-workspace{display:flex;justify-content:center;align-items:flex-start;padding:16px;min-height:570px;border-radius:15px;background:#f4f6fa;overflow:auto}
-#card{position:relative;width:450px;height:600px;flex:0 0 auto;overflow:hidden;border-radius:5px;background:#edf4fa;color:#15233a;isolation:isolate}
-#card .card-background{position:absolute;inset:0;z-index:-3;background:radial-gradient(circle at 80% 20%,rgba(74,161,255,.18),transparent 35%),linear-gradient(145deg,#f8fbff,#e5f0fa)}
-#card.scene-composition .card-background{background-size:cover;background-position:center}
-#card .scene-overlay{position:absolute;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 36%,rgba(255,255,255,.03))}
-.card-title{position:absolute;z-index:3;top:35px;left:30px;right:30px;margin:0;font-size:31px;line-height:1.08;font-weight:850;letter-spacing:-.8px;text-transform:uppercase;overflow-wrap:anywhere}
-.card-subtitle{position:absolute;z-index:3;top:110px;left:31px;right:31px;font-size:14px;line-height:1.35;color:#56657a}
-.card-product{position:absolute;z-index:2;width:68%;max-height:67%;object-fit:contain;left:50%;top:57%;transform:translate(-50%,-50%);filter:drop-shadow(0 17px 16px rgba(20,35,55,.2))}
-.card-features{position:absolute;z-index:4;left:30px;right:30px;bottom:27px;display:flex;flex-wrap:wrap;gap:8px}
-.feature{max-width:100%;padding:8px 11px;border-radius:8px;color:#174b87;background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.75);font-size:12px;font-weight:700;box-shadow:0 3px 10px rgba(25,50,80,.06)}
-.card-accent{position:absolute;z-index:1;top:0;left:0;width:8px;height:100%;background:#2678e9}
-#card.accent-cyan .card-accent{background:#16b8d5}
-#card.accent-green .card-accent{background:#20a477}
-#card.accent-orange .card-accent{background:#f18a32}
-#card.accent-violet .card-accent{background:#8561dc}
-#card.accent-black .card-accent{background:#202735}
-#card.background-dark{color:#fff;background:#182538}
-#card.background-dark .card-background{background:linear-gradient(145deg,#17283d,#30445e)}
-#card.background-dark .card-subtitle{color:#d4dfed}
-#card.background-soft .card-background{background:linear-gradient(145deg,#f4f1ed,#e7edf2)}
-#card.background-gradient .card-background{background:linear-gradient(135deg,#d9edff,#eef5ff 55%,#dce8f6)}
-#card.background-accent .card-background{background:linear-gradient(145deg,#d9eaff,#a9cdf6)}
-#card.design-editorial .card-title{font-family:Georgia,serif;font-weight:500;text-transform:none;font-size:35px;letter-spacing:-1px}
-#card.design-showcase .card-product{filter:drop-shadow(0 20px 18px rgba(20,35,55,.26))}
-#card.design-infographic .feature{border-radius:4px}
-#card.design-cinematic .card-product{filter:drop-shadow(0 18px 25px rgba(0,0,0,.3))}
-.preview-actions{display:flex;gap:10px;margin-top:16px}
+
+.preview-tag{
+  padding:7px 11px;
+  border-radius:30px;
+  background:#edf4ff;
+  color:#2868dc;
+  font-size:11px;
+  font-weight:800;
+}
+
+.preview-workspace{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:22px;
+  min-height:610px;
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 50% 30%,#fff 0%,#f1f4f9 75%);
+  overflow:auto;
+}
+
+/* ОСНОВНАЯ КАРТОЧКА */
+
+#card{
+  position:relative;
+  width:450px;
+  height:600px;
+  flex:0 0 auto;
+  overflow:hidden;
+  border-radius:7px;
+  background:#edf1f6;
+  color:#17263c;
+  isolation:isolate;
+  box-shadow:0 18px 55px rgba(20,36,59,.14);
+}
+
+/* ФОН */
+
+#card .card-background{
+  position:absolute;
+  inset:0;
+  z-index:-5;
+  background:
+    radial-gradient(ellipse at 78% 20%,rgba(100,170,245,.24),transparent 43%),
+    linear-gradient(145deg,#f9fbff,#e5edf7);
+  background-size:cover;
+  background-position:center;
+}
+
+#card .scene-overlay{
+  position:absolute;
+  inset:0;
+  z-index:-4;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.28),transparent 35%,rgba(15,30,50,.06)),
+    linear-gradient(90deg,rgba(255,255,255,.09),transparent 65%);
+}
+
+/* МЯГКОЕ СВЕЧЕНИЕ */
+
+#card::before{
+  content:"";
+  position:absolute;
+  width:350px;
+  height:350px;
+  right:-140px;
+  bottom:-90px;
+  border-radius:50%;
+  background:rgba(255,255,255,.22);
+  filter:blur(65px);
+  z-index:-2;
+  pointer-events:none;
+}
+
+#card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:8;
+  pointer-events:none;
+  box-shadow:inset 0 0 65px rgba(20,35,55,.045);
+}
+
+/* ЗАГОЛОВОК */
+
+.card-title{
+  position:absolute;
+  z-index:5;
+  top:35px;
+  left:34px;
+  right:34px;
+  margin:0;
+  font-family:'Manrope','DM Sans',sans-serif;
+  font-size:31px;
+  line-height:1.12;
+  font-weight:800;
+  letter-spacing:-1.25px;
+  text-transform:none;
+  overflow-wrap:anywhere;
+  color:inherit;
+  text-shadow:0 1px 1px rgba(255,255,255,.12);
+}
+
+.card-subtitle{
+  position:absolute;
+  z-index:5;
+  top:110px;
+  left:35px;
+  right:35px;
+  font-size:14px;
+  line-height:1.45;
+  font-weight:500;
+  letter-spacing:-.15px;
+  color:#5c6a7e;
+  max-width:330px;
+}
+
+/* ТОВАР */
+
+.card-product{
+  position:absolute;
+  z-index:3;
+  width:68%;
+  max-height:68%;
+  object-fit:contain;
+  left:50%;
+  top:57%;
+  transform:translate(-50%,-50%);
+
+  filter:
+    drop-shadow(0 5px 5px rgba(15,28,48,.12))
+    drop-shadow(0 15px 14px rgba(15,28,48,.17))
+    drop-shadow(0 28px 22px rgba(15,28,48,.12));
+
+  transition:filter .25s;
+}
+
+/* ПЛАШКИ */
+
+.card-features{
+  position:absolute;
+  z-index:6;
+  left:31px;
+  right:31px;
+  bottom:27px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  gap:8px;
+}
+
+.feature{
+  max-width:100%;
+  padding:9px 13px;
+  border-radius:9px;
+  color:#253c59;
+  background:rgba(255,255,255,.83);
+  border:1px solid rgba(255,255,255,.8);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  font-size:11px;
+  line-height:1.3;
+  font-weight:700;
+  letter-spacing:.05px;
+  box-shadow:0 5px 16px rgba(20,40,65,.09);
+}
+
+/* АКЦЕНТ */
+
+.card-accent{
+  position:absolute;
+  z-index:4;
+  top:0;
+  left:0;
+  width:3px;
+  height:100%;
+  background:#3c7de1;
+}
+
+#card.accent-cyan .card-accent{background:#20afc7}
+#card.accent-green .card-accent{background:#299a76}
+#card.accent-orange .card-accent{background:#d78a4c}
+#card.accent-violet .card-accent{background:#8064c8}
+#card.accent-black .card-accent{background:#283449}
+
+/* СВЕТЛЫЕ СТИЛИ */
+
+#card.background-light{color:#17263c}
+#card.background-soft{color:#283547}
+
+#card.background-soft .card-background{
+  background:linear-gradient(145deg,#f6f2ec,#e8edf0);
+}
+
+#card.background-gradient .card-background{
+  background:
+    radial-gradient(circle at 78% 20%,rgba(255,255,255,.9),transparent 38%),
+    linear-gradient(135deg,#dcecff,#eff5fb 55%,#d8e5f2);
+}
+
+#card.background-accent .card-background{
+  background:
+    radial-gradient(circle at 80% 18%,rgba(255,255,255,.55),transparent 35%),
+    linear-gradient(145deg,#d6e9fb,#a9c9e9);
+}
+
+/* ТЁМНЫЙ СТИЛЬ */
+
+#card.background-dark{
+  color:#fff;
+  background:#192638;
+}
+
+#card.background-dark .card-background{
+  background:linear-gradient(145deg,#152337,#33485f);
+}
+
+#card.background-dark .scene-overlay{
+  background:linear-gradient(180deg,rgba(10,20,35,.1),transparent 40%,rgba(10,20,35,.24));
+}
+
+#card.background-dark .card-subtitle{color:#d8e3ef}
+
+#card.background-dark .feature{
+  color:#f1f6ff;
+  background:rgba(255,255,255,.13);
+  border-color:rgba(255,255,255,.2);
+}
+
+/* СТИЛИ */
+
+#card.design-editorial .card-title{
+  font-family:Georgia,serif;
+  font-size:37px;
+  font-weight:500;
+  letter-spacing:-1.2px;
+}
+
+#card.design-showcase .card-product{
+  filter:
+    drop-shadow(0 7px 7px rgba(15,28,48,.16))
+    drop-shadow(0 22px 23px rgba(15,28,48,.22))
+    drop-shadow(0 35px 28px rgba(15,28,48,.1));
+}
+
+#card.design-infographic .feature{
+  border-radius:7px;
+  font-size:10px;
+}
+
+#card.design-cinematic .card-product{
+  filter:
+    drop-shadow(0 8px 8px rgba(0,0,0,.2))
+    drop-shadow(0 25px 27px rgba(0,0,0,.27));
+}
+
+#card.design-lifestyle .card-title{
+  font-weight:700;
+  letter-spacing:-1px;
+}
+
+/* ДЕЙСТВИЯ */
+
+.preview-actions{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+}
+
 .preview-actions button{flex:1}
-.small-note{margin-top:12px;color:#8a96a8;font-size:11px;line-height:1.5}
-.progress-line{display:none;height:5px;background:#e7edf5;border-radius:10px;margin-top:13px;overflow:hidden}
-.progress-line span{display:block;width:35%;height:100%;background:#2877ed;border-radius:10px;animation:progress 1.3s ease-in-out infinite alternate}
-@keyframes progress{from{transform:translateX(-30%)}to{transform:translateX(210%)}}
-@media(max-width:850px){.main-grid{grid-template-columns:1fr}.preview-panel{min-height:auto}.preview-workspace{min-height:470px}}
-@media(max-width:520px){.app{padding:18px 12px 35px}.header-caption{display:none}.panel{padding:17px}.preview-workspace{padding:8px;min-height:auto}#card{width:min(100%,360px);height:auto;aspect-ratio:3/4}.card-title{top:6%;left:7%;right:7%;font-size:clamp(19px,6vw,27px)}.card-subtitle{top:19%;left:7%;right:7%;font-size:11px}.card-features{left:7%;right:7%;bottom:5%}.feature{font-size:10px;padding:6px 8px}}
+
+.small-note{
+  margin-top:12px;
+  color:#8a96a8;
+  font-size:11px;
+  line-height:1.55;
+}
+
+.progress-line{
+  display:none;
+  height:5px;
+  background:#e7edf5;
+  border-radius:10px;
+  margin-top:13px;
+  overflow:hidden;
+}
+
+.progress-line span{
+  display:block;
+  width:35%;
+  height:100%;
+  background:#2877ed;
+  border-radius:10px;
+  animation:progress 1.3s ease-in-out infinite alternate;
+}
+
+@keyframes progress{
+  from{transform:translateX(-30%)}
+  to{transform:translateX(210%)}
+}
+
+@media(max-width:850px){
+  .main-grid{grid-template-columns:1fr}
+  .preview-panel{min-height:auto}
+  .preview-workspace{min-height:470px}
+}
+
+@media(max-width:520px){
+  .app{padding:18px 12px 35px}
+  .header-caption{display:none}
+  .panel{padding:17px}
+  .preview-workspace{padding:8px;min-height:auto}
+  #card{width:min(100%,360px);height:auto;aspect-ratio:3/4}
+  .card-title{
+    top:6%;
+    left:7%;
+    right:7%;
+    font-size:clamp(19px,6vw,27px);
+  }
+  .card-subtitle{
+    top:19%;
+    left:7%;
+    right:7%;
+    font-size:11px;
+  }
+  .card-features{left:7%;right:7%;bottom:5%}
+  .feature{font-size:10px;padding:7px 9px}
+}
 </style>
 </head>
 
 <body>
 <div class="app">
+
 <header>
   <div class="logo">Cardly<span> AI</span></div>
-  <div class="header-caption">Создание инфографики для Wildberries и Ozon</div>
+  <div class="header-caption">Product Design Studio · Wildberries & Ozon</div>
 </header>
 
 <main class="main-grid">
+
 <section class="panel">
   <h2>Создание карточки</h2>
 
   <div class="field">
     <label>Фотография товара</label>
+
     <div class="upload-area" id="uploadArea">
       <div class="upload-icon">📦</div>
       <strong>Загрузите фотографию товара</strong>
       <p>PNG, JPG или WEBP</p>
       <p>Рекомендуется изображение на простом фоне</p>
-      <label class="upload-button" for="fileInput">Выбрать фотографию</label>
+
+      <label class="upload-button" for="fileInput">
+        Выбрать фотографию
+      </label>
+
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp">
     </div>
+
     <div class="uploaded-preview" id="uploadedPreview">
       <img id="uploadedImage" alt="Загруженный товар">
       <div class="status" id="removeStatus">Фотография загружена</div>
     </div>
+
     <div class="progress-line" id="progressLine"><span></span></div>
   </div>
 
@@ -135,35 +629,66 @@ textarea{min-height:95px;resize:vertical;line-height:1.5}
   </div>
 
   <div class="divider"></div>
-  <button class="primary-button" id="generateButton" type="button">✨ Создать AI-композицию</button>
-  <button class="secondary-button" id="simpleButton" type="button">Создать обычную карточку</button>
-  <div class="status" id="mainStatus">Загрузите товар, укажите его название и нажмите «Создать AI-композицию».</div>
-  <div class="small-note">AI анализирует загруженный товар, подбирает окружение и создаёт фон. Исходное изображение товара сохраняется и накладывается поверх фона.</div>
+
+  <button class="primary-button" id="generateButton" type="button">
+    ✦ Создать AI-композицию
+  </button>
+
+  <button class="secondary-button" id="simpleButton" type="button">
+    Создать обычную карточку
+  </button>
+
+  <div class="status" id="mainStatus">
+    Загрузите товар, укажите его название и нажмите «Создать AI-композицию».
+  </div>
+
+  <div class="small-note">
+    AI подбирает окружение по названию и характеристикам товара.
+    Оригинальная фотография сохраняется и накладывается поверх фона.
+  </div>
 </section>
 
 <section class="panel preview-panel">
+
   <div class="preview-heading">
     <h2>Предпросмотр</h2>
     <span class="preview-tag">900 × 1200</span>
   </div>
 
   <div class="preview-workspace">
+
     <div id="card" class="background-light accent-blue design-premium">
+
       <div class="card-background" id="cardBackground"></div>
       <div class="scene-overlay"></div>
       <div class="card-accent"></div>
-      <h1 class="card-title" id="cardTitle">ВАШ ТОВАР</h1>
-      <div class="card-subtitle" id="cardSubtitle">Здесь появится описание товара</div>
+
+      <h1 class="card-title" id="cardTitle">Ваш товар</h1>
+
+      <div class="card-subtitle" id="cardSubtitle">
+        Здесь появится описание товара
+      </div>
+
       <img class="card-product" id="cardProduct" alt="Товар" style="display:none">
+
       <div class="card-features" id="cardFeatures"></div>
+
     </div>
+
   </div>
 
   <div class="preview-actions">
-    <button class="secondary-button" id="downloadButton" type="button" disabled>↓ Скачать PNG</button>
+    <button class="secondary-button" id="downloadButton" type="button" disabled>
+      ↓ Скачать PNG
+    </button>
   </div>
-  <div class="small-note">Итоговое изображение сохраняется в формате PNG размером 900 × 1200 пикселей.</div>
+
+  <div class="small-note">
+    Итоговое изображение сохраняется в формате PNG размером 900 × 1200 пикселей.
+  </div>
+
 </section>
+
 </main>
 </div>
 
@@ -256,6 +781,7 @@ async function loadSegmentationModel(){
       setRemoveStatus("Загружаем AI-модель удаления фона...","loading");
 
       const processor=await AutoProcessor.from_pretrained(MODEL_ID);
+
       const model=await AutoModel.from_pretrained(MODEL_ID,{
         device:"wasm",
         dtype:"fp32"
@@ -267,22 +793,18 @@ async function loadSegmentationModel(){
       throw error;
     });
   }
+
   return modelPromise;
 }
 
 function getModelInput(processed){
-  console.log("BIRE FNET PROCESSOR OUTPUT:",processed);
-
   const input=
     processed?.input_image||
     processed?.pixel_values||
     processed?.images;
 
   if(!input){
-    throw new Error(
-      "AutoProcessor не вернул входное изображение. " +
-      "Проверьте консоль браузера."
-    );
+    throw new Error("AutoProcessor не вернул входное изображение.");
   }
 
   return input;
@@ -310,7 +832,8 @@ function trimTransparentEdges(sourceCanvas){
 
   if(!found)return sourceCanvas;
 
-  const padding=Math.round(Math.min(width,height)*0.025);
+  const padding=Math.round(Math.min(width,height)*.025);
+
   minX=Math.max(0,minX-padding);
   minY=Math.max(0,minY-padding);
   maxX=Math.min(width-1,maxX+padding);
@@ -318,6 +841,7 @@ function trimTransparentEdges(sourceCanvas){
 
   const cropWidth=maxX-minX+1;
   const cropHeight=maxY-minY+1;
+
   const result=document.createElement("canvas");
   result.width=cropWidth;
   result.height=cropHeight;
@@ -331,21 +855,15 @@ function trimTransparentEdges(sourceCanvas){
   return result;
 }
 
-/*
-  Преобразует выходной тензор BiRefNet в Canvas-маску.
-  Размеры берутся из tensor.dims, а не из RawImage.
-*/
 function createMaskCanvas(maskTensor,originalWidth,originalHeight){
-  if(!maskTensor || !maskTensor.dims){
+  if(!maskTensor||!maskTensor.dims){
     throw new Error("BiRefNet вернул результат без размерностей.");
   }
 
   const dims=Array.from(maskTensor.dims).map(Number);
 
   if(dims.length<2){
-    throw new Error(
-      "Неподдерживаемая форма маски: "+JSON.stringify(dims)
-    );
+    throw new Error("Неподдерживаемая форма маски: "+JSON.stringify(dims));
   }
 
   const maskHeight=dims[dims.length-2];
@@ -357,9 +875,7 @@ function createMaskCanvas(maskTensor,originalWidth,originalHeight){
     maskWidth<=0||
     maskHeight<=0
   ){
-    throw new Error(
-      "Некорректные размерности маски: "+JSON.stringify(dims)
-    );
+    throw new Error("Некорректные размерности маски: "+JSON.stringify(dims));
   }
 
   const width=Math.floor(Number(originalWidth));
@@ -374,24 +890,11 @@ function createMaskCanvas(maskTensor,originalWidth,originalHeight){
     throw new Error("Некорректный размер исходного изображения.");
   }
 
-  // Для маски BiRefNet обычно имеет форму [1, 1, H, W].
-  // Получаем плоские значения без преобразования через RawImage.
-  let probabilityTensor;
-
-  try{
-    probabilityTensor=maskTensor.sigmoid();
-  }catch(error){
-    throw new Error("Не удалось обработать значения маски: "+error.message);
-  }
-
+  const probabilityTensor=maskTensor.sigmoid();
   const values=probabilityTensor.data;
 
-  if(!values || values.length<maskWidth*maskHeight){
-    throw new Error(
-      "Недостаточно данных в маске. Форма: "+
-      JSON.stringify(dims)+
-      ", элементов: "+(values?.length||0)
-    );
+  if(!values||values.length<maskWidth*maskHeight){
+    throw new Error("Недостаточно данных в маске.");
   }
 
   const canvas=document.createElement("canvas");
@@ -414,6 +917,7 @@ function createMaskCanvas(maskTensor,originalWidth,originalHeight){
       );
 
       const sourceIndex=sourceY*maskWidth+sourceX;
+
       const alpha=Math.max(
         0,
         Math.min(255,Math.round(Number(values[sourceIndex])*255))
@@ -434,6 +938,7 @@ function createMaskCanvas(maskTensor,originalWidth,originalHeight){
 
 async function removeBackground(file){
   if(isRemoving)return;
+
   isRemoving=true;
   progressLine.style.display="block";
 
@@ -467,40 +972,30 @@ async function removeBackground(file){
       inputCanvas.toDataURL("image/png")
     );
 
-    setRemoveStatus(
-      "AI анализирует изображение и удаляет фон...",
-      "loading"
-    );
+    setRemoveStatus("AI удаляет фон...","loading");
 
     const {processor,model}=await loadSegmentationModel();
 
     const processed=await processor(modelImage);
     const inputImage=getModelInput(processed);
 
-    // Входное имя input_image сохранено для текущей ONNX-модели.
     const output=await model({
       input_image:inputImage
     });
 
-    console.log("BIRE FNET MODEL OUTPUT:",output);
+    console.log("BIRE FNET OUTPUT:",output);
 
-    let maskTensor=
+    const maskTensor=
       output?.output||
       output?.logits||
       output?.[Object.keys(output||{})[0]];
 
-    if(!maskTensor || !maskTensor.dims){
-      throw new Error(
-        "Модель не вернула подходящий тензор маски."
-      );
+    if(!maskTensor||!maskTensor.dims){
+      throw new Error("Модель не вернула подходящую маску.");
     }
 
-    console.log("MASK TENSOR SHAPE:",maskTensor.dims);
-
     const maskCanvas=createMaskCanvas(
-      maskTensor,
-      width,
-      height
+      maskTensor,width,height
     );
 
     const resultCanvas=document.createElement("canvas");
@@ -508,21 +1003,17 @@ async function removeBackground(file){
     resultCanvas.height=height;
 
     const resultContext=resultCanvas.getContext(
-      "2d",
-      {willReadFrequently:true}
+      "2d",{willReadFrequently:true}
     );
 
-    // Рисуем исходный товар.
     resultContext.drawImage(inputCanvas,0,0,width,height);
 
-    // Применяем альфа-канал маски.
     const resultPixels=resultContext.getImageData(
       0,0,width,height
     );
 
     const maskPixels=maskCanvas.getContext(
-      "2d",
-      {willReadFrequently:true}
+      "2d",{willReadFrequently:true}
     ).getImageData(0,0,width,height);
 
     for(let i=0;i<resultPixels.data.length;i+=4){
@@ -538,23 +1029,15 @@ async function removeBackground(file){
     uploadedImage.src=cutoutImage;
     uploadedPreview.style.display="block";
 
-    setRemoveStatus(
-      "Фон удалён. Исходный товар готов к размещению.",
-      "success"
-    );
+    setRemoveStatus("Фон удалён. Товар готов к размещению.","success");
 
     renderProductPreview();
 
   }catch(error){
     console.error("BACKGROUND REMOVAL ERROR:",error);
 
-    setRemoveStatus(
-      "Не удалось удалить фон: "+error.message,
-      "error"
-    );
+    setRemoveStatus("Не удалось удалить фон: "+error.message,"error");
 
-    // Оставляем исходную фотографию, чтобы пользователь
-    // мог продолжить работу с карточкой.
     cutoutImage=await fileToDataURL(file);
     uploadedImage.src=cutoutImage;
     uploadedPreview.style.display="block";
@@ -598,7 +1081,7 @@ async function makeVisionImage(imageSource){
   ctx.fillRect(0,0,width,height);
   ctx.drawImage(img,0,0,width,height);
 
-  return canvas.toDataURL("image/jpeg",0.82);
+  return canvas.toDataURL("image/jpeg",.82);
 }
 
 async function requestDesign(){
@@ -659,18 +1142,12 @@ async function requestAIScene(){
 
   const scale=Math.max(
     50,
-    Math.min(
-      78,
-      Number(response.headers.get("X-Cardly-Scale"))||68
-    )
+    Math.min(78,Number(response.headers.get("X-Cardly-Scale"))||68)
   );
 
   const vertical=Math.max(
     43,
-    Math.min(
-      62,
-      Number(response.headers.get("X-Cardly-Vertical"))||55
-    )
+    Math.min(62,Number(response.headers.get("X-Cardly-Vertical"))||55)
   );
 
   return {
@@ -744,11 +1221,7 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
   card.classList.add("design-"+design);
 
   const backgrounds=[
-    "light",
-    "dark",
-    "soft",
-    "gradient",
-    "accent"
+    "light","dark","soft","gradient","accent"
   ];
 
   const background=backgrounds.includes(data.background)
@@ -758,12 +1231,7 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
   card.classList.add("background-"+background);
 
   const accents=[
-    "blue",
-    "cyan",
-    "green",
-    "orange",
-    "violet",
-    "black"
+    "blue","cyan","green","orange","violet","black"
   ];
 
   const accent=accents.includes(data.accent)
@@ -834,13 +1302,13 @@ async function generateAIComposition(){
     return;
   }
 
-  setLoading(true,"Шаг 1 из 2: создаём структуру карточки...");
+  setLoading(true,"Шаг 1 из 2: создаём дизайн карточки...");
 
   try{
     const design=await requestDesign();
 
     setStatus(
-      "Шаг 2 из 2: Vision анализирует товар, FLUX создаёт окружение...",
+      "Шаг 2 из 2: AI подбирает сцену и создаёт фон...",
       "loading"
     );
 
@@ -863,10 +1331,12 @@ async function generateAIComposition(){
 
   }catch(error){
     console.error("COMPOSITION ERROR:",error);
+
     setStatus(
       error.message||"Не удалось создать композицию",
       "error"
     );
+
   }finally{
     setLoading(false);
   }
@@ -896,10 +1366,7 @@ async function generateSimpleCard(){
 
     await renderCard(design);
 
-    setStatus(
-      "Карточка готова. Можно скачать изображение.",
-      "success"
-    );
+    setStatus("Карточка готова. Можно скачать изображение.","success");
 
   }catch(error){
     console.error("SIMPLE GENERATION ERROR:",error);
@@ -908,6 +1375,7 @@ async function generateSimpleCard(){
       error.message||"Не удалось создать карточку",
       "error"
     );
+
   }finally{
     setLoading(false);
   }
@@ -964,10 +1432,8 @@ async function downloadCard(){
   }catch(error){
     console.error("DOWNLOAD ERROR:",error);
 
-    setStatus(
-      "Ошибка скачивания: "+error.message,
-      "error"
-    );
+    setStatus("Ошибка скачивания: "+error.message,"error");
+
   }finally{
     downloadButton.disabled=false;
     downloadButton.textContent="↓ Скачать PNG";
@@ -984,18 +1450,12 @@ async function handleFile(file){
   ];
 
   if(!allowedTypes.includes(file.type)){
-    setStatus(
-      "Поддерживаются только PNG, JPG и WEBP.",
-      "error"
-    );
+    setStatus("Поддерживаются только PNG, JPG и WEBP.","error");
     return;
   }
 
   if(file.size>15*1024*1024){
-    setStatus(
-      "Размер файла не должен превышать 15 МБ.",
-      "error"
-    );
+    setStatus("Размер файла не должен превышать 15 МБ.","error");
     return;
   }
 
@@ -1024,9 +1484,7 @@ async function handleFile(file){
 
 fileInput.addEventListener("change",async event=>{
   const file=event.target.files?.[0];
-
   await handleFile(file);
-
   fileInput.value="";
 });
 
@@ -1041,28 +1499,15 @@ uploadArea.addEventListener("dragleave",()=>{
 
 uploadArea.addEventListener("drop",async event=>{
   event.preventDefault();
-
   uploadArea.classList.remove("dragover");
 
   const file=event.dataTransfer.files?.[0];
-
   await handleFile(file);
 });
 
-generateButton.addEventListener(
-  "click",
-  generateAIComposition
-);
-
-simpleButton.addEventListener(
-  "click",
-  generateSimpleCard
-);
-
-downloadButton.addEventListener(
-  "click",
-  downloadCard
-);
+generateButton.addEventListener("click",generateAIComposition);
+simpleButton.addEventListener("click",generateSimpleCard);
+downloadButton.addEventListener("click",downloadCard);
 
 setStatus("Загрузите товар, чтобы начать создание карточки.");
 </script>
