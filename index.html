@@ -328,35 +328,64 @@ function trimTransparentEdges(sourceCanvas){
   return result;
 }
 
-// Создаём Canvas из RawImage, не используя toCanvas().
+// Исправленная функция преобразования маски в Canvas.
 function rawImageToCanvas(rawImage){
-  const canvas=document.createElement("canvas");
-  canvas.width=rawImage.width;
-  canvas.height=rawImage.height;
+  const width = Number(rawImage.width);
+  const height = Number(rawImage.height);
 
-  const ctx=canvas.getContext("2d",{willReadFrequently:true});
-  const imageData=ctx.createImageData(rawImage.width,rawImage.height);
-
-  const source=rawImage.data;
-  const pixelCount=rawImage.width*rawImage.height;
-  const channels=rawImage.channels || Math.round(source.length/pixelCount);
-
-  if(!channels || source.length<pixelCount){
-    throw new Error("Не удалось определить формат данных маски");
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new Error(
+      "Некорректный размер маски: " + width + " × " + height
+    );
   }
 
-  for(let i=0;i<pixelCount;i++){
-    const sourceIndex=i*channels;
-    const value=source[sourceIndex] ?? 0;
-    const targetIndex=i*4;
+  const w = Math.floor(width);
+  const h = Math.floor(height);
 
-    imageData.data[targetIndex]=value;
-    imageData.data[targetIndex+1]=value;
-    imageData.data[targetIndex+2]=value;
-    imageData.data[targetIndex+3]=255;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext("2d", {
+    willReadFrequently: true
+  });
+
+  const imageData = ctx.createImageData(w, h);
+  const source = rawImage.data;
+
+  const pixelCount = w * h;
+  const channels = Number(rawImage.channels) ||
+    Math.round(source.length / pixelCount);
+
+  if (
+    !source ||
+    !Number.isInteger(channels) ||
+    channels < 1 ||
+    source.length < pixelCount * channels
+  ) {
+    throw new Error(
+      "Некорректные данные маски. Каналы: " + channels +
+      ", размер данных: " + (source?.length || 0)
+    );
   }
 
-  ctx.putImageData(imageData,0,0);
+  for (let i = 0; i < pixelCount; i++) {
+    const value = source[i * channels] ?? 0;
+    const index = i * 4;
+
+    imageData.data[index] = value;
+    imageData.data[index + 1] = value;
+    imageData.data[index + 2] = value;
+    imageData.data[index + 3] = 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
   return canvas;
 }
 
