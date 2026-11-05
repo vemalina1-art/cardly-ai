@@ -2,1340 +2,809 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cardly AI — создание инфографики</title>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardly AI</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: #f3f6fb;
-      color: #172033;
-    }
-
-    button, input, textarea, select { font: inherit; }
-    button { cursor: pointer; }
-
-    .app {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 20px 60px;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-
-    .logo {
-      font-size: 27px;
-      font-weight: 850;
-      letter-spacing: -1.2px;
-      color: #1769e8;
-    }
-
-    .logo span { color: #172033; }
-    .header-caption { color: #7a879b; font-size: 13px; }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: minmax(300px, 430px) minmax(320px, 1fr);
-      gap: 24px;
-      align-items: start;
-    }
-
-    .panel {
-      background: #fff;
-      border: 1px solid #e6ebf2;
-      border-radius: 20px;
-      padding: 23px;
-      box-shadow: 0 8px 30px rgba(28, 48, 80, .045);
-    }
-
-    .panel h2 { font-size: 18px; margin: 0 0 20px; }
-    .field { margin-bottom: 17px; }
-
-    .field label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #344158;
-    }
-
-    input[type="text"], textarea, select {
-      display: block;
-      width: 100%;
-      border: 1px solid #dce3ed;
-      border-radius: 11px;
-      padding: 12px 13px;
-      outline: none;
-      color: #172033;
-      background: #fff;
-      transition: border .2s, box-shadow .2s;
-    }
-
-    input[type="text"]:focus, textarea:focus, select:focus {
-      border-color: #4388f5;
-      box-shadow: 0 0 0 3px rgba(67, 136, 245, .12);
-    }
-
-    textarea { min-height: 95px; resize: vertical; line-height: 1.5; }
-
-    .upload-area {
-      border: 2px dashed #cbd7e8;
-      border-radius: 15px;
-      padding: 24px 15px;
-      text-align: center;
-      background: #f9fbfe;
-      transition: .2s;
-    }
-
-    .upload-area.dragover {
-      border-color: #2877ed;
-      background: #eef5ff;
-    }
-
-    .upload-icon { font-size: 30px; margin-bottom: 9px; }
-    .upload-area p { margin: 5px 0; font-size: 13px; color: #7a879b; }
-    .upload-area strong { display: block; margin-bottom: 5px; font-size: 14px; }
-
-    .upload-button {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 10px 16px;
-      background: #eaf2ff;
-      color: #1769e8;
-      border-radius: 9px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    #fileInput { display: none; }
-    .uploaded-preview { display: none; margin-top: 14px; text-align: center; }
-
-    .uploaded-preview img {
-      max-width: 100%;
-      max-height: 190px;
-      object-fit: contain;
-      border-radius: 10px;
-      background:
-        linear-gradient(45deg, #e8edf4 25%, transparent 25%),
-        linear-gradient(-45deg, #e8edf4 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #e8edf4 75%),
-        linear-gradient(-45deg, transparent 75%, #e8edf4 75%);
-      background-size: 16px 16px;
-      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-    }
-
-    .status { margin-top: 10px; color: #718096; font-size: 12px; line-height: 1.45; }
-    .status.success { color: #16834c; }
-    .status.error { color: #d13c3c; }
-    .status.loading { color: #1769e8; }
-
-    .primary-button, .secondary-button {
-      display: block;
-      width: 100%;
-      border: 0;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 14px;
-      font-weight: 750;
-      transition: .2s;
-    }
-
-    .primary-button {
-      color: #fff;
-      background: linear-gradient(135deg, #2478ef, #155bd0);
-      box-shadow: 0 6px 15px rgba(31, 105, 225, .2);
-    }
-
-    .primary-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 9px 20px rgba(31, 105, 225, .25);
-    }
-
-    .primary-button:disabled, .secondary-button:disabled {
-      opacity: .55;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .secondary-button { margin-top: 10px; color: #1769e8; background: #edf4ff; }
-    .secondary-button:hover { background: #e1edff; }
-
-    .divider { height: 1px; background: #edf0f5; margin: 20px 0; }
-    .preview-panel { min-height: 650px; }
-
-    .preview-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .preview-heading h2 { margin: 0; }
-
-    .preview-tag {
-      padding: 6px 10px;
-      border-radius: 20px;
-      background: #edf4ff;
-      color: #1769e8;
-      font-size: 11px;
-      font-weight: 750;
-    }
-
-    .preview-workspace {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 16px;
-      min-height: 570px;
-      border-radius: 15px;
-      background: #f4f6fa;
-      overflow: auto;
-    }
-
-    #card {
-      position: relative;
-      width: 450px;
-      height: 600px;
-      flex: 0 0 auto;
-      overflow: hidden;
-      border-radius: 5px;
-      background: #edf4fa;
-      color: #15233a;
-      isolation: isolate;
-    }
-
-    #card .card-background {
-      position: absolute;
-      inset: 0;
-      z-index: -3;
-      background:
-        radial-gradient(circle at 80% 20%, rgba(74, 161, 255, .18), transparent 35%),
-        linear-gradient(145deg, #f8fbff, #e5f0fa);
-    }
-
-    #card.scene-composition .card-background {
-      background-size: cover;
-      background-position: center;
-    }
-
-    #card .scene-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: -2;
-      pointer-events: none;
-      background: linear-gradient(
-        180deg,
-        rgba(255,255,255,.12),
-        transparent 36%,
-        rgba(255,255,255,.03)
-      );
-    }
-
-    .card-title {
-      position: absolute;
-      z-index: 3;
-      top: 35px;
-      left: 30px;
-      right: 30px;
-      margin: 0;
-      font-size: 31px;
-      line-height: 1.08;
-      font-weight: 850;
-      letter-spacing: -.8px;
-      text-transform: uppercase;
-      overflow-wrap: anywhere;
-    }
-
-    .card-subtitle {
-      position: absolute;
-      z-index: 3;
-      top: 110px;
-      left: 31px;
-      right: 31px;
-      font-size: 14px;
-      line-height: 1.35;
-      color: #56657a;
-    }
-
-    .card-product {
-      position: absolute;
-      z-index: 2;
-      width: 68%;
-      max-height: 67%;
-      object-fit: contain;
-      left: 50%;
-      top: 57%;
-      transform: translate(-50%, -50%);
-      filter: drop-shadow(0 17px 16px rgba(20, 35, 55, .2));
-    }
-
-    .card-features {
-      position: absolute;
-      z-index: 4;
-      left: 30px;
-      right: 30px;
-      bottom: 27px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .feature {
-      max-width: 100%;
-      padding: 8px 11px;
-      border-radius: 8px;
-      color: #174b87;
-      background: rgba(255,255,255,.88);
-      border: 1px solid rgba(255,255,255,.75);
-      font-size: 12px;
-      font-weight: 700;
-      box-shadow: 0 3px 10px rgba(25, 50, 80, .06);
-    }
-
-    .card-accent {
-      position: absolute;
-      z-index: 1;
-      top: 0;
-      left: 0;
-      width: 8px;
-      height: 100%;
-      background: #2678e9;
-    }
-
-    #card.accent-cyan .card-accent { background: #16b8d5; }
-    #card.accent-green .card-accent { background: #20a477; }
-    #card.accent-orange .card-accent { background: #f18a32; }
-    #card.accent-violet .card-accent { background: #8561dc; }
-    #card.accent-black .card-accent { background: #202735; }
-
-    #card.background-dark { color: #fff; background: #182538; }
-    #card.background-dark .card-background { background: linear-gradient(145deg, #17283d, #30445e); }
-    #card.background-dark .card-subtitle { color: #d4dfed; }
-    #card.background-soft .card-background { background: linear-gradient(145deg, #f4f1ed, #e7edf2); }
-    #card.background-gradient .card-background { background: linear-gradient(135deg, #d9edff, #eef5ff 55%, #dce8f6); }
-    #card.background-accent .card-background { background: linear-gradient(145deg, #d9eaff, #a9cdf6); }
-
-    #card.design-editorial .card-title {
-      font-family: Georgia, serif;
-      font-weight: 500;
-      text-transform: none;
-      font-size: 35px;
-      letter-spacing: -1px;
-    }
-
-    #card.design-showcase .card-product { filter: drop-shadow(0 20px 18px rgba(20, 35, 55, .26)); }
-    #card.design-lifestyle .card-background { background-color: #e9f0ed; }
-    #card.design-infographic .feature { border-radius: 4px; }
-    #card.design-cinematic .card-product { filter: drop-shadow(0 18px 25px rgba(0, 0, 0, .3)); }
-
-    .preview-empty {
-      text-align: center;
-      margin: auto;
-      max-width: 240px;
-      color: #9aa6b8;
-    }
-
-    .preview-empty .empty-icon { font-size: 42px; margin-bottom: 12px; }
-    .preview-empty p { font-size: 13px; line-height: 1.5; }
-
-    .preview-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .preview-actions button { flex: 1; }
-    .small-note { margin-top: 12px; color: #8a96a8; font-size: 11px; line-height: 1.5; }
-
-    .progress-line {
-      display: none;
-      height: 5px;
-      background: #e7edf5;
-      border-radius: 10px;
-      margin-top: 13px;
-      overflow: hidden;
-    }
-
-    .progress-line span {
-      display: block;
-      width: 35%;
-      height: 100%;
-      background: #2877ed;
-      border-radius: 10px;
-      animation: progress 1.3s ease-in-out infinite alternate;
-    }
-
-    @keyframes progress {
-      from { transform: translateX(-30%); }
-      to { transform: translateX(210%); }
-    }
-
-    @media (max-width: 850px) {
-      .main-grid { grid-template-columns: 1fr; }
-      .preview-panel { min-height: auto; }
-      .preview-workspace { min-height: 470px; }
-    }
-
-    @media (max-width: 520px) {
-      .app { padding: 18px 12px 35px; }
-      header { margin-bottom: 20px; }
-      .header-caption { display: none; }
-      .panel { padding: 17px; }
-      .preview-workspace { padding: 8px; min-height: auto; }
-
-      #card {
-        width: min(100%, 360px);
-        height: auto;
-        aspect-ratio: 3 / 4;
-      }
-
-      .card-title {
-        top: 6%;
-        left: 7%;
-        right: 7%;
-        font-size: clamp(19px, 6vw, 27px);
-      }
-
-      .card-subtitle { top: 19%; left: 7%; right: 7%; font-size: 11px; }
-      .card-features { left: 7%; right: 7%; bottom: 5%; }
-      .feature { font-size: 10px; padding: 6px 8px; }
-    }
-  </style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f3f6fb;color:#172033}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{max-width:1280px;margin:auto;padding:28px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:30px}
+.logo{font-size:27px;font-weight:850;letter-spacing:-1.2px;color:#1769e8}
+.logo span{color:#172033}
+.header-caption{color:#7a879b;font-size:13px}
+.main-grid{display:grid;grid-template-columns:minmax(300px,430px) minmax(320px,1fr);gap:24px;align-items:start}
+.panel{background:#fff;border:1px solid #e6ebf2;border-radius:20px;padding:23px;box-shadow:0 8px 30px rgba(28,48,80,.045)}
+.panel h2{font-size:18px;margin:0 0 20px}
+.field{margin-bottom:17px}
+.field label{display:block;margin-bottom:8px;font-size:13px;font-weight:700;color:#344158}
+input[type=text],textarea,select{display:block;width:100%;border:1px solid #dce3ed;border-radius:11px;padding:12px 13px;outline:none;color:#172033;background:#fff}
+input[type=text]:focus,textarea:focus,select:focus{border-color:#4388f5;box-shadow:0 0 0 3px rgba(67,136,245,.12)}
+textarea{min-height:95px;resize:vertical;line-height:1.5}
+.upload-area{border:2px dashed #cbd7e8;border-radius:15px;padding:24px 15px;text-align:center;background:#f9fbfe}
+.upload-area.dragover{border-color:#2877ed;background:#eef5ff}
+.upload-icon{font-size:30px;margin-bottom:9px}
+.upload-area p{margin:5px 0;font-size:13px;color:#7a879b}
+.upload-area strong{display:block;margin-bottom:5px;font-size:14px}
+.upload-button{display:inline-block;margin-top:12px;padding:10px 16px;background:#eaf2ff;color:#1769e8;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+#fileInput{display:none}
+.uploaded-preview{display:none;margin-top:14px;text-align:center}
+.uploaded-preview img{max-width:100%;max-height:190px;object-fit:contain;border-radius:10px;background:#edf1f6}
+.status{margin-top:10px;color:#718096;font-size:12px;line-height:1.45}
+.status.success{color:#16834c}
+.status.error{color:#d13c3c}
+.status.loading{color:#1769e8}
+.primary-button,.secondary-button{display:block;width:100%;border:0;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:750}
+.primary-button{color:#fff;background:linear-gradient(135deg,#2478ef,#155bd0);box-shadow:0 6px 15px rgba(31,105,225,.2)}
+.secondary-button{margin-top:10px;color:#1769e8;background:#edf4ff}
+.primary-button:disabled,.secondary-button:disabled{opacity:.55;cursor:not-allowed}
+.divider{height:1px;background:#edf0f5;margin:20px 0}
+.preview-panel{min-height:650px}
+.preview-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.preview-heading h2{margin:0}
+.preview-tag{padding:6px 10px;border-radius:20px;background:#edf4ff;color:#1769e8;font-size:11px;font-weight:750}
+.preview-workspace{display:flex;justify-content:center;align-items:flex-start;padding:16px;min-height:570px;border-radius:15px;background:#f4f6fa;overflow:auto}
+#card{position:relative;width:450px;height:600px;flex:0 0 auto;overflow:hidden;border-radius:5px;background:#edf4fa;color:#15233a;isolation:isolate}
+#card .card-background{position:absolute;inset:0;z-index:-3;background:radial-gradient(circle at 80% 20%,rgba(74,161,255,.18),transparent 35%),linear-gradient(145deg,#f8fbff,#e5f0fa)}
+#card.scene-composition .card-background{background-size:cover;background-position:center}
+#card .scene-overlay{position:absolute;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 36%,rgba(255,255,255,.03))}
+.card-title{position:absolute;z-index:3;top:35px;left:30px;right:30px;margin:0;font-size:31px;line-height:1.08;font-weight:850;letter-spacing:-.8px;text-transform:uppercase;overflow-wrap:anywhere}
+.card-subtitle{position:absolute;z-index:3;top:110px;left:31px;right:31px;font-size:14px;line-height:1.35;color:#56657a}
+.card-product{position:absolute;z-index:2;width:68%;max-height:67%;object-fit:contain;left:50%;top:57%;transform:translate(-50%,-50%);filter:drop-shadow(0 17px 16px rgba(20,35,55,.2))}
+.card-features{position:absolute;z-index:4;left:30px;right:30px;bottom:27px;display:flex;flex-wrap:wrap;gap:8px}
+.feature{max-width:100%;padding:8px 11px;border-radius:8px;color:#174b87;background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.75);font-size:12px;font-weight:700;box-shadow:0 3px 10px rgba(25,50,80,.06)}
+.card-accent{position:absolute;z-index:1;top:0;left:0;width:8px;height:100%;background:#2678e9}
+#card.accent-cyan .card-accent{background:#16b8d5}
+#card.accent-green .card-accent{background:#20a477}
+#card.accent-orange .card-accent{background:#f18a32}
+#card.accent-violet .card-accent{background:#8561dc}
+#card.accent-black .card-accent{background:#202735}
+#card.background-dark{color:#fff;background:#182538}
+#card.background-dark .card-background{background:linear-gradient(145deg,#17283d,#30445e)}
+#card.background-dark .card-subtitle{color:#d4dfed}
+#card.background-soft .card-background{background:linear-gradient(145deg,#f4f1ed,#e7edf2)}
+#card.background-gradient .card-background{background:linear-gradient(135deg,#d9edff,#eef5ff 55%,#dce8f6)}
+#card.background-accent .card-background{background:linear-gradient(145deg,#d9eaff,#a9cdf6)}
+#card.design-editorial .card-title{font-family:Georgia,serif;font-weight:500;text-transform:none;font-size:35px;letter-spacing:-1px}
+#card.design-showcase .card-product{filter:drop-shadow(0 20px 18px rgba(20,35,55,.26))}
+#card.design-infographic .feature{border-radius:4px}
+#card.design-cinematic .card-product{filter:drop-shadow(0 18px 25px rgba(0,0,0,.3))}
+.preview-actions{display:flex;gap:10px;margin-top:16px}
+.preview-actions button{flex:1}
+.small-note{margin-top:12px;color:#8a96a8;font-size:11px;line-height:1.5}
+.progress-line{display:none;height:5px;background:#e7edf5;border-radius:10px;margin-top:13px;overflow:hidden}
+.progress-line span{display:block;width:35%;height:100%;background:#2877ed;border-radius:10px;animation:progress 1.3s ease-in-out infinite alternate}
+@keyframes progress{from{transform:translateX(-30%)}to{transform:translateX(210%)}}
+@media(max-width:850px){.main-grid{grid-template-columns:1fr}.preview-panel{min-height:auto}.preview-workspace{min-height:470px}}
+@media(max-width:520px){.app{padding:18px 12px 35px}.header-caption{display:none}.panel{padding:17px}.preview-workspace{padding:8px;min-height:auto}#card{width:min(100%,360px);height:auto;aspect-ratio:3/4}.card-title{top:6%;left:7%;right:7%;font-size:clamp(19px,6vw,27px)}.card-subtitle{top:19%;left:7%;right:7%;font-size:11px}.card-features{left:7%;right:7%;bottom:5%}.feature{font-size:10px;padding:6px 8px}}
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <header>
-      <div class="logo">Cardly<span> AI</span></div>
-      <div class="header-caption">Создание инфографики для Wildberries и Ozon</div>
-    </header>
+<div class="app">
+<header>
+  <div class="logo">Cardly<span> AI</span></div>
+  <div class="header-caption">Создание инфографики для Wildberries и Ozon</div>
+</header>
 
-    <main class="main-grid">
-      <section class="panel">
-        <h2>Создание карточки</h2>
+<main class="main-grid">
+<section class="panel">
+  <h2>Создание карточки</h2>
 
-        <div class="field">
-          <label>Фотография товара</label>
-
-          <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">📦</div>
-            <strong>Загрузите фотографию товара</strong>
-            <p>PNG, JPG или WEBP</p>
-            <p>Рекомендуется изображение на простом фоне</p>
-            <label class="upload-button" for="fileInput">Выбрать фотографию</label>
-            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp">
-          </div>
-
-          <div class="uploaded-preview" id="uploadedPreview">
-            <img id="uploadedImage" alt="Загруженный товар">
-            <div class="status" id="removeStatus">Фотография загружена</div>
-          </div>
-
-          <div class="progress-line" id="progressLine"><span></span></div>
-        </div>
-
-        <div class="field">
-          <label for="productName">Название товара</label>
-          <input type="text" id="productName" placeholder="Например: Смеситель для кухни">
-        </div>
-
-        <div class="field">
-          <label for="characteristics">Характеристики и преимущества</label>
-          <textarea id="characteristics" placeholder="Укажите материал, назначение, особенности и преимущества товара..."></textarea>
-        </div>
-
-        <div class="field">
-          <label for="styleSelect">Стиль оформления</label>
-          <select id="styleSelect">
-            <option value="premium">Premium — премиальный</option>
-            <option value="editorial">Editorial — журнальный</option>
-            <option value="showcase">Showcase — демонстрационный</option>
-            <option value="lifestyle">Lifestyle — интерьерный</option>
-            <option value="infographic">Infographic — инфографика</option>
-            <option value="cinematic">Cinematic — кинематографичный</option>
-          </select>
-        </div>
-
-        <div class="divider"></div>
-
-        <button class="primary-button" id="generateButton" type="button">✨ Создать AI-композицию</button>
-        <button class="secondary-button" id="simpleButton" type="button">Создать обычную карточку</button>
-
-        <div class="status" id="mainStatus">
-          Загрузите товар, укажите его название и нажмите «Создать AI-композицию».
-        </div>
-
-        <div class="small-note">
-          AI анализирует загруженный товар, подбирает окружение и создаёт фон.
-          Исходное изображение товара сохраняется и накладывается поверх фона.
-        </div>
-      </section>
-
-      <section class="panel preview-panel">
-        <div class="preview-heading">
-          <h2>Предпросмотр</h2>
-          <span class="preview-tag">900 × 1200</span>
-        </div>
-
-        <div class="preview-workspace">
-          <div id="card" class="background-light accent-blue design-premium">
-            <div class="card-background" id="cardBackground"></div>
-            <div class="scene-overlay"></div>
-            <div class="card-accent"></div>
-            <h1 class="card-title" id="cardTitle">ВАШ ТОВАР</h1>
-            <div class="card-subtitle" id="cardSubtitle">Здесь появится описание товара</div>
-            <img class="card-product" id="cardProduct" alt="Товар" style="display:none">
-            <div class="card-features" id="cardFeatures"></div>
-          </div>
-        </div>
-
-        <div class="preview-actions">
-          <button class="secondary-button" id="downloadButton" type="button" disabled>↓ Скачать PNG</button>
-        </div>
-
-        <div class="small-note">
-          Итоговое изображение сохраняется в формате PNG размером 900 × 1200 пикселей.
-        </div>
-      </section>
-    </main>
+  <div class="field">
+    <label>Фотография товара</label>
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon">📦</div>
+      <strong>Загрузите фотографию товара</strong>
+      <p>PNG, JPG или WEBP</p>
+      <p>Рекомендуется изображение на простом фоне</p>
+      <label class="upload-button" for="fileInput">Выбрать фотографию</label>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp">
+    </div>
+    <div class="uploaded-preview" id="uploadedPreview">
+      <img id="uploadedImage" alt="Загруженный товар">
+      <div class="status" id="removeStatus">Фотография загружена</div>
+    </div>
+    <div class="progress-line" id="progressLine"><span></span></div>
   </div>
 
-  <script type="module">
-    import {
-      AutoModel,
-      AutoProcessor,
-      RawImage,
-      env
-    } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
-
-    // --------------------------------------------------
-    // НАСТРОЙКИ
-    // --------------------------------------------------
-
-    const API_BASE = window.location.origin;
-    const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
-
-    env.allowLocalModels = false;
-    env.allowRemoteModels = true;
-    env.remoteHost = API_BASE + "/api/model/";
-    env.remotePathTemplate = "{model}/resolve/{revision}/";
-
-    // --------------------------------------------------
-    // ЭЛЕМЕНТЫ СТРАНИЦЫ
-    // --------------------------------------------------
-
-    const fileInput = document.getElementById("fileInput");
-    const uploadArea = document.getElementById("uploadArea");
-    const uploadedPreview = document.getElementById("uploadedPreview");
-    const uploadedImage = document.getElementById("uploadedImage");
-
-    const productName = document.getElementById("productName");
-    const characteristics = document.getElementById("characteristics");
-    const styleSelect = document.getElementById("styleSelect");
-
-    const removeStatus = document.getElementById("removeStatus");
-    const mainStatus = document.getElementById("mainStatus");
-    const progressLine = document.getElementById("progressLine");
-
-    const generateButton = document.getElementById("generateButton");
-    const simpleButton = document.getElementById("simpleButton");
-    const downloadButton = document.getElementById("downloadButton");
-
-    const card = document.getElementById("card");
-    const cardTitle = document.getElementById("cardTitle");
-    const cardSubtitle = document.getElementById("cardSubtitle");
-    const cardProduct = document.getElementById("cardProduct");
-    const cardFeatures = document.getElementById("cardFeatures");
-
-    // --------------------------------------------------
-    // СОСТОЯНИЕ
-    // --------------------------------------------------
-
-    let cutoutImage = null;
-    let originalFile = null;
-    let modelPromise = null;
-    let isRemoving = false;
-    let sceneObjectUrl = null;
-    let hasGeneratedCard = false;
-
-    // --------------------------------------------------
-    // СЛУЖЕБНЫЕ ФУНКЦИИ
-    // --------------------------------------------------
-
-    function setStatus(message, type = "") {
-      mainStatus.textContent = message;
-      mainStatus.className = "status " + type;
-    }
-
-    function setRemoveStatus(message, type = "") {
-      removeStatus.textContent = message;
-      removeStatus.className = "status " + type;
-    }
-
-    function setLoading(isLoading, message = "") {
-      generateButton.disabled = isLoading;
-      simpleButton.disabled = isLoading;
-      progressLine.style.display = isLoading ? "block" : "none";
-
-      if (message) {
-        setStatus(message, isLoading ? "loading" : "");
-      }
-    }
-
-    function revokeSceneUrl() {
-      if (sceneObjectUrl) {
-        URL.revokeObjectURL(sceneObjectUrl);
-        sceneObjectUrl = null;
-      }
-    }
-
-    function fileToDataURL(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function loadImage(src) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error("Не удалось загрузить изображение"));
-        img.src = src;
-      });
-    }
-
-    // --------------------------------------------------
-    // ЗАГРУЗКА МОДЕЛИ
-    // --------------------------------------------------
-
-    async function loadSegmentationModel() {
-      if (!modelPromise) {
-        modelPromise = (async () => {
-          setRemoveStatus("Загружаем AI-модель удаления фона...", "loading");
-
-          const processor = await AutoProcessor.from_pretrained(MODEL_ID);
-
-          const model = await AutoModel.from_pretrained(
-            MODEL_ID,
-            {
-              device: "wasm",
-              dtype: "fp32"
-            }
-          );
-
-          return { processor, model };
-        })().catch(error => {
-          modelPromise = null;
-          throw error;
-        });
-      }
-
-      return modelPromise;
-    }
-
-    // --------------------------------------------------
-    // ПОЛУЧЕНИЕ ВХОДНОГО ТЕНЗОРА
-    // --------------------------------------------------
-
-    function getModelInput(processed) {
-      console.log("BIRE FNET PROCESSOR OUTPUT:", processed);
-
-      const input =
-        processed?.input_image ||
-        processed?.pixel_values ||
-        processed?.images;
-
-      if (!input) {
-        throw new Error(
-          "AutoProcessor не вернул входное изображение. Проверьте конфигурацию модели."
-        );
-      }
-
-      return input;
-    }
-
-    // --------------------------------------------------
-    // УДАЛЕНИЕ ФОНА
-    // --------------------------------------------------
-
-    async function removeBackground(file) {
-      if (isRemoving) return;
-
-      isRemoving = true;
-      progressLine.style.display = "block";
-
-      try {
-        setRemoveStatus("Подготавливаем фотографию...", "loading");
-
-        const imageData = await fileToDataURL(file);
-        const originalImage = await loadImage(imageData);
-
-        const originalWidth = originalImage.naturalWidth;
-        const originalHeight = originalImage.naturalHeight;
-        const maxDimension = 1800;
-
-        const resizeRatio = Math.min(
-          1,
-          maxDimension / Math.max(originalWidth, originalHeight)
-        );
-
-        const width = Math.round(originalWidth * resizeRatio);
-        const height = Math.round(originalHeight * resizeRatio);
-
-        const inputCanvas = document.createElement("canvas");
-        inputCanvas.width = width;
-        inputCanvas.height = height;
-
-        const inputContext = inputCanvas.getContext("2d");
-        inputContext.drawImage(originalImage, 0, 0, width, height);
-
-        const modelImage = await RawImage.fromURL(
-          inputCanvas.toDataURL("image/png")
-        );
-
-        setRemoveStatus(
-          "AI анализирует изображение и удаляет фон...",
-          "loading"
-        );
-
-        const { processor, model } = await loadSegmentationModel();
-
-        // Подготавливаем изображение процессором.
-        const processed = await processor(modelImage);
-
-        // Передаём тензор с именем, ожидаемым ONNX-моделью.
-        const inputImage = getModelInput(processed);
-
-        const output = await model({
-          input_image: inputImage
-        });
-
-        let maskTensor =
-          output.output ||
-          output.logits ||
-          output[Object.keys(output)[0]];
-
-        if (!maskTensor) {
-          throw new Error("Модель не вернула маску изображения");
-        }
-
-        let mask = maskTensor[0];
-
-        if (mask.dims && mask.dims.length === 3) {
-          mask = mask.squeeze(0);
-        }
-
-        const maskImage = await RawImage.fromTensor(
-          mask.sigmoid().mul(255).to("uint8")
-        );
-
-        const resizedMask = maskImage.resize(width, height);
-        const maskCanvas = resizedMask.toCanvas();
-
-        const maskContext = maskCanvas.getContext("2d", {
-          willReadFrequently: true
-        });
-
-        const maskPixels = maskContext.getImageData(0, 0, width, height);
-
-        const resultCanvas = document.createElement("canvas");
-        resultCanvas.width = width;
-        resultCanvas.height = height;
-
-        const resultContext = resultCanvas.getContext("2d", {
-          willReadFrequently: true
-        });
-
-        resultContext.drawImage(inputCanvas, 0, 0, width, height);
-
-        const resultPixels = resultContext.getImageData(0, 0, width, height);
-
-        for (let i = 0; i < resultPixels.data.length; i += 4) {
-          resultPixels.data[i + 3] = maskPixels.data[i];
-        }
-
-        resultContext.putImageData(resultPixels, 0, 0);
-
-        const trimmedCanvas = trimTransparentEdges(resultCanvas);
-        cutoutImage = trimmedCanvas.toDataURL("image/png");
-
-        uploadedImage.src = cutoutImage;
-        uploadedPreview.style.display = "block";
-
-        setRemoveStatus(
-          "Фон удалён. Исходный товар готов к размещению.",
-          "success"
-        );
-
-        renderProductPreview();
-
-      } catch (error) {
-        console.error("BACKGROUND REMOVAL ERROR:", error);
-
-        setRemoveStatus(
-          "Не удалось удалить фон: " + error.message,
-          "error"
-        );
-
-        // При ошибке показываем исходное фото.
-        cutoutImage = await fileToDataURL(file);
-        uploadedImage.src = cutoutImage;
-        uploadedPreview.style.display = "block";
-
-        renderProductPreview();
-
-      } finally {
-        isRemoving = false;
-        progressLine.style.display = "none";
-      }
-    }
-
-    // --------------------------------------------------
-    // ОБРЕЗКА ПРОЗРАЧНЫХ КРАЁВ
-    // --------------------------------------------------
-
-    function trimTransparentEdges(sourceCanvas) {
-      const ctx = sourceCanvas.getContext("2d", {
-        willReadFrequently: true
+  <div class="field">
+    <label for="productName">Название товара</label>
+    <input type="text" id="productName" placeholder="Например: Смеситель для кухни">
+  </div>
+
+  <div class="field">
+    <label for="characteristics">Характеристики и преимущества</label>
+    <textarea id="characteristics" placeholder="Укажите материал, назначение, особенности и преимущества товара..."></textarea>
+  </div>
+
+  <div class="field">
+    <label for="styleSelect">Стиль оформления</label>
+    <select id="styleSelect">
+      <option value="premium">Premium — премиальный</option>
+      <option value="editorial">Editorial — журнальный</option>
+      <option value="showcase">Showcase — демонстрационный</option>
+      <option value="lifestyle">Lifestyle — интерьерный</option>
+      <option value="infographic">Infographic — инфографика</option>
+      <option value="cinematic">Cinematic — кинематографичный</option>
+    </select>
+  </div>
+
+  <div class="divider"></div>
+  <button class="primary-button" id="generateButton" type="button">✨ Создать AI-композицию</button>
+  <button class="secondary-button" id="simpleButton" type="button">Создать обычную карточку</button>
+
+  <div class="status" id="mainStatus">Загрузите товар, укажите его название и нажмите «Создать AI-композицию».</div>
+  <div class="small-note">AI анализирует загруженный товар, подбирает окружение и создаёт фон. Исходное изображение товара сохраняется и накладывается поверх фона.</div>
+</section>
+
+<section class="panel preview-panel">
+  <div class="preview-heading">
+    <h2>Предпросмотр</h2>
+    <span class="preview-tag">900 × 1200</span>
+  </div>
+
+  <div class="preview-workspace">
+    <div id="card" class="background-light accent-blue design-premium">
+      <div class="card-background" id="cardBackground"></div>
+      <div class="scene-overlay"></div>
+      <div class="card-accent"></div>
+      <h1 class="card-title" id="cardTitle">ВАШ ТОВАР</h1>
+      <div class="card-subtitle" id="cardSubtitle">Здесь появится описание товара</div>
+      <img class="card-product" id="cardProduct" alt="Товар" style="display:none">
+      <div class="card-features" id="cardFeatures"></div>
+    </div>
+  </div>
+
+  <div class="preview-actions">
+    <button class="secondary-button" id="downloadButton" type="button" disabled>↓ Скачать PNG</button>
+  </div>
+  <div class="small-note">Итоговое изображение сохраняется в формате PNG размером 900 × 1200 пикселей.</div>
+</section>
+</main>
+</div>
+
+<script type="module">
+import {
+  AutoModel,
+  AutoProcessor,
+  RawImage,
+  env
+} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+
+const API_BASE = window.location.origin;
+const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
+
+env.allowLocalModels = false;
+env.allowRemoteModels = true;
+env.remoteHost = API_BASE + "/api/model/";
+env.remotePathTemplate = "{model}/resolve/{revision}/";
+
+const fileInput = document.getElementById("fileInput");
+const uploadArea = document.getElementById("uploadArea");
+const uploadedPreview = document.getElementById("uploadedPreview");
+const uploadedImage = document.getElementById("uploadedImage");
+const productName = document.getElementById("productName");
+const characteristics = document.getElementById("characteristics");
+const styleSelect = document.getElementById("styleSelect");
+const removeStatus = document.getElementById("removeStatus");
+const mainStatus = document.getElementById("mainStatus");
+const progressLine = document.getElementById("progressLine");
+const generateButton = document.getElementById("generateButton");
+const simpleButton = document.getElementById("simpleButton");
+const downloadButton = document.getElementById("downloadButton");
+const card = document.getElementById("card");
+const cardTitle = document.getElementById("cardTitle");
+const cardSubtitle = document.getElementById("cardSubtitle");
+const cardProduct = document.getElementById("cardProduct");
+const cardFeatures = document.getElementById("cardFeatures");
+
+let cutoutImage = null;
+let modelPromise = null;
+let isRemoving = false;
+let sceneObjectUrl = null;
+let hasGeneratedCard = false;
+
+function setStatus(message,type=""){
+  mainStatus.textContent=message;
+  mainStatus.className="status "+type;
+}
+
+function setRemoveStatus(message,type=""){
+  removeStatus.textContent=message;
+  removeStatus.className="status "+type;
+}
+
+function setLoading(value,message=""){
+  generateButton.disabled=value;
+  simpleButton.disabled=value;
+  progressLine.style.display=value?"block":"none";
+  if(message)setStatus(message,value?"loading":"");
+}
+
+function revokeSceneUrl(){
+  if(sceneObjectUrl){
+    URL.revokeObjectURL(sceneObjectUrl);
+    sceneObjectUrl=null;
+  }
+}
+
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(new Error("Не удалось прочитать файл"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error("Не удалось загрузить изображение"));
+    img.src=src;
+  });
+}
+
+// Загрузка модели
+async function loadSegmentationModel(){
+  if(!modelPromise){
+    modelPromise=(async()=>{
+      setRemoveStatus("Загружаем AI-модель удаления фона...","loading");
+
+      const processor=await AutoProcessor.from_pretrained(MODEL_ID);
+      const model=await AutoModel.from_pretrained(MODEL_ID,{
+        device:"wasm",
+        dtype:"fp32"
       });
 
-      const width = sourceCanvas.width;
-      const height = sourceCanvas.height;
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const pixels = imageData.data;
+      return {processor,model};
+    })().catch(error=>{
+      modelPromise=null;
+      throw error;
+    });
+  }
+  return modelPromise;
+}
 
-      let minX = width;
-      let minY = height;
-      let maxX = 0;
-      let maxY = 0;
-      let found = false;
+// Получение входа модели
+function getModelInput(processed){
+  console.log("BIRE FNET PROCESSOR OUTPUT:",processed);
 
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const alpha = pixels[(y * width + x) * 4 + 3];
+  const input=
+    processed?.input_image||
+    processed?.pixel_values||
+    processed?.images;
 
-          if (alpha > 12) {
-            found = true;
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-          }
-        }
+  if(!input){
+    throw new Error("AutoProcessor не вернул входное изображение.");
+  }
+
+  return input;
+}
+
+// Обрезка прозрачных краёв
+function trimTransparentEdges(sourceCanvas){
+  const ctx=sourceCanvas.getContext("2d",{willReadFrequently:true});
+  const width=sourceCanvas.width;
+  const height=sourceCanvas.height;
+  const pixels=ctx.getImageData(0,0,width,height).data;
+
+  let minX=width,minY=height,maxX=0,maxY=0,found=false;
+
+  for(let y=0;y<height;y++){
+    for(let x=0;x<width;x++){
+      if(pixels[(y*width+x)*4+3]>12){
+        found=true;
+        minX=Math.min(minX,x);
+        minY=Math.min(minY,y);
+        maxX=Math.max(maxX,x);
+        maxY=Math.max(maxY,y);
       }
+    }
+  }
 
-      if (!found) return sourceCanvas;
+  if(!found)return sourceCanvas;
 
-      const padding = Math.round(Math.min(width, height) * 0.025);
+  const padding=Math.round(Math.min(width,height)*0.025);
+  minX=Math.max(0,minX-padding);
+  minY=Math.max(0,minY-padding);
+  maxX=Math.min(width-1,maxX+padding);
+  maxY=Math.min(height-1,maxY+padding);
 
-      minX = Math.max(0, minX - padding);
-      minY = Math.max(0, minY - padding);
-      maxX = Math.min(width - 1, maxX + padding);
-      maxY = Math.min(height - 1, maxY + padding);
+  const cropWidth=maxX-minX+1;
+  const cropHeight=maxY-minY+1;
+  const result=document.createElement("canvas");
+  result.width=cropWidth;
+  result.height=cropHeight;
 
-      const cropWidth = maxX - minX + 1;
-      const cropHeight = maxY - minY + 1;
+  result.getContext("2d").drawImage(
+    sourceCanvas,
+    minX,minY,cropWidth,cropHeight,
+    0,0,cropWidth,cropHeight
+  );
 
-      const result = document.createElement("canvas");
-      result.width = cropWidth;
-      result.height = cropHeight;
+  return result;
+}
 
-      result.getContext("2d").drawImage(
-        sourceCanvas,
-        minX, minY, cropWidth, cropHeight,
-        0, 0, cropWidth, cropHeight
+// Удаление фона
+async function removeBackground(file){
+  if(isRemoving)return;
+  isRemoving=true;
+  progressLine.style.display="block";
+
+  try{
+    setRemoveStatus("Подготавливаем фотографию...","loading");
+
+    const imageData=await fileToDataURL(file);
+    const originalImage=await loadImage(imageData);
+
+    const originalWidth=originalImage.naturalWidth;
+    const originalHeight=originalImage.naturalHeight;
+    const maxDimension=1800;
+
+    const ratio=Math.min(1,maxDimension/Math.max(originalWidth,originalHeight));
+    const width=Math.round(originalWidth*ratio);
+    const height=Math.round(originalHeight*ratio);
+
+    const inputCanvas=document.createElement("canvas");
+    inputCanvas.width=width;
+    inputCanvas.height=height;
+    inputCanvas.getContext("2d").drawImage(originalImage,0,0,width,height);
+
+    const modelImage=await RawImage.fromURL(inputCanvas.toDataURL("image/png"));
+
+    setRemoveStatus("AI анализирует изображение и удаляет фон...","loading");
+
+    const {processor,model}=await loadSegmentationModel();
+    const processed=await processor(modelImage);
+    const inputImage=getModelInput(processed);
+
+    const output=await model({input_image:inputImage});
+
+    let maskTensor=
+      output.output||
+      output.logits||
+      output[Object.keys(output)[0]];
+
+    if(!maskTensor){
+      throw new Error("Модель не вернула маску изображения");
+    }
+
+    console.log("BIRE FNET MODEL OUTPUT:",output);
+    console.log("MASK TENSOR SHAPE:",maskTensor.dims);
+
+    // Приводим маску к формату [1, высота, ширина].
+    let mask=maskTensor;
+
+    // Убираем только лишние первые размерности.
+    while(mask.dims && mask.dims.length>3){
+      mask=mask.squeeze(0);
+    }
+
+    // Если модель вернула [высота, ширина],
+    // добавляем размерность канала.
+    if(mask.dims && mask.dims.length===2){
+      mask=mask.unsqueeze(0);
+    }
+
+    if(!mask.dims || mask.dims.length!==3){
+      throw new Error(
+        "Неожиданный формат маски модели: "+
+        JSON.stringify(mask.dims)
       );
-
-      return result;
     }
 
-    // --------------------------------------------------
-    // ПРЕВЬЮ ТОВАРА
-    // --------------------------------------------------
+    // RawImage.fromTensor требует 3D-тензор [C,H,W].
+    const maskForImage=mask.sigmoid().mul(255).to("uint8");
+    const maskImage=await RawImage.fromTensor(maskForImage);
 
-    function renderProductPreview() {
-      if (!cutoutImage) return;
+    const resizedMask=maskImage.resize(width,height);
+    const maskCanvas=resizedMask.toCanvas();
+    const maskContext=maskCanvas.getContext("2d",{willReadFrequently:true});
+    const maskPixels=maskContext.getImageData(0,0,width,height);
 
-      cardProduct.src = cutoutImage;
-      cardProduct.style.display = "block";
-      hasGeneratedCard = true;
-      downloadButton.disabled = false;
+    const resultCanvas=document.createElement("canvas");
+    resultCanvas.width=width;
+    resultCanvas.height=height;
+
+    const resultContext=resultCanvas.getContext("2d",{willReadFrequently:true});
+    resultContext.drawImage(inputCanvas,0,0,width,height);
+
+    const resultPixels=resultContext.getImageData(0,0,width,height);
+
+    for(let i=0;i<resultPixels.data.length;i+=4){
+      resultPixels.data[i+3]=maskPixels.data[i];
     }
 
-    // --------------------------------------------------
-    // ПОДГОТОВКА ФОТО ДЛЯ VISION
-    // --------------------------------------------------
-
-    async function makeVisionImage(imageSource) {
-      const img = await loadImage(imageSource);
-      const maxSide = 768;
-
-      const ratio = Math.min(
-        1,
-        maxSide / Math.max(img.width, img.height)
-      );
-
-      const width = Math.round(img.width * ratio);
-      const height = Math.round(img.height * ratio);
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#f4f5f7";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
-
-      return canvas.toDataURL("image/jpeg", 0.82);
-    }
-
-    // --------------------------------------------------
-    // ЗАПРОС ДИЗАЙНА У LLAMA
-    // --------------------------------------------------
-
-    async function requestDesign() {
-      const name = productName.value.trim();
-
-      if (!name) throw new Error("Введите название товара");
-
-      const response = await fetch(API_BASE + "/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productName: name,
-          characteristics: characteristics.value.trim()
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Не удалось создать дизайн");
-      }
-
-      return data;
-    }
-
-    // --------------------------------------------------
-    // ЗАПРОС VISION + FLUX
-    // --------------------------------------------------
-
-    async function requestAIScene() {
-      if (!cutoutImage) {
-        throw new Error("Сначала загрузите фотографию товара");
-      }
-
-      const analysisImage = await makeVisionImage(cutoutImage);
-
-      const response = await fetch(API_BASE + "/api/generate-scene", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productName: productName.value.trim(),
-          characteristics: characteristics.value.trim(),
-          style: styleSelect.value,
-          image: analysisImage
-        })
-      });
-
-      if (!response.ok) {
-        let message = "Не удалось создать AI-фон";
-
-        try {
-          const data = await response.json();
-          message = data.error || message;
-        } catch (error) {}
-
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
-
-      const position = response.headers.get("X-Cardly-Position") || "center";
-
-      const scale = Math.max(
-        50,
-        Math.min(78, Number(response.headers.get("X-Cardly-Scale")) || 68)
-      );
-
-      const vertical = Math.max(
-        43,
-        Math.min(62, Number(response.headers.get("X-Cardly-Vertical")) || 55)
-      );
-
-      return {
-        blob,
-        layout: { position, scale, vertical }
-      };
-    }
-
-    // --------------------------------------------------
-    // ПОЗИЦИЯ ТОВАРА
-    // --------------------------------------------------
-
-    function applyProductLayout(layout) {
-      const position = layout?.position || "center";
-
-      const scale = Math.max(
-        50,
-        Math.min(78, Number(layout?.scale) || 68)
-      );
-
-      const vertical = Math.max(
-        43,
-        Math.min(62, Number(layout?.vertical) || 55)
-      );
-
-      cardProduct.style.width = scale + "%";
-      cardProduct.style.maxHeight = "70%";
-      cardProduct.style.top = vertical + "%";
-      cardProduct.style.transform = "translateY(-50%)";
-
-      if (position === "left") {
-        cardProduct.style.left = "8%";
-        cardProduct.style.right = "auto";
-      } else if (position === "right") {
-        cardProduct.style.left = "auto";
-        cardProduct.style.right = "8%";
-      } else {
-        cardProduct.style.left = "50%";
-        cardProduct.style.right = "auto";
-        cardProduct.style.transform = "translate(-50%, -50%)";
-      }
-    }
-
-    // --------------------------------------------------
-    // ОТРИСОВКА КАРТОЧКИ
-    // --------------------------------------------------
-
-    async function renderCard(data, sceneUrl = null, sceneLayout = null) {
-      const title = data.title || productName.value || "Ваш товар";
-
-      cardTitle.textContent = title;
-      cardSubtitle.textContent = data.subtitle || "";
-      cardFeatures.innerHTML = "";
-
-      const features = Array.isArray(data.features)
-        ? data.features.slice(0, 4)
-        : [];
-
-      features.forEach(featureText => {
-        const feature = document.createElement("div");
-        feature.className = "feature";
-        feature.textContent = featureText;
-        cardFeatures.appendChild(feature);
-      });
-
-      card.className = "";
-
-      const design = [
-        "premium", "editorial", "showcase",
-        "lifestyle", "infographic", "cinematic"
-      ].includes(styleSelect.value) ? styleSelect.value : "premium";
-
-      card.classList.add("design-" + design);
-
-      const background = [
-        "light", "dark", "soft", "gradient", "accent"
-      ].includes(data.background) ? data.background : "light";
-
-      card.classList.add("background-" + background);
-
-      const accent = [
-        "blue", "cyan", "green", "orange", "violet", "black"
-      ].includes(data.accent) ? data.accent : "blue";
-
-      card.classList.add("accent-" + accent);
-
-      const titlePosition = data.titlePosition || "top";
-
-      if (titlePosition === "middle") {
-        cardTitle.style.top = "38%";
-        cardTitle.style.bottom = "auto";
-      } else if (titlePosition === "bottom") {
-        cardTitle.style.top = "auto";
-        cardTitle.style.bottom = "23%";
-      } else {
-        cardTitle.style.top = "6%";
-        cardTitle.style.bottom = "auto";
-      }
-
-      if (titlePosition === "top") {
-        cardSubtitle.style.top = "19%";
-        cardSubtitle.style.bottom = "auto";
-      } else {
-        cardSubtitle.style.top = "auto";
-        cardSubtitle.style.bottom = "17%";
-      }
-
-      if (cutoutImage) {
-        cardProduct.src = cutoutImage;
-        cardProduct.style.display = "block";
-
-        applyProductLayout(
-          sceneLayout || {
-            position: data.productPosition || "center",
-            scale: 68,
-            vertical: 57
-          }
-        );
-      }
-
-      const cardBackground = document.getElementById("cardBackground");
-
-      if (sceneUrl) {
-        card.classList.add("scene-composition");
-        cardBackground.style.backgroundImage = `url("${sceneUrl}")`;
-        cardBackground.style.backgroundSize = "cover";
-        cardBackground.style.backgroundPosition = "center";
-      } else {
-        card.classList.remove("scene-composition");
-        cardBackground.style.backgroundImage = "";
-        cardBackground.style.backgroundSize = "";
-        cardBackground.style.backgroundPosition = "";
-      }
-
-      hasGeneratedCard = true;
-      downloadButton.disabled = false;
-    }
-
-    // --------------------------------------------------
-    // AI-КОМПОЗИЦИЯ
-    // --------------------------------------------------
-
-    async function generateAIComposition() {
-      if (!cutoutImage) {
-        setStatus("Сначала загрузите фотографию товара.", "error");
-        return;
-      }
-
-      if (!productName.value.trim()) {
-        setStatus("Введите название товара.", "error");
-        productName.focus();
-        return;
-      }
-
-      setLoading(true, "Шаг 1 из 2: создаём структуру карточки...");
-
-      try {
-        const design = await requestDesign();
-
-        setStatus(
-          "Шаг 2 из 2: Vision анализирует товар, FLUX создаёт окружение...",
-          "loading"
-        );
-
-        const scene = await requestAIScene();
-
-        revokeSceneUrl();
-        sceneObjectUrl = URL.createObjectURL(scene.blob);
-
-        await renderCard(design, sceneObjectUrl, scene.layout);
-
-        setStatus("AI-композиция готова. Можно скачать карточку.", "success");
-
-      } catch (error) {
-        console.error("COMPOSITION ERROR:", error);
-        setStatus(error.message || "Не удалось создать композицию", "error");
-
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // --------------------------------------------------
-    // ОБЫЧНАЯ КАРТОЧКА
-    // --------------------------------------------------
-
-    async function generateSimpleCard() {
-      if (!cutoutImage) {
-        setStatus("Сначала загрузите фотографию товара.", "error");
-        return;
-      }
-
-      if (!productName.value.trim()) {
-        setStatus("Введите название товара.", "error");
-        productName.focus();
-        return;
-      }
-
-      setLoading(true, "Создаём дизайн карточки...");
-
-      try {
-        const design = await requestDesign();
-        revokeSceneUrl();
-
-        const cardBackground = document.getElementById("cardBackground");
-        cardBackground.style.backgroundImage = "";
-
-        await renderCard(design);
-
-        setStatus("Карточка готова. Можно скачать изображение.", "success");
-
-      } catch (error) {
-        console.error("SIMPLE GENERATION ERROR:", error);
-        setStatus(error.message || "Не удалось создать карточку", "error");
-
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // --------------------------------------------------
-    // СКАЧИВАНИЕ PNG
-    // --------------------------------------------------
-
-    async function downloadCard() {
-      if (!hasGeneratedCard) {
-        setStatus("Сначала создайте карточку.", "error");
-        return;
-      }
-
-      downloadButton.disabled = true;
-      downloadButton.textContent = "Подготавливаем PNG...";
-
-      try {
-        const canvas = await html2canvas(card, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          backgroundColor: null,
-          logging: false
-        });
-
-        const exportCanvas = document.createElement("canvas");
-        exportCanvas.width = 900;
-        exportCanvas.height = 1200;
-
-        const context = exportCanvas.getContext("2d");
-
-        context.drawImage(
-          canvas,
-          0, 0,
-          exportCanvas.width,
-          exportCanvas.height
-        );
-
-        const blob = await new Promise(resolve => {
-          exportCanvas.toBlob(resolve, "image/png");
-        });
-
-        if (!blob) throw new Error("Не удалось подготовить PNG");
-
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-
-        link.href = downloadUrl;
-        link.download = "cardly-ai-900x1200.png";
-
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1500);
-
-        setStatus("Изображение скачано.", "success");
-
-      } catch (error) {
-        console.error("DOWNLOAD ERROR:", error);
-        setStatus("Ошибка скачивания: " + error.message, "error");
-
-      } finally {
-        downloadButton.disabled = false;
-        downloadButton.textContent = "↓ Скачать PNG";
-      }
-    }
-
-    // --------------------------------------------------
-    // ЗАГРУЗКА ФОТО
-    // --------------------------------------------------
-
-    async function handleFile(file) {
-      if (!file) return;
-
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/webp"
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        setStatus("Поддерживаются только PNG, JPG и WEBP.", "error");
-        return;
-      }
-
-      if (file.size > 15 * 1024 * 1024) {
-        setStatus("Размер файла не должен превышать 15 МБ.", "error");
-        return;
-      }
-
-      originalFile = file;
-      cutoutImage = null;
-      hasGeneratedCard = false;
-
-      revokeSceneUrl();
-
-      cardProduct.style.display = "none";
-      cardProduct.removeAttribute("src");
-      downloadButton.disabled = true;
-
-      const previewUrl = await fileToDataURL(file);
-
-      uploadedImage.src = previewUrl;
-      uploadedPreview.style.display = "block";
-
-      setRemoveStatus(
-        "Фотография загружена. Начинаем удаление фона...",
-        "loading"
-      );
-
-      await removeBackground(file);
-    }
-
-    // --------------------------------------------------
-    // СОБЫТИЯ
-    // --------------------------------------------------
-
-    fileInput.addEventListener("change", async event => {
-      const file = event.target.files?.[0];
-      await handleFile(file);
-      fileInput.value = "";
+    resultContext.putImageData(resultPixels,0,0);
+
+    const trimmedCanvas=trimTransparentEdges(resultCanvas);
+    cutoutImage=trimmedCanvas.toDataURL("image/png");
+
+    uploadedImage.src=cutoutImage;
+    uploadedPreview.style.display="block";
+
+    setRemoveStatus("Фон удалён. Исходный товар готов к размещению.","success");
+    renderProductPreview();
+
+  }catch(error){
+    console.error("BACKGROUND REMOVAL ERROR:",error);
+
+    setRemoveStatus("Не удалось удалить фон: "+error.message,"error");
+
+    cutoutImage=await fileToDataURL(file);
+    uploadedImage.src=cutoutImage;
+    uploadedPreview.style.display="block";
+    renderProductPreview();
+
+  }finally{
+    isRemoving=false;
+    progressLine.style.display="none";
+  }
+}
+
+function renderProductPreview(){
+  if(!cutoutImage)return;
+  cardProduct.src=cutoutImage;
+  cardProduct.style.display="block";
+  hasGeneratedCard=true;
+  downloadButton.disabled=false;
+}
+
+async function makeVisionImage(imageSource){
+  const img=await loadImage(imageSource);
+  const maxSide=768;
+  const ratio=Math.min(1,maxSide/Math.max(img.width,img.height));
+  const width=Math.round(img.width*ratio);
+  const height=Math.round(img.height*ratio);
+
+  const canvas=document.createElement("canvas");
+  canvas.width=width;
+  canvas.height=height;
+
+  const ctx=canvas.getContext("2d");
+  ctx.fillStyle="#f4f5f7";
+  ctx.fillRect(0,0,width,height);
+  ctx.drawImage(img,0,0,width,height);
+
+  return canvas.toDataURL("image/jpeg",0.82);
+}
+
+async function requestDesign(){
+  const name=productName.value.trim();
+  if(!name)throw new Error("Введите название товара");
+
+  const response=await fetch(API_BASE+"/api/generate",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      productName:name,
+      characteristics:characteristics.value.trim()
+    })
+  });
+
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||"Не удалось создать дизайн");
+  return data;
+}
+
+async function requestAIScene(){
+  if(!cutoutImage)throw new Error("Сначала загрузите фотографию товара");
+
+  const analysisImage=await makeVisionImage(cutoutImage);
+
+  const response=await fetch(API_BASE+"/api/generate-scene",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      productName:productName.value.trim(),
+      characteristics:characteristics.value.trim(),
+      style:styleSelect.value,
+      image:analysisImage
+    })
+  });
+
+  if(!response.ok){
+    let message="Не удалось создать AI-фон";
+    try{
+      const data=await response.json();
+      message=data.error||message;
+    }catch(e){}
+    throw new Error(message);
+  }
+
+  const blob=await response.blob();
+
+  const position=response.headers.get("X-Cardly-Position")||"center";
+  const scale=Math.max(50,Math.min(78,Number(response.headers.get("X-Cardly-Scale"))||68));
+  const vertical=Math.max(43,Math.min(62,Number(response.headers.get("X-Cardly-Vertical"))||55));
+
+  return {blob,layout:{position,scale,vertical}};
+}
+
+function applyProductLayout(layout){
+  const position=layout?.position||"center";
+  const scale=Math.max(50,Math.min(78,Number(layout?.scale)||68));
+  const vertical=Math.max(43,Math.min(62,Number(layout?.vertical)||55));
+
+  cardProduct.style.width=scale+"%";
+  cardProduct.style.maxHeight="70%";
+  cardProduct.style.top=vertical+"%";
+  cardProduct.style.transform="translateY(-50%)";
+
+  if(position==="left"){
+    cardProduct.style.left="8%";
+    cardProduct.style.right="auto";
+  }else if(position==="right"){
+    cardProduct.style.left="auto";
+    cardProduct.style.right="8%";
+  }else{
+    cardProduct.style.left="50%";
+    cardProduct.style.right="auto";
+    cardProduct.style.transform="translate(-50%,-50%)";
+  }
+}
+
+async function renderCard(data,sceneUrl=null,sceneLayout=null){
+  cardTitle.textContent=data.title||productName.value||"Ваш товар";
+  cardSubtitle.textContent=data.subtitle||"";
+  cardFeatures.innerHTML="";
+
+  const features=Array.isArray(data.features)?data.features.slice(0,4):[];
+
+  features.forEach(text=>{
+    const feature=document.createElement("div");
+    feature.className="feature";
+    feature.textContent=text;
+    cardFeatures.appendChild(feature);
+  });
+
+  card.className="";
+
+  const designs=["premium","editorial","showcase","lifestyle","infographic","cinematic"];
+  const design=designs.includes(styleSelect.value)?styleSelect.value:"premium";
+  card.classList.add("design-"+design);
+
+  const backgrounds=["light","dark","soft","gradient","accent"];
+  const background=backgrounds.includes(data.background)?data.background:"light";
+  card.classList.add("background-"+background);
+
+  const accents=["blue","cyan","green","orange","violet","black"];
+  const accent=accents.includes(data.accent)?data.accent:"blue";
+  card.classList.add("accent-"+accent);
+
+  const titlePosition=data.titlePosition||"top";
+
+  if(titlePosition==="middle"){
+    cardTitle.style.top="38%";
+    cardTitle.style.bottom="auto";
+  }else if(titlePosition==="bottom"){
+    cardTitle.style.top="auto";
+    cardTitle.style.bottom="23%";
+  }else{
+    cardTitle.style.top="6%";
+    cardTitle.style.bottom="auto";
+  }
+
+  if(titlePosition==="top"){
+    cardSubtitle.style.top="19%";
+    cardSubtitle.style.bottom="auto";
+  }else{
+    cardSubtitle.style.top="auto";
+    cardSubtitle.style.bottom="17%";
+  }
+
+  if(cutoutImage){
+    cardProduct.src=cutoutImage;
+    cardProduct.style.display="block";
+    applyProductLayout(sceneLayout||{
+      position:data.productPosition||"center",
+      scale:68,
+      vertical:57
+    });
+  }
+
+  const cardBackground=document.getElementById("cardBackground");
+
+  if(sceneUrl){
+    card.classList.add("scene-composition");
+    cardBackground.style.backgroundImage=`url("${sceneUrl}")`;
+    cardBackground.style.backgroundSize="cover";
+    cardBackground.style.backgroundPosition="center";
+  }else{
+    card.classList.remove("scene-composition");
+    cardBackground.style.backgroundImage="";
+    cardBackground.style.backgroundSize="";
+    cardBackground.style.backgroundPosition="";
+  }
+
+  hasGeneratedCard=true;
+  downloadButton.disabled=false;
+}
+
+async function generateAIComposition(){
+  if(!cutoutImage){
+    setStatus("Сначала загрузите фотографию товара.","error");
+    return;
+  }
+
+  if(!productName.value.trim()){
+    setStatus("Введите название товара.","error");
+    productName.focus();
+    return;
+  }
+
+  setLoading(true,"Шаг 1 из 2: создаём структуру карточки...");
+
+  try{
+    const design=await requestDesign();
+
+    setStatus("Шаг 2 из 2: Vision анализирует товар, FLUX создаёт окружение...","loading");
+
+    const scene=await requestAIScene();
+    revokeSceneUrl();
+    sceneObjectUrl=URL.createObjectURL(scene.blob);
+
+    await renderCard(design,sceneObjectUrl,scene.layout);
+    setStatus("AI-композиция готова. Можно скачать карточку.","success");
+
+  }catch(error){
+    console.error("COMPOSITION ERROR:",error);
+    setStatus(error.message||"Не удалось создать композицию","error");
+  }finally{
+    setLoading(false);
+  }
+}
+
+async function generateSimpleCard(){
+  if(!cutoutImage){
+    setStatus("Сначала загрузите фотографию товара.","error");
+    return;
+  }
+
+  if(!productName.value.trim()){
+    setStatus("Введите название товара.","error");
+    productName.focus();
+    return;
+  }
+
+  setLoading(true,"Создаём дизайн карточки...");
+
+  try{
+    const design=await requestDesign();
+    revokeSceneUrl();
+
+    const cardBackground=document.getElementById("cardBackground");
+    cardBackground.style.backgroundImage="";
+
+    await renderCard(design);
+    setStatus("Карточка готова. Можно скачать изображение.","success");
+
+  }catch(error){
+    console.error("SIMPLE GENERATION ERROR:",error);
+    setStatus(error.message||"Не удалось создать карточку","error");
+  }finally{
+    setLoading(false);
+  }
+}
+
+async function downloadCard(){
+  if(!hasGeneratedCard){
+    setStatus("Сначала создайте карточку.","error");
+    return;
+  }
+
+  downloadButton.disabled=true;
+  downloadButton.textContent="Подготавливаем PNG...";
+
+  try{
+    const canvas=await html2canvas(card,{
+      scale:2,
+      useCORS:true,
+      allowTaint:false,
+      backgroundColor:null,
+      logging:false
     });
 
-    uploadArea.addEventListener("dragover", event => {
-      event.preventDefault();
-      uploadArea.classList.add("dragover");
+    const exportCanvas=document.createElement("canvas");
+    exportCanvas.width=900;
+    exportCanvas.height=1200;
+
+    exportCanvas.getContext("2d").drawImage(
+      canvas,0,0,900,1200
+    );
+
+    const blob=await new Promise(resolve=>{
+      exportCanvas.toBlob(resolve,"image/png");
     });
 
-    uploadArea.addEventListener("dragleave", () => {
-      uploadArea.classList.remove("dragover");
-    });
+    if(!blob)throw new Error("Не удалось подготовить PNG");
 
-    uploadArea.addEventListener("drop", async event => {
-      event.preventDefault();
-      uploadArea.classList.remove("dragover");
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download="cardly-ai-900x1200.png";
 
-      const file = event.dataTransfer.files?.[0];
-      await handleFile(file);
-    });
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-    generateButton.addEventListener("click", generateAIComposition);
-    simpleButton.addEventListener("click", generateSimpleCard);
-    downloadButton.addEventListener("click", downloadCard);
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    setStatus("Изображение скачано.","success");
 
-    setStatus("Загрузите товар, чтобы начать создание карточки.");
-  </script>
+  }catch(error){
+    console.error("DOWNLOAD ERROR:",error);
+    setStatus("Ошибка скачивания: "+error.message,"error");
+  }finally{
+    downloadButton.disabled=false;
+    downloadButton.textContent="↓ Скачать PNG";
+  }
+}
+
+async function handleFile(file){
+  if(!file)return;
+
+  const allowedTypes=["image/png","image/jpeg","image/webp"];
+
+  if(!allowedTypes.includes(file.type)){
+    setStatus("Поддерживаются только PNG, JPG и WEBP.","error");
+    return;
+  }
+
+  if(file.size>15*1024*1024){
+    setStatus("Размер файла не должен превышать 15 МБ.","error");
+    return;
+  }
+
+  cutoutImage=null;
+  hasGeneratedCard=false;
+  revokeSceneUrl();
+
+  cardProduct.style.display="none";
+  cardProduct.removeAttribute("src");
+  downloadButton.disabled=true;
+
+  const previewUrl=await fileToDataURL(file);
+  uploadedImage.src=previewUrl;
+  uploadedPreview.style.display="block";
+
+  setRemoveStatus("Фотография загружена. Начинаем удаление фона...","loading");
+  await removeBackground(file);
+}
+
+fileInput.addEventListener("change",async event=>{
+  const file=event.target.files?.[0];
+  await handleFile(file);
+  fileInput.value="";
+});
+
+uploadArea.addEventListener("dragover",event=>{
+  event.preventDefault();
+  uploadArea.classList.add("dragover");
+});
+
+uploadArea.addEventListener("dragleave",()=>{
+  uploadArea.classList.remove("dragover");
+});
+
+uploadArea.addEventListener("drop",async event=>{
+  event.preventDefault();
+  uploadArea.classList.remove("dragover");
+  const file=event.dataTransfer.files?.[0];
+  await handleFile(file);
+});
+
+generateButton.addEventListener("click",generateAIComposition);
+simpleButton.addEventListener("click",generateSimpleCard);
+downloadButton.addEventListener("click",downloadCard);
+
+setStatus("Загрузите товар, чтобы начать создание карточки.");
+</script>
 </body>
 </html>
