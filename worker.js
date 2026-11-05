@@ -10,14 +10,49 @@ export default {
       "Access-Control-Expose-Headers": "*"
     };
 
-    const jsonResponse = (data, status = 200) => {
-      return new Response(JSON.stringify(data), {
+    const jsonResponse = (data, status = 200, extraHeaders = {}) =>
+      new Response(JSON.stringify(data), {
         status,
         headers: {
           ...corsHeaders,
+          ...extraHeaders,
           "Content-Type": "application/json; charset=utf-8"
         }
       });
+
+    const imageResponse = (base64, layout) => {
+      const binary = atob(base64);
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+
+      return new Response(bytes, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "image/jpeg",
+          "Cache-Control": "no-store",
+          "X-Cardly-Position": layout.position,
+          "X-Cardly-Scale": String(layout.scale),
+          "X-Cardly-Vertical": String(layout.vertical)
+        }
+      });
+    };
+
+    const readAIText = result =>
+      String(result?.response || result?.result || result?.text || "").trim();
+
+    const parseJSON = text => {
+      const clean = String(text)
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const start = clean.indexOf("{");
+      const end = clean.lastIndexOf("}");
+
+      if (start < 0 || end <= start) {
+        throw new Error("AI не вернул корректный JSON");
+      }
+
+      return JSON.parse(clean.slice(start, end + 1));
     };
 
     if (request.method === "OPTIONS") {
@@ -27,12 +62,10 @@ export default {
       });
     }
 
-    // 1. BIRE FNET MODEL FILE PROXY — НЕ ИЗМЕНЯЕМ
+    // 1. ПРОКСИ BIRE FNET — НЕОБХОДИМ ДЛЯ УДАЛЕНИЯ ФОНА
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
-        return jsonResponse({
-          error: "Method not allowed"
-        }, 405);
+        return jsonResponse({ error: "Method not allowed" }, 405);
       }
 
       try {
@@ -49,9 +82,7 @@ export default {
         ];
 
         if (!modelPath.startsWith(allowedPrefix)) {
-          return jsonResponse({
-            error: "Model path not allowed"
-          }, 403);
+          return jsonResponse({ error: "Model path not allowed" }, 403);
         }
 
         const filePath = modelPath.slice(allowedPrefix.length);
@@ -88,29 +119,11 @@ export default {
           redirect: "follow"
         });
 
-        const responseHeaders = new Headers(
-          hfResponse.headers
-        );
+        const responseHeaders = new Headers(hfResponse.headers);
 
-        responseHeaders.set(
-          "Access-Control-Allow-Origin",
-          "*"
-        );
-
-        responseHeaders.set(
-          "Access-Control-Allow-Methods",
-          "GET, HEAD, OPTIONS"
-        );
-
-        responseHeaders.set(
-          "Access-Control-Allow-Headers",
-          "*"
-        );
-
-        responseHeaders.set(
-          "Access-Control-Expose-Headers",
-          "*"
-        );
+        for (const [key, value] of Object.entries(corsHeaders)) {
+          responseHeaders.set(key, value);
+        }
 
         return new Response(
           request.method === "HEAD" ? null : hfResponse.body,
@@ -131,7 +144,7 @@ export default {
       }
     }
 
-    // 2. TEST MODEL FILE
+    // 2. ПРОВЕРКА МОДЕЛИ
     if (url.pathname === "/api/test-model") {
       try {
         const testUrl =
@@ -148,13 +161,11 @@ export default {
         });
 
       } catch (error) {
-        return jsonResponse({
-          error: error.message
-        }, 500);
+        return jsonResponse({ error: error.message }, 500);
       }
     }
 
-    // 3. TEST CLOUDFLARE AI — LLAMA
+    // 3. ПРОВЕРКА LLAMA
     if (url.pathname === "/api/test-ai") {
       try {
         const result = await env.AI.run(
@@ -170,13 +181,59 @@ export default {
         return jsonResponse(result);
 
       } catch (error) {
+        return jsonResponse({ error: error.message }, 500);
+      }
+    }
+
+    // 4. ПРОВЕРКА VISION
+    if (
+      url.pathname === "/api/test-vision" &&
+      request.method === "POST"
+    ) {
+      try {
+        const body = await request.json();
+        const image = String(body.image || "");
+
+        if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
+          return jsonResponse({
+            error: "Передайте фотографию в формате Data URL"
+          }, 400);
+        }
+
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.2-11b-vision-instruct",
+          {
+            messages: [
+              {
+                role: "system",
+                content: "Ты анализируешь фотографии товаров."
+              },
+              {
+                role: "user",
+                content:
+                  "Опиши товар на фотографии: тип, форму, цвет, материал и назначение. Не выдумывай невидимые характеристики."
+              }
+            ],
+            image,
+            max_tokens: 300
+          }
+        );
+
+        return jsonResponse({
+          ok: true,
+          result
+        });
+
+      } catch (error) {
+        console.error("VISION TEST ERROR:", error);
+
         return jsonResponse({
           error: error.message
         }, 500);
       }
     }
 
-    // 4. TEST IMAGE GENERATION — FLUX
+    // 5. ПРОВЕРКА FLUX
     if (
       url.pathname === "/api/test-image" &&
       request.method === "POST"
@@ -201,44 +258,29 @@ export default {
 
         const result = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
-          {
-            prompt,
-            steps
-          }
+          { prompt, steps }
         );
 
-        if (!result || !result.image) {
-          throw new Error(
-            "Модель не вернула изображение"
-          );
+        if (!result?.image) {
+          throw new Error("Модель не вернула изображение");
         }
 
-        const binary = atob(result.image);
-
-        const bytes = Uint8Array.from(
-          binary,
-          char => char.charCodeAt(0)
-        );
-
-        return new Response(bytes, {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "image/jpeg",
-            "Cache-Control": "no-store"
-          }
+        return imageResponse(result.image, {
+          position: "center",
+          scale: 68,
+          vertical: 55
         });
 
       } catch (error) {
         console.error("IMAGE GENERATION ERROR:", error);
 
         return jsonResponse({
-          error: error.message ||
-            "Ошибка генерации изображения"
+          error: error.message
         }, 500);
       }
     }
 
-    // 5. AI ADVERTISING SCENE — SMART PRODUCT MATCHING
+    // 6. УМНАЯ ГЕНЕРАЦИЯ СЦЕНЫ С АНАЛИЗОМ ФОТОГРАФИИ
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
@@ -258,187 +300,146 @@ export default {
           .trim()
           .slice(0, 40);
 
+        const image = String(body.image || "");
+
         if (!productName) {
           return jsonResponse({
             error: "Введите название товара"
           }, 400);
         }
 
-        const productText = (
-          productName + " " + characteristics
-        ).toLowerCase();
+        if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
+          return jsonResponse({
+            error: "Не получено фото товара для анализа"
+          }, 400);
+        }
 
-        // Визуальные стили рекламной сцены.
-        const styleDescriptions = {
+        if (image.length > 7_000_000) {
+          return jsonResponse({
+            error: "Изображение слишком большое"
+          }, 413);
+        }
+
+        const styles = {
           premium:
-            "premium commercial advertising photography, refined materials, elegant architectural lighting, sophisticated composition",
+            "premium commercial photography, elegant materials, refined lighting",
 
           editorial:
-            "high-end editorial photography, natural directional light, artistic but realistic composition, subtle textures",
+            "high-end editorial photography, artistic natural light, subtle textures",
 
           showcase:
-            "professional product showcase, clean architectural environment, clear visual hierarchy, balanced studio lighting",
+            "professional product showcase, clean architectural environment",
 
           lifestyle:
-            "realistic contemporary lifestyle interior, natural daylight, believable environment, calm atmosphere",
+            "realistic contemporary lifestyle setting, natural daylight",
 
           infographic:
-            "modern commercial advertising background, clean geometric architecture, structured composition, controlled colors",
+            "modern commercial background, clean geometric composition",
 
           cinematic:
-            "cinematic commercial photography, directional lighting, rich but natural contrast, realistic depth"
+            "cinematic commercial photography, directional light, realistic depth"
         };
 
         const selectedStyle =
-          styleDescriptions[style] ||
-          styleDescriptions.premium;
+          styles[style] || styles.premium;
 
-        // Определяем категорию товара и подходящее окружение.
-        const categories = [
+        // СНАЧАЛА АНАЛИЗИРУЕМ РЕАЛЬНОЕ ФОТО ТОВАРА
+        const visionPrompt = [
+          "Проанализируй фотографию одного товара для карточки маркетплейса.",
+          "Название товара: " + productName,
+          "Дополнительная информация: " + characteristics,
+          "Определи фактический тип предмета, его форму, цвет, материал и назначение.",
+          "Не выдумывай характеристики, которых нельзя увидеть.",
+          "Подбери реалистичное окружение, которое подходит именно этому товару.",
+          "Фон будет сгенерирован отдельно, а исходная фотография товара будет наложена поверх.",
+          "Поэтому на фоне не должно быть самого товара, его копий, похожих изделий или деталей этого изделия.",
+          "Если это товар для установки, например смеситель или душевая фурнитура, предложи интерьер и оставь место установки пустым.",
+          "Если это одежда, обувь, косметика, электроника или другая категория, предложи подходящую сцену.",
+          "Верни только JSON без Markdown.",
+          'Формат: {"category":"категория","visual_description":"видимые особенности","environment":"описание окружения на английском языке","placement":"left или center или right","scale":68,"vertical":55}.',
+          "scale — число от 50 до 78.",
+          "vertical — число от 43 до 62.",
+          "Оставь верхнюю область свободной для заголовка."
+        ].join("\n");
+
+        const visionResult = await env.AI.run(
+          "@cf/meta/llama-3.2-11b-vision-instruct",
           {
-            test: /(ролик|ролики|каретк|дверн.*душ|душев.*двер|душев.*кабин|кабин.*душ)/i,
-            name: "shower enclosure rollers and hardware",
-            environment:
-              "A realistic frameless glass shower enclosure. Large transparent glass panels, elegant chrome profiles, light grey stone porcelain tiles and a clean shower area. The camera sees the glass structure and its architectural details. The background must clearly communicate shower enclosure hardware."
-          },
-          {
-            test: /(кухонн.*смесител|смесител.*кухн|кран.*кухн)/i,
-            name: "kitchen faucet",
-            environment:
-              "A contemporary designer kitchen sink area. A refined stone countertop, a simple backsplash, subtle cabinetry and realistic kitchen lighting. The scene must clearly look like a kitchen, not a bathroom."
-          },
-          {
-            test: /(смесител|кран|излив|аэратор)/i,
-            name: "bathroom faucet",
-            environment:
-              "A modern bathroom washbasin area. A refined ceramic basin, light natural stone countertop, elegant wall tiles and subtle mirror reflections. The scene must clearly look like a bathroom vanity, not a kitchen."
-          },
-          {
-            test: /(лейк|верхн.*душ|душев.*систем|душев.*гарнитур)/i,
-            name: "shower head and shower system",
-            environment:
-              "A modern shower area with large-format porcelain wall tiles, a glass shower screen, a discreet shower niche and realistic water details. The scene must clearly communicate a shower installation."
-          },
-          {
-            test: /(шланг)/i,
-            name: "shower hose",
-            environment:
-              "A clean contemporary shower enclosure with glass panels, a chrome shower connection area, stone porcelain tiles and subtle realistic reflections. Keep the scene simple and clearly recognizable as a shower."
-          },
-          {
-            test: /(дозатор|диспенсер|мыл)/i,
-            name: "soap dispenser",
-            environment:
-              "A refined bathroom vanity with a light stone countertop, elegant tiled backsplash, ceramic basin partially visible and soft natural daylight. Leave a clean countertop display area."
-          },
-          {
-            test: /(сифон|слив|трап)/i,
-            name: "bathroom drainage and plumbing",
-            environment:
-              "A realistic modern shower floor with large-format stone porcelain tiles, a visible drainage area, subtle water reflections and clean architectural details. No unrelated bathroom accessories."
-          },
-          {
-            test: /(держател|крючок|полк|мыльниц|стакан.*ванн)/i,
-            name: "bathroom accessories",
-            environment:
-              "A modern coordinated bathroom interior with elegant wall tiles, a stone surface, subtle chrome details and restrained bathroom decor. Keep the environment realistic and uncluttered."
-          },
-          {
-            test: /(наушник|телефон|смартфон|заряд|электрон|гаджет)/i,
-            name: "consumer electronics",
-            environment:
-              "A contemporary technology studio with refined matte surfaces, architectural geometry, subtle reflections and controlled studio lighting. No household interiors."
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Ты профессиональный визуальный аналитик товаров. Возвращай только корректный JSON."
+              },
+              {
+                role: "user",
+                content: visionPrompt
+              }
+            ],
+            image,
+            max_tokens: 650,
+            temperature: 0.2
           }
-        ];
-
-        const matched = categories.find(category =>
-          category.test.test(productText)
         );
 
-        const categoryName = matched
-          ? matched.name
-          : "general consumer product";
+        const analysis = parseJSON(readAIText(visionResult));
 
-        const environment = matched
-          ? matched.environment
-          : "A contemporary commercial display environment with materials and surroundings logically suited to the named product. Avoid random interiors and unrelated objects.";
+        // Проверяем расположение и размер товара
+        const position = ["left", "center", "right"].includes(
+          analysis.placement
+        ) ? analysis.placement : "center";
 
-        // Учитываем цвет и материал, если они указаны.
-        const materialColorRules = [
-          {
-            test: /(хром|хромирован|серебрист|нержавеющ.*сталь)/i,
-            value:
-              "Use a coordinated cool neutral palette with silver-grey details, white stone and restrained reflections."
-          },
-          {
-            test: /(чёрн|черн|матов.*чёрн|матов.*черн)/i,
-            value:
-              "Use a sophisticated neutral palette with graphite, charcoal and light stone contrast. Do not make the entire scene black."
-          },
-          {
-            test: /(белый|белая|белое|белые)/i,
-            value:
-              "Use balanced medium-tone surroundings so a white product remains visually distinct and clearly visible."
-          },
-          {
-            test: /(золот|латун)/i,
-            value:
-              "Use warm neutral stone and restrained warm metallic accents, without excessive gold decoration."
-          }
-        ];
+        const scale = Number.isFinite(Number(analysis.scale))
+          ? Math.max(50, Math.min(78, Number(analysis.scale)))
+          : 68;
 
-        const materialRule = materialColorRules.find(rule =>
-          rule.test.test(productText)
-        );
+        const vertical = Number.isFinite(Number(analysis.vertical))
+          ? Math.max(43, Math.min(62, Number(analysis.vertical)))
+          : 55;
 
-        const colorDirection = materialRule
-          ? materialRule.value
-          : "Use a balanced natural color palette that complements the product category.";
+        const category = String(
+          analysis.category || productName
+        ).slice(0, 100);
 
-        // Формируем единое описание без противоречащих инструкций.
+        const visualDescription = String(
+          analysis.visual_description || ""
+        ).slice(0, 500);
+
+        const environment = String(
+          analysis.environment || ""
+        ).slice(0, 900);
+
+        // ПОТОМ FLUX СОЗДАЁТ ТОЛЬКО ФОН
         const finalPrompt = [
           "Create a photorealistic vertical 3:4 commercial advertising background.",
-          "PRODUCT CATEGORY: " + categoryName + ".",
-          "ENVIRONMENT: " + environment,
-          "COLOR DIRECTION: " + colorDirection,
+          "PRODUCT CATEGORY: " + category + ".",
+          "VISIBLE PRODUCT DESCRIPTION FOR COLOR MATCHING ONLY: " + visualDescription + ".",
+          "ENVIRONMENT: " + environment + ".",
           "VISUAL STYLE: " + selectedStyle + ".",
-          "Composition: professional architectural advertising photography, coherent perspective, realistic materials, natural depth, believable lighting and subtle ambient shadows.",
-          "Reserve a visually calm, unobstructed area in the lower center for placing the real product photograph later.",
-          "Keep the upper area relatively clean for a headline.",
-          "The environment must look specifically designed for this product category.",
-          "Do not create a generic luxury interior.",
-          "Do not mix bathroom, kitchen and unrelated environments.",
-          "BACKGROUND ONLY: do not show the actual product, its replica, similar products, product parts or floating objects.",
-          "No text, no letters, no typography, no logos, no labels, no watermark."
-        ].join(" ");
+          "Create a coherent real-world scene with believable perspective, realistic materials and professional commercial lighting.",
+          "Leave a clear unobstructed display zone in the " + position + " area around the lower-middle part of the image.",
+          "Keep the upper 25 percent visually calm and uncluttered for a headline.",
+          "BACKGROUND ONLY: absolutely no product, no replica, no similar item, no product parts and no competing hero object.",
+          "For installation scenes, show the surrounding environment but leave the actual mounting position empty.",
+          "No text, letters, numbers, typography, logos, labels, watermark or people."
+        ].join(" ").slice(0, 2048);
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
           {
-            prompt: finalPrompt.slice(0, 2048),
+            prompt: finalPrompt,
             steps: 6
           }
         );
 
-        if (!imageResult || !imageResult.image) {
-          throw new Error(
-            "FLUX не вернул изображение рекламной сцены"
-          );
+        if (!imageResult?.image) {
+          throw new Error("FLUX не вернул изображение рекламной сцены");
         }
 
-        const binary = atob(imageResult.image);
-
-        const bytes = Uint8Array.from(
-          binary,
-          char => char.charCodeAt(0)
-        );
-
-        return new Response(bytes, {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "image/jpeg",
-            "Cache-Control": "no-store"
-          }
+        return imageResponse(imageResult.image, {
+          position,
+          scale,
+          vertical
         });
 
       } catch (error) {
@@ -451,7 +452,7 @@ export default {
       }
     }
 
-    // 6. GENERATE CARD DESIGN — CLASSIC MODE
+    // 7. ОБЫЧНАЯ ГЕНЕРАЦИЯ КАРТОЧКИ
     if (
       url.pathname === "/api/generate" &&
       request.method === "POST"
@@ -461,54 +462,44 @@ export default {
 
         const productName = String(
           body.productName || ""
-        ).slice(0, 160);
+        ).trim().slice(0, 160);
 
         const characteristics = String(
           body.characteristics || body.features || ""
         ).slice(0, 2000);
 
-        if (!productName.trim()) {
+        if (!productName) {
           return jsonResponse({
             error: "Введите название товара"
           }, 400);
         }
 
         const prompt = `
-Ты арт-директор профессионального сервиса инфографики для Wildberries и Ozon.
-Создай только структуру дизайна карточки 900x1200.
-Не выдумывай характеристики товара.
-Используй только факты из входных данных.
+Ты арт-директор сервиса инфографики для маркетплейсов.
+Создай структуру дизайна карточки 900x1200.
+Не выдумывай характеристики.
 
-Название товара:
-${productName}
+Название: ${productName}
+Характеристики: ${characteristics}
 
-Характеристики:
-${characteristics}
-
-Верни только корректный JSON без Markdown и комментариев.
-
-Формат:
+Верни только JSON:
 {
-  "title": "короткий выразительный заголовок",
-  "subtitle": "короткое пояснение",
-  "features": ["преимущество 1", "преимущество 2"],
-  "design": "hero",
-  "productPosition": "center",
-  "titlePosition": "top",
-  "featuresPosition": "bottom",
-  "background": "light",
-  "accent": "blue",
-  "shadow": "soft",
-  "decoration": "none"
+"title":"короткий заголовок",
+"subtitle":"короткое пояснение",
+"features":["преимущество 1","преимущество 2"],
+"design":"hero",
+"productPosition":"center",
+"titlePosition":"top",
+"featuresPosition":"bottom",
+"background":"light",
+"accent":"blue",
+"shadow":"soft",
+"decoration":"none"
 }
 
-Правила:
-- Заголовок короткий, максимум 5 слов.
-- Не добавляй рекламных обещаний, которых нет во входных данных.
-- В features добавляй только подтверждённые характеристики.
-- Не повторяй одно и то же в заголовке и преимуществах.
-- Максимум 4 преимущества.
-- Не используй длинные предложения.
+Заголовок максимум 5 слов.
+В features только подтверждённые факты.
+Максимум 4 преимущества.
 
 Допустимые значения:
 design: hero, split, editorial, dynamic, info, premium
@@ -528,83 +519,30 @@ decoration: none
               {
                 role: "system",
                 content:
-                  "Ты профессиональный арт-директор. Возвращай только валидный JSON. Не добавляй Markdown."
+                  "Ты профессиональный арт-директор. Возвращай только валидный JSON."
               },
               {
                 role: "user",
                 content: prompt
               }
-            ]
+            ],
+            max_tokens: 500,
+            temperature: 0.35
           }
         );
 
-        let answer = result.response || result.text || "";
-
-        answer = answer
-          .replace(/```json/gi, "")
-          .replace(/```/g, "")
-          .trim();
-
-        const start = answer.indexOf("{");
-        const end = answer.lastIndexOf("}");
-
-        if (start === -1 || end === -1) {
-          throw new Error(
-            "AI не вернул корректный JSON"
-          );
-        }
-
-        const data = JSON.parse(
-          answer.slice(start, end + 1)
-        );
+        const data = parseJSON(readAIText(result));
 
         const allowed = {
           design: [
-            "hero",
-            "split",
-            "editorial",
-            "dynamic",
-            "info",
-            "premium"
+            "hero", "split", "editorial",
+            "dynamic", "info", "premium"
           ],
-          productPosition: [
-            "left",
-            "center",
-            "right"
-          ],
-          titlePosition: [
-            "top",
-            "middle",
-            "bottom"
-          ],
-          featuresPosition: [
-            "left",
-            "right",
-            "bottom"
-          ],
-          background: [
-            "light",
-            "dark",
-            "soft",
-            "gradient",
-            "accent"
-          ],
-          accent: [
-            "blue",
-            "cyan",
-            "green",
-            "orange",
-            "violet",
-            "black"
-          ],
-          shadow: [
-            "soft",
-            "medium",
-            "none"
-          ],
-          decoration: [
-            "none"
-          ]
+          productPosition: ["left", "center", "right"],
+          titlePosition: ["top", "middle", "bottom"],
+          featuresPosition: ["left", "right", "bottom"],
+          background: ["light", "dark", "soft", "gradient", "accent"],
+          accent: ["blue", "cyan", "green", "orange", "violet", "black"]
         };
 
         const defaults = {
@@ -613,9 +551,7 @@ decoration: none
           titlePosition: "top",
           featuresPosition: "bottom",
           background: "light",
-          accent: "blue",
-          shadow: "soft",
-          decoration: "none"
+          accent: "blue"
         };
 
         for (const [key, values] of Object.entries(allowed)) {
@@ -645,12 +581,12 @@ decoration: none
         console.error("GENERATE ERROR:", error);
 
         return jsonResponse({
-          error: error.message
+          error: error.message || "Не удалось создать дизайн"
         }, 500);
       }
     }
 
-    // 7. STATIC WEBSITE FILES
+    // 8. СТАТИЧЕСКИЕ ФАЙЛЫ САЙТА
     return env.ASSETS.fetch(request);
   }
 };
