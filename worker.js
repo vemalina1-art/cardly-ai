@@ -62,7 +62,7 @@ export default {
       });
     }
 
-    // 1. ПРОКСИ BIRE FNET — НЕОБХОДИМ ДЛЯ УДАЛЕНИЯ ФОНА
+    // 1. ПРОКСИ BIRE FNET — УДАЛЕНИЕ ФОНА
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
         return jsonResponse({ error: "Method not allowed" }, 405);
@@ -144,7 +144,7 @@ export default {
       }
     }
 
-    // 2. ПРОВЕРКА МОДЕЛИ
+    // 2. ПРОВЕРКА МОДЕЛИ BIRE FNET
     if (url.pathname === "/api/test-model") {
       try {
         const testUrl =
@@ -165,7 +165,7 @@ export default {
       }
     }
 
-    // 3. ПРОВЕРКА LLAMA
+    // 3. ПРОВЕРКА ТЕКСТОВОЙ LLAMA
     if (url.pathname === "/api/test-ai") {
       try {
         const result = await env.AI.run(
@@ -185,52 +185,17 @@ export default {
       }
     }
 
-    // 4. ПРОВЕРКА VISION
+    // 4. VISION ОТКЛЮЧЁН
     if (
       url.pathname === "/api/test-vision" &&
       request.method === "POST"
     ) {
-      try {
-        const body = await request.json();
-        const image = String(body.image || "");
-
-        if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
-          return jsonResponse({
-            error: "Передайте фотографию в формате Data URL"
-          }, 400);
-        }
-
-        const result = await env.AI.run(
-          "@cf/meta/llama-3.2-11b-vision-instruct",
-          {
-            messages: [
-              {
-                role: "system",
-                content: "Ты анализируешь фотографии товаров."
-              },
-              {
-                role: "user",
-                content:
-                  "Опиши товар на фотографии: тип, форму, цвет, материал и назначение. Не выдумывай невидимые характеристики."
-              }
-            ],
-            image,
-            max_tokens: 300
-          }
-        );
-
-        return jsonResponse({
-          ok: true,
-          result
-        });
-
-      } catch (error) {
-        console.error("VISION TEST ERROR:", error);
-
-        return jsonResponse({
-          error: error.message
-        }, 500);
-      }
+      return jsonResponse({
+        ok: false,
+        disabled: true,
+        message:
+          "Vision отключён. Для AI-композиции используется текстовая модель."
+      }, 410);
     }
 
     // 5. ПРОВЕРКА FLUX
@@ -280,7 +245,7 @@ export default {
       }
     }
 
-    // 6. УМНАЯ ГЕНЕРАЦИЯ СЦЕНЫ С АНАЛИЗОМ ФОТОГРАФИИ
+    // 6. AI-КОМПОЗИЦИЯ: LLAMA 3.1 + FLUX
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
@@ -310,7 +275,7 @@ export default {
 
         if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
           return jsonResponse({
-            error: "Не получено фото товара для анализа"
+            error: "Не получено фото товара"
           }, 400);
         }
 
@@ -343,48 +308,71 @@ export default {
         const selectedStyle =
           styles[style] || styles.premium;
 
-        // СНАЧАЛА АНАЛИЗИРУЕМ РЕАЛЬНОЕ ФОТО ТОВАРА
-        const visionPrompt = [
-          "Проанализируй фотографию одного товара для карточки маркетплейса.",
-          "Название товара: " + productName,
-          "Дополнительная информация: " + characteristics,
-          "Определи фактический тип предмета, его форму, цвет, материал и назначение.",
-          "Не выдумывай характеристики, которых нельзя увидеть.",
-          "Подбери реалистичное окружение, которое подходит именно этому товару.",
-          "Фон будет сгенерирован отдельно, а исходная фотография товара будет наложена поверх.",
-          "Поэтому на фоне не должно быть самого товара, его копий, похожих изделий или деталей этого изделия.",
-          "Если это товар для установки, например смеситель или душевая фурнитура, предложи интерьер и оставь место установки пустым.",
-          "Если это одежда, обувь, косметика, электроника или другая категория, предложи подходящую сцену.",
-          "Верни только JSON без Markdown.",
-          'Формат: {"category":"категория","visual_description":"видимые особенности","environment":"описание окружения на английском языке","placement":"left или center или right","scale":68,"vertical":55}.',
-          "scale — число от 50 до 78.",
-          "vertical — число от 43 до 62.",
-          "Оставь верхнюю область свободной для заголовка."
-        ].join("\n");
+        // ШАГ 1. LLAMA 3.1 ПОДБИРАЕТ СЦЕНУ
+        const prompt = `
+Ты профессиональный арт-директор рекламных карточек маркетплейсов.
 
-        const visionResult = await env.AI.run(
-          "@cf/meta/llama-3.2-11b-vision-instruct",
+Придумай подходящее окружение для фотографии товара.
+
+Название товара: ${productName}
+
+Характеристики:
+${characteristics || "Дополнительные характеристики не указаны."}
+
+Стиль:
+${selectedStyle}
+
+Правила:
+- Подбирай окружение именно под указанный товар.
+- Не выдумывай характеристики.
+- Фон будет создан отдельно.
+- Оригинальная фотография товара будет наложена поверх фона.
+- Не добавляй на фон сам товар, его копии или похожие изделия.
+- Для сантехники используй подходящий интерьер ванной комнаты.
+- Для косметики используй эстетичное окружение с подходящими материалами.
+- Для электроники используй современную технологичную обстановку.
+- Для одежды и аксессуаров используй подходящую коммерческую сцену.
+- Оставь верхнюю часть изображения свободной для заголовка.
+- Оставь свободное пространство для размещения товара.
+
+Верни только JSON без Markdown:
+
+{
+  "category": "категория товара",
+  "visual_description": "описание цветовой гаммы и визуального характера",
+  "environment": "подробное описание фона на английском языке",
+  "placement": "center",
+  "scale": 68,
+  "vertical": 55
+}
+
+placement: left, center или right.
+scale: число от 50 до 78.
+vertical: число от 43 до 62.
+`;
+
+        const textResult = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fp8",
           {
             messages: [
               {
                 role: "system",
                 content:
-                  "Ты профессиональный визуальный аналитик товаров. Возвращай только корректный JSON."
+                  "Ты профессиональный арт-директор. Возвращай только корректный JSON без пояснений."
               },
               {
                 role: "user",
-                content: visionPrompt
+                content: prompt
               }
             ],
-            image,
             max_tokens: 650,
-            temperature: 0.2
+            temperature: 0.3
           }
         );
 
-        const analysis = parseJSON(readAIText(visionResult));
+        const analysis = parseJSON(readAIText(textResult));
 
-        // Проверяем расположение и размер товара
+        // ШАГ 2. ПРОВЕРКА ПАРАМЕТРОВ
         const position = ["left", "center", "right"].includes(
           analysis.placement
         ) ? analysis.placement : "center";
@@ -406,21 +394,22 @@ export default {
         ).slice(0, 500);
 
         const environment = String(
-          analysis.environment || ""
+          analysis.environment ||
+          "A clean modern commercial interior"
         ).slice(0, 900);
 
-        // ПОТОМ FLUX СОЗДАЁТ ТОЛЬКО ФОН
+        // ШАГ 3. FLUX СОЗДАЁТ ТОЛЬКО ФОН
         const finalPrompt = [
           "Create a photorealistic vertical 3:4 commercial advertising background.",
           "PRODUCT CATEGORY: " + category + ".",
-          "VISIBLE PRODUCT DESCRIPTION FOR COLOR MATCHING ONLY: " + visualDescription + ".",
+          "COLOR AND VISUAL CHARACTER: " + visualDescription + ".",
           "ENVIRONMENT: " + environment + ".",
           "VISUAL STYLE: " + selectedStyle + ".",
-          "Create a coherent real-world scene with believable perspective, realistic materials and professional commercial lighting.",
+          "Create a realistic coherent environment with believable perspective, professional lighting and refined materials.",
           "Leave a clear unobstructed display zone in the " + position + " area around the lower-middle part of the image.",
           "Keep the upper 25 percent visually calm and uncluttered for a headline.",
-          "BACKGROUND ONLY: absolutely no product, no replica, no similar item, no product parts and no competing hero object.",
-          "For installation scenes, show the surrounding environment but leave the actual mounting position empty.",
+          "BACKGROUND ONLY. Do not generate any product, replica, similar item, product parts or competing hero object.",
+          "For installation scenes, leave the actual mounting position empty.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
         ].join(" ").slice(0, 2048);
 
@@ -581,7 +570,8 @@ decoration: none
         console.error("GENERATE ERROR:", error);
 
         return jsonResponse({
-          error: error.message || "Не удалось создать дизайн"
+          error: error.message ||
+            "Не удалось создать дизайн"
         }, 500);
       }
     }
