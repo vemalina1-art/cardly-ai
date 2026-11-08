@@ -185,17 +185,63 @@ export default {
       }
     }
 
-    // 4. VISION ОТКЛЮЧЁН
+    // 4. ПРОВЕРКА VISION
     if (
       url.pathname === "/api/test-vision" &&
       request.method === "POST"
     ) {
-      return jsonResponse({
-        ok: false,
-        disabled: true,
-        message:
-          "Vision отключён. Для AI-композиции используется текстовая модель."
-      }, 410);
+      try {
+        const body = await request.json();
+        const image = String(body.image || "");
+
+        if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
+          return jsonResponse({
+            error: "Не получено фото товара"
+          }, 400);
+        }
+
+        if (image.length > 7_000_000) {
+          return jsonResponse({
+            error: "Изображение слишком большое"
+          }, 413);
+        }
+
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.2-11b-vision-instruct",
+          {
+            messages: [{
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "Опиши видимый товар: форму, цвет и материал. Ответь кратко на русском."
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: image
+                  }
+                }
+              ]
+            }],
+            max_tokens: 300
+          }
+        );
+
+        return jsonResponse({
+          ok: true,
+          analysis: readAIText(result),
+          raw: result
+        });
+
+      } catch (error) {
+        console.error("VISION TEST ERROR:", error);
+
+        return jsonResponse({
+          ok: false,
+          error: error.message
+        }, 500);
+      }
     }
 
     // 5. ПРОВЕРКА FLUX
@@ -245,7 +291,7 @@ export default {
       }
     }
 
-    // 6. AI-КОМПОЗИЦИЯ: LLAMA 3.1 + FLUX
+    // 6. AI-КОМПОЗИЦИЯ: VISION + FLUX
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
@@ -286,143 +332,196 @@ export default {
         }
 
         const styles = {
-          premium:
-            "premium commercial photography, elegant materials, refined lighting",
-
-          editorial:
-            "high-end editorial photography, artistic natural light, subtle textures",
-
-          showcase:
-            "professional product showcase, clean architectural environment",
-
-          lifestyle:
-            "realistic contemporary lifestyle setting, natural daylight",
-
-          infographic:
-            "modern commercial background, clean geometric composition",
-
-          cinematic:
-            "cinematic commercial photography, directional light, realistic depth"
+          premium: "premium commercial photography, elegant materials, refined soft lighting",
+          editorial: "high-end editorial photography, artistic natural light, subtle textures",
+          showcase: "professional product showcase, clean architectural environment",
+          lifestyle: "realistic contemporary lifestyle setting, natural daylight",
+          infographic: "modern commercial background, clean geometric composition",
+          cinematic: "cinematic commercial photography, directional light, realistic depth"
         };
 
-        const selectedStyle =
-          styles[style] || styles.premium;
+        const selectedStyle = styles[style] || styles.premium;
 
-        // ШАГ 1. LLAMA 3.1 ПОДБИРАЕТ СЦЕНУ
-        const prompt = `
-Ты профессиональный арт-директор рекламных карточек маркетплейсов.
+        // ШАГ 1. VISION АНАЛИЗИРУЕТ РЕАЛЬНОЕ ФОТО
 
-Придумай подходящее окружение для фотографии товара.
+        const visionPrompt = `
+Ты — технический арт-директор предметной рекламной фотографии.
+Проанализируй именно изображение товара, приложенное к запросу.
 
-Название товара: ${productName}
+Название от пользователя: ${productName}
+Характеристики от пользователя: ${characteristics || "не указаны"}
 
-Характеристики:
-${characteristics || "Дополнительные характеристики не указаны."}
+Определи только видимые признаки: что это за предмет, его силуэт,
+ориентацию, примерные пропорции, видимые материалы и основные цвета.
+Не додумывай невидимые детали и не меняй конструкцию товара.
 
-Стиль:
-${selectedStyle}
+Затем спроектируй подходящую рекламную сцену, в которой этот предмет
+будет выглядеть естественно после размещения на фоне. Укажи подходящую
+опорную поверхность или плоскость, перспективу камеры, направление света,
+цветовую температуру и свободную область для самого товара.
 
-Правила:
-- Подбирай окружение именно под указанный товар.
-- Не выдумывай характеристики.
-- Фон будет создан отдельно.
-- Оригинальная фотография товара будет наложена поверх фона.
-- Не добавляй на фон сам товар, его копии или похожие изделия.
-- Для сантехники используй подходящий интерьер ванной комнаты.
-- Для косметики используй эстетичное окружение с подходящими материалами.
-- Для электроники используй современную технологичную обстановку.
-- Для одежды и аксессуаров используй подходящую коммерческую сцену.
-- Оставь верхнюю часть изображения свободной для заголовка.
-- Оставь свободное пространство для размещения товара.
+Важно:
+- Не описывай сцену, в которой товар физически не может находиться.
+- Учитывай, где предмет должен опираться, крепиться или стоять.
+- Не помещай визуально похожие предметы рядом с товаром.
+- Оставь верхние 22 процента спокойными для заголовка.
+- Товар будет добавлен поверх фона отдельно, поэтому в фоне не должно быть
+  самого товара, его копии или деталей, которые выглядят как его дубликат.
+- Выбирай масштаб и положение с учётом реального силуэта на фото.
+- Описание окружения и визуальных инструкций для генератора пиши на английском.
 
-Верни только JSON без Markdown:
-
+Верни только JSON без Markdown в следующем формате:
 {
-  "category": "категория товара",
-  "visual_description": "описание цветовой гаммы и визуального характера",
-  "environment": "подробное описание фона на английском языке",
+  "category": "короткая категория",
+  "product_shape": "видимый силуэт и ориентация предмета",
+  "materials": "только видимые материалы",
+  "colors": "основные видимые цвета",
+  "visual_description": "характер и палитра сцены",
+  "environment": "подробное описание окружения на английском",
+  "support_surface": "подходящая опорная поверхность на английском",
+  "camera_perspective": "перспектива и ракурс на английском",
+  "light_direction": "направление и мягкость света на английском",
   "placement": "center",
-  "scale": 68,
-  "vertical": 55
+  "scale": 62,
+  "vertical": 58
 }
 
-placement: left, center или right.
-scale: число от 50 до 78.
-vertical: число от 43 до 62.
+placement должен быть left, center или right.
+scale — число от 50 до 78.
+vertical — число от 43 до 62.
 `;
 
-        const textResult = await env.AI.run(
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
+        const visionResult = await env.AI.run(
+          "@cf/meta/llama-3.2-11b-vision-instruct",
           {
             messages: [
               {
                 role: "system",
-                content:
-                  "Ты профессиональный арт-директор. Возвращай только корректный JSON без пояснений."
+                content: "Ты анализируешь реальные товарные фотографии. Не выдумывай детали. Возвращай только корректный JSON."
               },
               {
                 role: "user",
-                content: prompt
+                content: [
+                  {
+                    type: "text",
+                    text: visionPrompt
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: image
+                    }
+                  }
+                ]
               }
             ],
-            max_tokens: 650,
-            temperature: 0.3
+            max_tokens: 850,
+            temperature: 0.2
           }
         );
 
-        const analysis = parseJSON(readAIText(textResult));
+        const analysis = parseJSON(readAIText(visionResult));
 
-        // ШАГ 2. ПРОВЕРКА ПАРАМЕТРОВ
-        const position = ["left", "center", "right"].includes(
-          analysis.placement
-        ) ? analysis.placement : "center";
+        // ШАГ 2. НОРМАЛИЗАЦИЯ ПАРАМЕТРОВ
+
+        const position = ["left", "center", "right"].includes(analysis.placement)
+          ? analysis.placement
+          : "center";
 
         const scale = Number.isFinite(Number(analysis.scale))
           ? Math.max(50, Math.min(78, Number(analysis.scale)))
-          : 68;
+          : 62;
 
         const vertical = Number.isFinite(Number(analysis.vertical))
           ? Math.max(43, Math.min(62, Number(analysis.vertical)))
-          : 55;
+          : 58;
 
-        const category = String(
-          analysis.category || productName
-        ).slice(0, 100);
+        const safeText = (value, max = 450) =>
+          String(value || "")
+            .replace(/[\r\n]+/g, " ")
+            .slice(0, max);
 
-        const visualDescription = String(
-          analysis.visual_description || ""
-        ).slice(0, 500);
+        const category = safeText(
+          analysis.category || productName,
+          100
+        );
 
-        const environment = String(
-          analysis.environment ||
-          "A clean modern commercial interior"
-        ).slice(0, 900);
+        const productShape = safeText(
+          analysis.product_shape,
+          350
+        );
 
-        // ШАГ 3. FLUX СОЗДАЁТ ТОЛЬКО ФОН
+        const materials = safeText(
+          analysis.materials,
+          250
+        );
+
+        const colors = safeText(
+          analysis.colors,
+          200
+        );
+
+        const visualDescription = safeText(
+          analysis.visual_description,
+          350
+        );
+
+        const environment = safeText(
+          analysis.environment || "A clean modern commercial interior",
+          650
+        );
+
+        const supportSurface = safeText(
+          analysis.support_surface,
+          250
+        );
+
+        const cameraPerspective = safeText(
+          analysis.camera_perspective,
+          250
+        );
+
+        const lightDirection = safeText(
+          analysis.light_direction,
+          250
+        );
+
+        // ШАГ 3. FLUX СОЗДАЁТ СЦЕНУ ПОД ТОВАР
+
         const finalPrompt = [
-          "Create a photorealistic vertical 3:4 commercial advertising background.",
+          "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
           "PRODUCT CATEGORY: " + category + ".",
-          "COLOR AND VISUAL CHARACTER: " + visualDescription + ".",
+          "REFERENCE PRODUCT SILHOUETTE: " + productShape + ".",
+          "VISIBLE MATERIALS: " + materials + ".",
+          "VISIBLE PRODUCT COLORS: " + colors + ".",
+          "SCENE PALETTE: " + visualDescription + ".",
           "ENVIRONMENT: " + environment + ".",
+          "SUPPORTING ARCHITECTURE OR SURFACE: " + supportSurface + ".",
+          "CAMERA AND PERSPECTIVE: " + cameraPerspective + ".",
+          "LIGHTING: " + lightDirection + ".",
           "VISUAL STYLE: " + selectedStyle + ".",
-          "Create a realistic coherent environment with believable perspective, professional lighting and refined materials.",
-          "Leave a clear unobstructed display zone in the " + position + " area around the lower-middle part of the image.",
-          "Keep the upper 25 percent visually calm and uncluttered for a headline.",
-          "BACKGROUND ONLY. Do not generate any product, replica, similar item, product parts or competing hero object.",
-          "For installation scenes, leave the actual mounting position empty.",
+          "Compose the environment around the reference object's real silhouette and proportions, not around a generic central rectangle.",
+          "The lower-middle " + position + " region is reserved for compositing the real product, with enough clear space matching its shape.",
+          "Include a believable nearby support plane, ledge, tabletop, floor or mounting context when physically appropriate for this product.",
+          "Make the perspective lines, surface angle, material reflections and light direction coherent with a real object placed in the reserved region.",
+          "Use natural ambient occlusion and realistic depth in the environment; avoid a flat studio gradient.",
+          "Keep the upper 22 percent visually calm for a headline.",
+          "BACKGROUND ONLY: do not draw the product, a replica, similar objects, product parts, silhouettes, placeholder objects or a fake product shadow.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
-        ].join(" ").slice(0, 2048);
+        ].join(" ").slice(0, 2600);
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
           {
             prompt: finalPrompt,
-            steps: 6
+            steps: 8
           }
         );
 
         if (!imageResult?.image) {
-          throw new Error("FLUX не вернул изображение рекламной сцены");
+          throw new Error(
+            "FLUX не вернул изображение рекламной сцены"
+          );
         }
 
         return imageResponse(imageResult.image, {
@@ -434,14 +533,20 @@ vertical: число от 43 до 62.
       } catch (error) {
         console.error("AD SCENE GENERATION ERROR:", error);
 
+        const message = String(error?.message || "");
+
+        const licenseHint = /license|accept|terms|403/i.test(message)
+          ? " Если модель Vision запускается впервые, сначала примите лицензию Meta для @cf/meta/llama-3.2-11b-vision-instruct в Cloudflare."
+          : "";
+
         return jsonResponse({
-          error: error.message ||
-            "Не удалось создать рекламное окружение"
+          error: (message || "Не удалось создать рекламное окружение") + licenseHint
         }, 500);
       }
     }
 
     // 7. ОБЫЧНАЯ ГЕНЕРАЦИЯ КАРТОЧКИ
+
     if (
       url.pathname === "/api/generate" &&
       request.method === "POST"
@@ -577,6 +682,7 @@ decoration: none
     }
 
     // 8. СТАТИЧЕСКИЕ ФАЙЛЫ САЙТА
+
     return env.ASSETS.fetch(request);
   }
 };
