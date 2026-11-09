@@ -1,4 +1,3 @@
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -185,7 +184,7 @@ export default {
       }
     }
 
-    // 4. ПРОВЕРКА VISION
+    // 4. ПРОВЕРКА VISION-МОДЕЛИ QWEN
     if (
       url.pathname === "/api/test-vision" &&
       request.method === "POST"
@@ -196,42 +195,35 @@ export default {
 
         if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
           return jsonResponse({
-            error: "Не получено фото товара"
+            error: "Передайте фото в поле image в формате data:image/jpeg;base64,..."
           }, 400);
         }
 
-        if (image.length > 7_000_000) {
-          return jsonResponse({
-            error: "Изображение слишком большое"
-          }, 413);
-        }
-
         const result = await env.AI.run(
-          "@cf/meta/llama-3.2-11b-vision-instruct",
+          "@cf/qwen/qwen3.8-27b",
           {
             messages: [{
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: "Опиши видимый товар: форму, цвет и материал. Ответь кратко на русском."
+                  text: "Кратко опиши предмет на фото. Ответь по-русски."
                 },
                 {
                   type: "image_url",
-                  image_url: {
-                    url: image
-                  }
+                  image_url: { url: image }
                 }
               ]
             }],
-            max_tokens: 300
+            max_completion_tokens: 400,
+            reasoning_effort: "low"
           }
         );
 
         return jsonResponse({
           ok: true,
-          analysis: readAIText(result),
-          raw: result
+          model: "@cf/qwen/qwen3.8-27b",
+          result: readAIText(result) || result
         });
 
       } catch (error) {
@@ -291,7 +283,7 @@ export default {
       }
     }
 
-    // 6. AI-КОМПОЗИЦИЯ: VISION + FLUX
+    // 6. AI-КОМПОЗИЦИЯ: АНАЛИЗ ФОТО ТОВАРА + FLUX
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
@@ -332,18 +324,23 @@ export default {
         }
 
         const styles = {
-          premium: "premium commercial photography, elegant materials, refined soft lighting",
-          editorial: "high-end editorial photography, artistic natural light, subtle textures",
-          showcase: "professional product showcase, clean architectural environment",
-          lifestyle: "realistic contemporary lifestyle setting, natural daylight",
-          infographic: "modern commercial background, clean geometric composition",
-          cinematic: "cinematic commercial photography, directional light, realistic depth"
+          premium:
+            "premium commercial photography, elegant materials, refined soft lighting",
+          editorial:
+            "high-end editorial photography, artistic natural light, subtle textures",
+          showcase:
+            "professional product showcase, clean architectural environment",
+          lifestyle:
+            "realistic contemporary lifestyle setting, natural daylight",
+          infographic:
+            "modern commercial background, clean geometric composition",
+          cinematic:
+            "cinematic commercial photography, directional light, realistic depth"
         };
 
         const selectedStyle = styles[style] || styles.premium;
 
-        // ШАГ 1. VISION АНАЛИЗИРУЕТ РЕАЛЬНОЕ ФОТО
-
+        // ШАГ 1. QWEN АНАЛИЗИРУЕТ РЕАЛЬНОЕ ФОТО ТОВАРА
         const visionPrompt = `
 Ты — технический арт-директор предметной рекламной фотографии.
 Проанализируй именно изображение товара, приложенное к запросу.
@@ -392,12 +389,13 @@ vertical — число от 43 до 62.
 `;
 
         const visionResult = await env.AI.run(
-          "@cf/meta/llama-3.2-11b-vision-instruct",
+          "@cf/qwen/qwen3.8-27b",
           {
             messages: [
               {
                 role: "system",
-                content: "Ты анализируешь реальные товарные фотографии. Не выдумывай детали. Возвращай только корректный JSON."
+                content:
+                  "Ты анализируешь реальные товарные фотографии. Не выдумывай детали. Возвращай только корректный JSON."
               },
               {
                 role: "user",
@@ -408,23 +406,23 @@ vertical — число от 43 до 62.
                   },
                   {
                     type: "image_url",
-                    image_url: {
-                      url: image
-                    }
+                    image_url: { url: image }
                   }
                 ]
               }
             ],
-            max_tokens: 850,
+            max_completion_tokens: 1200,
+            reasoning_effort: "low",
             temperature: 0.2
           }
         );
 
         const analysis = parseJSON(readAIText(visionResult));
 
-        // ШАГ 2. НОРМАЛИЗАЦИЯ ПАРАМЕТРОВ
-
-        const position = ["left", "center", "right"].includes(analysis.placement)
+        // ШАГ 2. НОРМАЛИЗАЦИЯ ПАРАМЕТРОВ РАСПОЛОЖЕНИЯ
+        const position = ["left", "center", "right"].includes(
+          analysis.placement
+        )
           ? analysis.placement
           : "center";
 
@@ -467,7 +465,8 @@ vertical — число от 43 до 62.
         );
 
         const environment = safeText(
-          analysis.environment || "A clean modern commercial interior",
+          analysis.environment ||
+            "A clean modern commercial interior",
           650
         );
 
@@ -486,8 +485,7 @@ vertical — число от 43 до 62.
           250
         );
 
-        // ШАГ 3. FLUX СОЗДАЁТ СЦЕНУ ПОД ТОВАР
-
+        // ШАГ 3. FLUX СОЗДАЁТ ПОДХОДЯЩУЮ СЦЕНУ
         const finalPrompt = [
           "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
           "PRODUCT CATEGORY: " + category + ".",
@@ -533,20 +531,15 @@ vertical — число от 43 до 62.
       } catch (error) {
         console.error("AD SCENE GENERATION ERROR:", error);
 
-        const message = String(error?.message || "");
-
-        const licenseHint = /license|accept|terms|403/i.test(message)
-          ? " Если модель Vision запускается впервые, сначала примите лицензию Meta для @cf/meta/llama-3.2-11b-vision-instruct в Cloudflare."
-          : "";
-
         return jsonResponse({
-          error: (message || "Не удалось создать рекламное окружение") + licenseHint
+          error:
+            error.message ||
+            "Не удалось создать рекламное окружение"
         }, 500);
       }
     }
 
     // 7. ОБЫЧНАЯ ГЕНЕРАЦИЯ КАРТОЧКИ
-
     if (
       url.pathname === "/api/generate" &&
       request.method === "POST"
@@ -629,14 +622,43 @@ decoration: none
 
         const allowed = {
           design: [
-            "hero", "split", "editorial",
-            "dynamic", "info", "premium"
+            "hero",
+            "split",
+            "editorial",
+            "dynamic",
+            "info",
+            "premium"
           ],
-          productPosition: ["left", "center", "right"],
-          titlePosition: ["top", "middle", "bottom"],
-          featuresPosition: ["left", "right", "bottom"],
-          background: ["light", "dark", "soft", "gradient", "accent"],
-          accent: ["blue", "cyan", "green", "orange", "violet", "black"]
+          productPosition: [
+            "left",
+            "center",
+            "right"
+          ],
+          titlePosition: [
+            "top",
+            "middle",
+            "bottom"
+          ],
+          featuresPosition: [
+            "left",
+            "right",
+            "bottom"
+          ],
+          background: [
+            "light",
+            "dark",
+            "soft",
+            "gradient",
+            "accent"
+          ],
+          accent: [
+            "blue",
+            "cyan",
+            "green",
+            "orange",
+            "violet",
+            "black"
+          ]
         };
 
         const defaults = {
@@ -675,14 +697,14 @@ decoration: none
         console.error("GENERATE ERROR:", error);
 
         return jsonResponse({
-          error: error.message ||
+          error:
+            error.message ||
             "Не удалось создать дизайн"
         }, 500);
       }
     }
 
     // 8. СТАТИЧЕСКИЕ ФАЙЛЫ САЙТА
-
     return env.ASSETS.fetch(request);
   }
 };
