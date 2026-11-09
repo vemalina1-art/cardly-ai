@@ -1,3 +1,4 @@
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -35,11 +36,37 @@ export default {
       });
     };
 
-    const readAIText = result =>
-      String(result?.response || result?.result || result?.text || "").trim();
+    // ЧТЕНИЕ ОТВЕТА AI
+    const readAIText = result => {
+      const value =
+        result?.response ??
+        result?.result ??
+        result?.text ??
+        result?.choices?.[0]?.message?.content ??
+        "";
 
+      if (typeof value === "string") {
+        return value.trim();
+      }
+
+      if (Array.isArray(value)) {
+        return value
+          .filter(item => item?.type === "text" || item?.text)
+          .map(item => item.text || "")
+          .join("\n")
+          .trim();
+      }
+
+      if (typeof value === "object" && value !== null) {
+        return JSON.stringify(value);
+      }
+
+      return "";
+    };
+
+    // УСТОЙЧИВОЕ ЧТЕНИЕ JSON
     const parseJSON = text => {
-      const clean = String(text)
+      const clean = String(text || "")
         .replace(/```json/gi, "")
         .replace(/```/g, "")
         .trim();
@@ -48,10 +75,22 @@ export default {
       const end = clean.lastIndexOf("}");
 
       if (start < 0 || end <= start) {
-        throw new Error("AI не вернул корректный JSON");
+        throw new Error(
+          "AI не вернул JSON. Ответ модели: " +
+          clean.slice(0, 500)
+        );
       }
 
-      return JSON.parse(clean.slice(start, end + 1));
+      try {
+        return JSON.parse(clean.slice(start, end + 1));
+      } catch (error) {
+        throw new Error(
+          "Ошибка разбора JSON: " +
+          error.message +
+          ". Ответ модели: " +
+          clean.slice(0, 500)
+        );
+      }
     };
 
     if (request.method === "OPTIONS") {
@@ -417,7 +456,11 @@ vertical — число от 43 до 62.
           }
         );
 
-        const analysis = parseJSON(readAIText(visionResult));
+        const visionText = readAIText(visionResult);
+
+        console.log("QWEN RAW RESPONSE:", visionText.slice(0, 3000));
+
+        const analysis = parseJSON(visionText);
 
         // ШАГ 2. НОРМАЛИЗАЦИЯ ПАРАМЕТРОВ РАСПОЛОЖЕНИЯ
         const position = ["left", "center", "right"].includes(
