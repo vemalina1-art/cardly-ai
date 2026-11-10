@@ -285,7 +285,7 @@ export default {
 
         const prompt = String(body.prompt || "")
           .trim()
-          .slice(0, 2048);
+          .slice(0, 1900);
 
         const steps = Math.min(
           8,
@@ -549,7 +549,7 @@ vertical — число от 43 до 62.
           "Keep the upper 22 percent visually calm for a headline.",
           "BACKGROUND ONLY: do not draw the product, a replica, similar objects, product parts, silhouettes, placeholder objects or a fake product shadow.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
-        ].join(" ").slice(0, 2600);
+        ].join(" ").slice(0, 1900);
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
