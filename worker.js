@@ -379,52 +379,94 @@ export default {
 
         const selectedStyle = styles[style] || styles.premium;
 
-        // ШАГ 1. QWEN АНАЛИЗИРУЕТ РЕАЛЬНОЕ ФОТО ТОВАРА
+        // ШАГ 1. QWEN АНАЛИЗИРУЕТ ФОТО И ПРОЕКТИРУЕТ СЦЕНУ
         const visionPrompt = `
-Ты — технический арт-директор предметной рекламной фотографии.
-Проанализируй именно изображение товара, приложенное к запросу.
+You are an expert commercial product photographer and marketplace art director.
 
-Название от пользователя: ${productName}
-Характеристики от пользователя: ${characteristics || "не указаны"}
+Analyze the actual uploaded product image first.
+Use the product name and characteristics only as additional context.
+If the image contradicts the product name, trust visible evidence.
 
-Определи только видимые признаки: что это за предмет, его силуэт,
-ориентацию, примерные пропорции, видимые материалы и основные цвета.
-Не додумывай невидимые детали и не меняй конструкцию товара.
+PRODUCT NAME: ${productName}
+PRODUCT CHARACTERISTICS: ${characteristics || "Not provided"}
 
-Затем спроектируй подходящую рекламную сцену, в которой этот предмет
-будет выглядеть естественно после размещения на фоне. Укажи подходящую
-опорную поверхность или плоскость, перспективу камеры, направление света,
-цветовую температуру и свободную область для самого товара.
+YOUR TASK:
+Design a realistic, attractive advertising environment specifically for this product.
 
-Важно:
-- Не описывай сцену, в которой товар физически не может находиться.
-- Учитывай, где предмет должен опираться, крепиться или стоять.
-- Не помещай визуально похожие предметы рядом с товаром.
-- Оставь верхние 22 процента спокойными для заголовка.
-- Товар будет добавлен поверх фона отдельно, поэтому в фоне не должно быть
-  самого товара, его копии или деталей, которые выглядят как его дубликат.
-- Выбирай масштаб и положение с учётом реального силуэта на фото.
-- Описание окружения и визуальных инструкций для генератора пиши на английском.
+STEP 1 — PRODUCT IDENTIFICATION:
+Identify:
+- Exact visible product category.
+- Product silhouette, orientation and proportions.
+- Visible materials, colors and distinctive details.
+- How the product is normally used, mounted or positioned.
+Do not invent invisible features.
 
-Верни только JSON без Markdown в следующем формате:
+STEP 2 — CATEGORY:
+Choose the closest category:
+bathroom_plumbing, kitchen, electronics, beauty,
+clothing, footwear, home_decor, furniture, tools,
+automotive, sports, toys, pet, office, other.
+
+STEP 3 — SCENE DESIGN:
+Create a visually rich but believable commercial environment.
+The scene must match the actual product category.
+
+Examples:
+- Bathroom plumbing: contemporary bathroom, realistic tile,
+  stone or ceramic surfaces, coordinated fixtures and soft daylight.
+- Kitchen: refined kitchen interior, countertop, natural materials.
+- Electronics: modern workspace, architectural surfaces,
+  controlled studio lighting.
+- Beauty: elegant vanity, refined textures, soft natural light.
+- Home decor: tasteful residential interior with suitable materials.
+- Tools: realistic workshop or professional work surface.
+- Clothing and footwear: editorial studio or appropriate lifestyle setting.
+- Furniture: realistic interior with correct floor and wall perspective.
+
+These are examples, not fixed templates.
+Choose the environment that best suits the actual product.
+
+STEP 4 — COMPOSITION:
+- Vertical 3:4 advertising background.
+- Keep the upper 22 percent relatively calm for a headline.
+- Reserve a clear, visually suitable area for the real product.
+- Use a realistic surface or mounting context when appropriate.
+- Match the perspective and lighting to the product's shape.
+- Create depth using architectural details, textures and light.
+- Avoid empty generic gradients and meaningless decorations.
+- Do not create another product or a duplicate of the uploaded item.
+
+STEP 5 — VISUAL QUALITY:
+The result should resemble professional commercial photography
+for a premium Wildberries or Ozon product listing.
+Use a coordinated color palette, realistic materials,
+intentional composition and attractive lighting.
+
+Return ONLY valid JSON. No Markdown, no explanations.
+
+Use exactly this structure:
 {
-  "category": "короткая категория",
-  "product_shape": "видимый силуэт и ориентация предмета",
-  "materials": "только видимые материалы",
-  "colors": "основные видимые цвета",
-  "visual_description": "характер и палитра сцены",
-  "environment": "подробное описание окружения на английском",
-  "support_surface": "подходящая опорная поверхность на английском",
-  "camera_perspective": "перспектива и ракурс на английском",
-  "light_direction": "направление и мягкость света на английском",
-  "placement": "center",
+  "category": "one category from the list",
+  "product_shape": "visible shape and orientation in English",
+  "materials": "visible materials in English",
+  "colors": "main visible colors in English",
+  "visual_description": "scene concept and color palette in English",
+  "environment": "detailed realistic environment in English",
+  "support_surface": "appropriate support or mounting context in English",
+  "camera_perspective": "camera angle and perspective in English",
+  "light_direction": "lighting direction and quality in English",
+  "placement": "left, center or right",
   "scale": 62,
-  "vertical": 58
+  "vertical": 55
 }
 
-placement должен быть left, center или right.
-scale — число от 50 до 78.
-vertical — число от 43 до 62.
+Rules:
+placement must be left, center or right.
+scale must be an integer from 50 to 78.
+vertical must be an integer from 43 to 62.
+
+Choose placement, scale and vertical based on the actual
+product silhouette and the available composition space.
 `;
 
         const visionResult = await env.AI.run(
@@ -434,7 +476,7 @@ vertical — число от 43 до 62.
               {
                 role: "system",
                 content:
-                  "Ты анализируешь реальные товарные фотографии. Не выдумывай детали. Возвращай только корректный JSON."
+                  "You are an expert commercial product photographer. Analyze the actual image carefully. Never invent product details. Return only valid JSON."
               },
               {
                 role: "user",
@@ -475,7 +517,7 @@ vertical — число от 43 до 62.
 
         const vertical = Number.isFinite(Number(analysis.vertical))
           ? Math.max(43, Math.min(62, Number(analysis.vertical)))
-          : 58;
+          : 55;
 
         const safeText = (value, max = 450) =>
           String(value || "")
