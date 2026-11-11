@@ -1,4 +1,3 @@
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -36,37 +35,11 @@ export default {
       });
     };
 
-    // ЧТЕНИЕ ОТВЕТА AI
-    const readAIText = result => {
-      const value =
-        result?.response ??
-        result?.result ??
-        result?.text ??
-        result?.choices?.[0]?.message?.content ??
-        "";
+    const readAIText = result =>
+      String(result?.response || result?.result || result?.text || "").trim();
 
-      if (typeof value === "string") {
-        return value.trim();
-      }
-
-      if (Array.isArray(value)) {
-        return value
-          .filter(item => item?.type === "text" || item?.text)
-          .map(item => item.text || "")
-          .join("\n")
-          .trim();
-      }
-
-      if (typeof value === "object" && value !== null) {
-        return JSON.stringify(value);
-      }
-
-      return "";
-    };
-
-    // УСТОЙЧИВОЕ ЧТЕНИЕ JSON
     const parseJSON = text => {
-      const clean = String(text || "")
+      const clean = String(text)
         .replace(/```json/gi, "")
         .replace(/```/g, "")
         .trim();
@@ -75,22 +48,10 @@ export default {
       const end = clean.lastIndexOf("}");
 
       if (start < 0 || end <= start) {
-        throw new Error(
-          "AI не вернул JSON. Ответ модели: " +
-          clean.slice(0, 500)
-        );
+        throw new Error("AI не вернул корректный JSON");
       }
 
-      try {
-        return JSON.parse(clean.slice(start, end + 1));
-      } catch (error) {
-        throw new Error(
-          "Ошибка разбора JSON: " +
-          error.message +
-          ". Ответ модели: " +
-          clean.slice(0, 500)
-        );
-      }
+      return JSON.parse(clean.slice(start, end + 1));
     };
 
     if (request.method === "OPTIONS") {
@@ -232,7 +193,7 @@ export default {
         const body = await request.json();
         const image = String(body.image || "");
 
-        if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
+        if (!/^data:image\\/(jpeg|png|webp);base64,/i.test(image)) {
           return jsonResponse({
             error: "Передайте фото в поле image в формате data:image/jpeg;base64,..."
           }, 400);
@@ -244,14 +205,8 @@ export default {
             messages: [{
               role: "user",
               content: [
-                {
-                  type: "text",
-                  text: "Кратко опиши предмет на фото. Ответь по-русски."
-                },
-                {
-                  type: "image_url",
-                  image_url: { url: image }
-                }
+                { type: "text", text: "Кратко опиши предмет на фото. Ответь по-русски." },
+                { type: "image_url", image_url: { url: image } }
               ]
             }],
             max_completion_tokens: 400,
@@ -267,7 +222,6 @@ export default {
 
       } catch (error) {
         console.error("VISION TEST ERROR:", error);
-
         return jsonResponse({
           ok: false,
           error: error.message
@@ -285,7 +239,7 @@ export default {
 
         const prompt = String(body.prompt || "")
           .trim()
-          .slice(0, 1900);
+          .slice(0, 2048);
 
         const steps = Math.min(
           8,
@@ -322,7 +276,7 @@ export default {
       }
     }
 
-    // 6. AI-КОМПОЗИЦИЯ: АНАЛИЗ ФОТО ТОВАРА + FLUX
+    // 6. AI-КОМПОЗИЦИЯ: VISION АНАЛИЗ ТОВАРА + FLUX
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
@@ -345,128 +299,74 @@ export default {
         const image = String(body.image || "");
 
         if (!productName) {
-          return jsonResponse({
-            error: "Введите название товара"
-          }, 400);
+          return jsonResponse({ error: "Введите название товара" }, 400);
         }
 
         if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
-          return jsonResponse({
-            error: "Не получено фото товара"
-          }, 400);
+          return jsonResponse({ error: "Не получено фото товара" }, 400);
         }
 
         if (image.length > 7_000_000) {
-          return jsonResponse({
-            error: "Изображение слишком большое"
-          }, 413);
+          return jsonResponse({ error: "Изображение слишком большое" }, 413);
         }
 
         const styles = {
-          premium:
-            "premium commercial photography, elegant materials, refined soft lighting",
-          editorial:
-            "high-end editorial photography, artistic natural light, subtle textures",
-          showcase:
-            "professional product showcase, clean architectural environment",
-          lifestyle:
-            "realistic contemporary lifestyle setting, natural daylight",
-          infographic:
-            "modern commercial background, clean geometric composition",
-          cinematic:
-            "cinematic commercial photography, directional light, realistic depth"
+          premium: "premium commercial photography, elegant materials, refined soft lighting",
+          editorial: "high-end editorial photography, artistic natural light, subtle textures",
+          showcase: "professional product showcase, clean architectural environment",
+          lifestyle: "realistic contemporary lifestyle setting, natural daylight",
+          infographic: "modern commercial background, clean geometric composition",
+          cinematic: "cinematic commercial photography, directional light, realistic depth"
         };
 
         const selectedStyle = styles[style] || styles.premium;
 
-        // ШАГ 1. QWEN АНАЛИЗИРУЕТ ФОТО И ПРОЕКТИРУЕТ СЦЕНУ
+        // ШАГ 1. VISION-МОДЕЛЬ ДЕЙСТВИТЕЛЬНО СМОТРИТ НА ФОТО ТОВАРА
         const visionPrompt = `
-You are an expert commercial product photographer and marketplace art director.
+Ты — технический арт-директор предметной рекламной фотографии.
+Проанализируй именно изображение товара, приложенное к запросу.
 
-Analyze the actual uploaded product image first.
-Use the product name and characteristics only as additional context.
-If the image contradicts the product name, trust visible evidence.
+Название от пользователя: ${productName}
+Характеристики от пользователя: ${characteristics || "не указаны"}
 
-PRODUCT NAME: ${productName}
-PRODUCT CHARACTERISTICS: ${characteristics || "Not provided"}
+Определи только видимые признаки: что это за предмет, его силуэт,
+ориентацию, примерные пропорции, видимые материалы и основные цвета.
+Не додумывай невидимые детали и не меняй конструкцию товара.
 
-YOUR TASK:
-Design a realistic, attractive advertising environment specifically for this product.
+Затем спроектируй подходящую рекламную сцену, в которой этот предмет
+будет выглядеть естественно после размещения на фоне. Укажи подходящую
+опорную поверхность или плоскость, перспективу камеры, направление света,
+цветовую температуру и свободную область для самого товара.
 
-STEP 1 — PRODUCT IDENTIFICATION:
-Identify:
-- Exact visible product category.
-- Product silhouette, orientation and proportions.
-- Visible materials, colors and distinctive details.
-- How the product is normally used, mounted or positioned.
-Do not invent invisible features.
+Важно:
+- Не описывай сцену, в которой товар физически не может находиться.
+- Учитывай, где предмет должен опираться, крепиться или стоять.
+- Не помещай визуально похожие предметы рядом с товаром.
+- Оставь верхние 22 процента спокойными для заголовка.
+- Товар будет добавлен поверх фона отдельно, поэтому в фоне не должно быть
+  самого товара, его копии или деталей, которые выглядят как его дубликат.
+- Выбирай масштаб и положение с учётом реального силуэта на фото.
+- Описание окружения и визуальных инструкций для генератора пиши на английском.
 
-STEP 2 — CATEGORY:
-Choose the closest category:
-bathroom_plumbing, kitchen, electronics, beauty,
-clothing, footwear, home_decor, furniture, tools,
-automotive, sports, toys, pet, office, other.
-
-STEP 3 — SCENE DESIGN:
-Create a visually rich but believable commercial environment.
-The scene must match the actual product category.
-
-Examples:
-- Bathroom plumbing: contemporary bathroom, realistic tile,
-  stone or ceramic surfaces, coordinated fixtures and soft daylight.
-- Kitchen: refined kitchen interior, countertop, natural materials.
-- Electronics: modern workspace, architectural surfaces,
-  controlled studio lighting.
-- Beauty: elegant vanity, refined textures, soft natural light.
-- Home decor: tasteful residential interior with suitable materials.
-- Tools: realistic workshop or professional work surface.
-- Clothing and footwear: editorial studio or appropriate lifestyle setting.
-- Furniture: realistic interior with correct floor and wall perspective.
-
-These are examples, not fixed templates.
-Choose the environment that best suits the actual product.
-
-STEP 4 — COMPOSITION:
-- Vertical 3:4 advertising background.
-- Keep the upper 22 percent relatively calm for a headline.
-- Reserve a clear, visually suitable area for the real product.
-- Use a realistic surface or mounting context when appropriate.
-- Match the perspective and lighting to the product's shape.
-- Create depth using architectural details, textures and light.
-- Avoid empty generic gradients and meaningless decorations.
-- Do not create another product or a duplicate of the uploaded item.
-
-STEP 5 — VISUAL QUALITY:
-The result should resemble professional commercial photography
-for a premium Wildberries or Ozon product listing.
-Use a coordinated color palette, realistic materials,
-intentional composition and attractive lighting.
-
-Return ONLY valid JSON. No Markdown, no explanations.
-
-Use exactly this structure:
+Верни только JSON без Markdown в следующем формате:
 {
-  "category": "one category from the list",
-  "product_shape": "visible shape and orientation in English",
-  "materials": "visible materials in English",
-  "colors": "main visible colors in English",
-  "visual_description": "scene concept and color palette in English",
-  "environment": "detailed realistic environment in English",
-  "support_surface": "appropriate support or mounting context in English",
-  "camera_perspective": "camera angle and perspective in English",
-  "light_direction": "lighting direction and quality in English",
-  "placement": "left, center or right",
+  "category": "короткая категория",
+  "product_shape": "видимый силуэт и ориентация предмета",
+  "materials": "только видимые материалы",
+  "colors": "основные видимые цвета",
+  "visual_description": "характер и палитра сцены",
+  "environment": "подробное описание окружения на английском",
+  "support_surface": "подходящая опорная поверхность на английском",
+  "camera_perspective": "перспектива и ракурс на английском",
+  "light_direction": "направление и мягкость света на английском",
+  "placement": "center",
   "scale": 62,
-  "vertical": 55
+  "vertical": 58
 }
 
-Rules:
-placement must be left, center or right.
-scale must be an integer from 50 to 78.
-vertical must be an integer from 43 to 62.
-
-Choose placement, scale and vertical based on the actual
-product silhouette and the available composition space.
+placement должен быть left, center или right.
+scale — число от 50 до 78.
+vertical — число от 43 до 62.
 `;
 
         const visionResult = await env.AI.run(
@@ -475,20 +375,13 @@ product silhouette and the available composition space.
             messages: [
               {
                 role: "system",
-                content:
-                  "You are an expert commercial product photographer. Analyze the actual image carefully. Never invent product details. Return only valid JSON."
+                content: "Ты анализируешь реальные товарные фотографии. Не выдумывай детали. Возвращай только корректный JSON."
               },
               {
                 role: "user",
                 content: [
-                  {
-                    type: "text",
-                    text: visionPrompt
-                  },
-                  {
-                    type: "image_url",
-                    image_url: { url: image }
-                  }
+                  { type: "text", text: visionPrompt },
+                  { type: "image_url", image_url: { url: image } }
                 ]
               }
             ],
@@ -498,16 +391,10 @@ product silhouette and the available composition space.
           }
         );
 
-        const visionText = readAIText(visionResult);
+        const analysis = parseJSON(readAIText(visionResult));
 
-        console.log("QWEN RAW RESPONSE:", visionText.slice(0, 3000));
-
-        const analysis = parseJSON(visionText);
-
-        // ШАГ 2. НОРМАЛИЗАЦИЯ ПАРАМЕТРОВ РАСПОЛОЖЕНИЯ
-        const position = ["left", "center", "right"].includes(
-          analysis.placement
-        )
+        // ШАГ 2. БЕЗОПАСНО НОРМАЛИЗУЕМ ПАРАМЕТРЫ РАСПОЛОЖЕНИЯ
+        const position = ["left", "center", "right"].includes(analysis.placement)
           ? analysis.placement
           : "center";
 
@@ -517,79 +404,40 @@ product silhouette and the available composition space.
 
         const vertical = Number.isFinite(Number(analysis.vertical))
           ? Math.max(43, Math.min(62, Number(analysis.vertical)))
-          : 55;
+          : 58;
 
         const safeText = (value, max = 450) =>
-          String(value || "")
-            .replace(/[\r\n]+/g, " ")
-            .slice(0, max);
+          String(value || "").replace(/[\r\n]+/g, " ").slice(0, max);
 
-        const category = safeText(
-          analysis.category || productName,
-          100
-        );
-
-        const productShape = safeText(
-          analysis.product_shape,
-          350
-        );
-
-        const materials = safeText(
-          analysis.materials,
-          250
-        );
-
-        const colors = safeText(
-          analysis.colors,
-          200
-        );
-
-        const visualDescription = safeText(
-          analysis.visual_description,
-          350
-        );
-
+        const category = safeText(analysis.category || productName, 100);
+        const productShape = safeText(analysis.product_shape, 350);
+        const materials = safeText(analysis.materials, 250);
+        const colors = safeText(analysis.colors, 200);
+        const visualDescription = safeText(analysis.visual_description, 350);
         const environment = safeText(
-          analysis.environment ||
-            "A clean modern commercial interior",
+          analysis.environment || "A clean modern commercial interior",
           650
         );
+        const supportSurface = safeText(analysis.support_surface, 250);
+        const cameraPerspective = safeText(analysis.camera_perspective, 250);
+        const lightDirection = safeText(analysis.light_direction, 250);
 
-        const supportSurface = safeText(
-          analysis.support_surface,
-          250
-        );
-
-        const cameraPerspective = safeText(
-          analysis.camera_perspective,
-          250
-        );
-
-        const lightDirection = safeText(
-          analysis.light_direction,
-          250
-        );
-
-        // ШАГ 3. FLUX СОЗДАЁТ ПОДХОДЯЩУЮ СЦЕНУ
+        // ШАГ 3. FLUX СОЗДАЁТ ПУСТОЕ ОКРУЖЕНИЕ ДЛЯ ОРИГИНАЛЬНОГО ТОВАРА
+        // Сам товар остаётся оригинальным PNG и не перерисовывается.
         const finalPrompt = [
-          "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
-          "PRODUCT CATEGORY: " + category + ".",
-          "REFERENCE PRODUCT SILHOUETTE: " + productShape + ".",
-          "VISIBLE MATERIALS: " + materials + ".",
-          "VISIBLE PRODUCT COLORS: " + colors + ".",
-          "SCENE PALETTE: " + visualDescription + ".",
+          "Create a photorealistic vertical 3:4 advertising BACKGROUND PLATE only. This is an empty environment, NOT a product photograph and NOT a finished poster.",
+          "SCENE STYLE: " + selectedStyle + ".",
           "ENVIRONMENT: " + environment + ".",
-          "SUPPORTING ARCHITECTURE OR SURFACE: " + supportSurface + ".",
-          "CAMERA AND PERSPECTIVE: " + cameraPerspective + ".",
+          "SURFACE AND ARCHITECTURE: " + supportSurface + ".",
+          "CAMERA PERSPECTIVE: " + cameraPerspective + ".",
           "LIGHTING: " + lightDirection + ".",
-          "VISUAL STYLE: " + selectedStyle + ".",
-          "Compose the environment around the reference object's real silhouette and proportions, not around a generic central rectangle.",
-          "The lower-middle " + position + " region is reserved for compositing the real product, with enough clear space matching its shape.",
-          "Include a believable nearby support plane, ledge, tabletop, floor or mounting context when physically appropriate for this product.",
-          "Make the perspective lines, surface angle, material reflections and light direction coherent with a real object placed in the reserved region.",
-          "Use natural ambient occlusion and realistic depth in the environment; avoid a flat studio gradient.",
-          "Keep the upper 22 percent visually calm for a headline.",
-          "BACKGROUND ONLY: do not draw the product, a replica, similar objects, product parts, silhouettes, placeholder objects or a fake product shadow.",
+          "Create a believable real location with coherent perspective, refined materials, subtle texture, realistic ambient light, soft directional highlights and natural depth.",
+          "The lower-middle area is reserved for a product that will be added later. Keep this entire area EMPTY, clean and unobstructed.",
+          "If a support plane is appropriate, show only the empty plane itself. Do not place anything on it, beside it or behind it.",
+          "ABSOLUTE RULE: render NO product, NO object, NO equipment, NO fixture, NO hardware, NO accessory, NO tool, NO furniture, NO prop, NO replica, NO duplicate, NO silhouette, NO placeholder and NO object-shaped decoration.",
+          "Do not depict anything from the product category, even partially. Do not draw product parts or similar-looking items anywhere in the image.",
+          "Do not create a fake product, product outline, product reflection or product shadow. The real product will be composited separately.",
+          "Keep the upper 22 percent calm and uncluttered for a headline.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
         ].join(" ").slice(0, 1900);
 
@@ -602,9 +450,7 @@ product silhouette and the available composition space.
         );
 
         if (!imageResult?.image) {
-          throw new Error(
-            "FLUX не вернул изображение рекламной сцены"
-          );
+          throw new Error("FLUX не вернул изображение рекламной сцены");
         }
 
         return imageResponse(imageResult.image, {
@@ -616,10 +462,13 @@ product silhouette and the available composition space.
       } catch (error) {
         console.error("AD SCENE GENERATION ERROR:", error);
 
+        const message = String(error?.message || "");
+        const licenseHint = /license|accept|terms|403/i.test(message)
+          ? " Если модель Vision запускается впервые, сначала примите лицензию Meta для @cf/meta/llama-3.2-11b-vision-instruct в Cloudflare."
+          : "";
+
         return jsonResponse({
-          error:
-            error.message ||
-            "Не удалось создать рекламное окружение"
+          error: (message || "Не удалось создать рекламное окружение") + licenseHint
         }, 500);
       }
     }
@@ -707,43 +556,14 @@ decoration: none
 
         const allowed = {
           design: [
-            "hero",
-            "split",
-            "editorial",
-            "dynamic",
-            "info",
-            "premium"
+            "hero", "split", "editorial",
+            "dynamic", "info", "premium"
           ],
-          productPosition: [
-            "left",
-            "center",
-            "right"
-          ],
-          titlePosition: [
-            "top",
-            "middle",
-            "bottom"
-          ],
-          featuresPosition: [
-            "left",
-            "right",
-            "bottom"
-          ],
-          background: [
-            "light",
-            "dark",
-            "soft",
-            "gradient",
-            "accent"
-          ],
-          accent: [
-            "blue",
-            "cyan",
-            "green",
-            "orange",
-            "violet",
-            "black"
-          ]
+          productPosition: ["left", "center", "right"],
+          titlePosition: ["top", "middle", "bottom"],
+          featuresPosition: ["left", "right", "bottom"],
+          background: ["light", "dark", "soft", "gradient", "accent"],
+          accent: ["blue", "cyan", "green", "orange", "violet", "black"]
         };
 
         const defaults = {
@@ -782,8 +602,7 @@ decoration: none
         console.error("GENERATE ERROR:", error);
 
         return jsonResponse({
-          error:
-            error.message ||
+          error: error.message ||
             "Не удалось создать дизайн"
         }, 500);
       }
