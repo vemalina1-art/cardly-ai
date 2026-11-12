@@ -1,3 +1,4 @@
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -205,8 +206,14 @@ export default {
             messages: [{
               role: "user",
               content: [
-                { type: "text", text: "Кратко опиши предмет на фото. Ответь по-русски." },
-                { type: "image_url", image_url: { url: image } }
+                {
+                  type: "text",
+                  text: "Кратко опиши предмет на фото. Ответь по-русски."
+                },
+                {
+                  type: "image_url",
+                  image_url: { url: image }
+                }
               ]
             }],
             max_completion_tokens: 400,
@@ -290,7 +297,7 @@ export default {
 
         const characteristics = String(body.characteristics || "")
           .trim()
-          .slice(0, 1200);
+          .slice(0, 350);
 
         const style = String(body.style || "premium")
           .trim()
@@ -321,52 +328,43 @@ export default {
 
         const selectedStyle = styles[style] || styles.premium;
 
-        // ШАГ 1. VISION-МОДЕЛЬ ДЕЙСТВИТЕЛЬНО СМОТРИТ НА ФОТО ТОВАРА
+        // ШАГ 1. АНАЛИЗ ФОТО ТОВАРА ЧЕРЕЗ QWEN
         const visionPrompt = `
-Ты — технический арт-директор предметной рекламной фотографии.
-Проанализируй именно изображение товара, приложенное к запросу.
+Analyze the attached product photo. Use only visible facts.
 
-Название от пользователя: ${productName}
-Характеристики от пользователя: ${characteristics || "не указаны"}
+Product: ${productName}
+Characteristics: ${characteristics || "not provided"}
 
-Определи только видимые признаки: что это за предмет, его силуэт,
-ориентацию, примерные пропорции, видимые материалы и основные цвета.
-Не додумывай невидимые детали и не меняй конструкцию товара.
+Identify the product category, shape, orientation, visible materials and colors. Do not invent details or alter the product design.
 
-Затем спроектируй подходящую рекламную сцену, в которой этот предмет
-будет выглядеть естественно после размещения на фоне. Укажи подходящую
-опорную поверхность или плоскость, перспективу камеры, направление света,
-цветовую температуру и свободную область для самого товара.
+Design a realistic advertising background suitable for this exact object. Specify its environment, support surface, camera perspective, light direction and color palette.
 
-Важно:
-- Не описывай сцену, в которой товар физически не может находиться.
-- Учитывай, где предмет должен опираться, крепиться или стоять.
-- Не помещай визуально похожие предметы рядом с товаром.
-- Оставь верхние 22 процента спокойными для заголовка.
-- Товар будет добавлен поверх фона отдельно, поэтому в фоне не должно быть
-  самого товара, его копии или деталей, которые выглядят как его дубликат.
-- Выбирай масштаб и положение с учётом реального силуэта на фото.
-- Описание окружения и визуальных инструкций для генератора пиши на английском.
+Rules:
+- No product, replicas or similar objects in the background.
+- Leave the upper 22% calm for a headline.
+- Choose a physically suitable surface or mounting context.
+- Write scene descriptions in English.
+- Return only valid JSON, without Markdown.
 
-Верни только JSON без Markdown в следующем формате:
+Use exactly this structure:
 {
-  "category": "короткая категория",
-  "product_shape": "видимый силуэт и ориентация предмета",
-  "materials": "только видимые материалы",
-  "colors": "основные видимые цвета",
-  "visual_description": "характер и палитра сцены",
-  "environment": "подробное описание окружения на английском",
-  "support_surface": "подходящая опорная поверхность на английском",
-  "camera_perspective": "перспектива и ракурс на английском",
-  "light_direction": "направление и мягкость света на английском",
+  "category": "short product category",
+  "product_shape": "visible shape and orientation",
+  "materials": "visible materials",
+  "colors": "main visible colors",
+  "visual_description": "scene style and palette",
+  "environment": "English environment description",
+  "support_surface": "English support surface description",
+  "camera_perspective": "English camera perspective",
+  "light_direction": "English lighting description",
   "placement": "center",
   "scale": 62,
   "vertical": 58
 }
 
-placement должен быть left, center или right.
-scale — число от 50 до 78.
-vertical — число от 43 до 62.
+placement: left, center or right.
+scale: number from 50 to 78.
+vertical: number from 43 to 62.
 `;
 
         const visionResult = await env.AI.run(
@@ -375,7 +373,7 @@ vertical — число от 43 до 62.
             messages: [
               {
                 role: "system",
-                content: "Ты анализируешь реальные товарные фотографии. Не выдумывай детали. Возвращай только корректный JSON."
+                content: "Analyze the real product photo. Do not invent details. Return only valid JSON."
               },
               {
                 role: "user",
@@ -393,7 +391,7 @@ vertical — число от 43 до 62.
 
         const analysis = parseJSON(readAIText(visionResult));
 
-        // ШАГ 2. БЕЗОПАСНО НОРМАЛИЗУЕМ ПАРАМЕТРЫ РАСПОЛОЖЕНИЯ
+        // ШАГ 2. НОРМАЛИЗАЦИЯ ПОЛОЖЕНИЯ ТОВАРА
         const position = ["left", "center", "right"].includes(analysis.placement)
           ? analysis.placement
           : "center";
@@ -422,8 +420,8 @@ vertical — число от 43 до 62.
         const cameraPerspective = safeText(analysis.camera_perspective, 250);
         const lightDirection = safeText(analysis.light_direction, 250);
 
-        // ШАГ 3. FLUX СОЗДАЁТ СЦЕНУ С УЧЁТОМ РЕАЛЬНОЙ ФОРМЫ ТОВАРА
-        // Сам товар остаётся оригинальным PNG и не перерисовывается.
+        // ШАГ 3. FLUX СОЗДАЁТ ТОЛЬКО ФОН
+        // ОРИГИНАЛЬНЫЙ ТОВАР ДОБАВЛЯЕТСЯ ОТДЕЛЬНО
         const finalPrompt = [
           "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
           "PRODUCT CATEGORY: " + category + ".",
@@ -436,15 +434,15 @@ vertical — число от 43 до 62.
           "CAMERA AND PERSPECTIVE: " + cameraPerspective + ".",
           "LIGHTING: " + lightDirection + ".",
           "VISUAL STYLE: " + selectedStyle + ".",
-          "Compose the environment around the reference object's real silhouette and proportions, not around a generic central rectangle.",
-          "The lower-middle " + position + " region is reserved for compositing the real product, with enough clear space matching its shape.",
-          "Include a believable nearby support plane, ledge, tabletop, floor or mounting context when physically appropriate for this product.",
-          "Make the perspective lines, surface angle, material reflections and light direction coherent with a real object placed in the reserved region.",
-          "Use natural ambient occlusion and realistic depth in the environment; avoid a flat studio gradient.",
+          "Compose the environment around the reference object's real silhouette and proportions.",
+          "The lower-middle " + position + " region is reserved for compositing the real product.",
+          "Include a believable support plane, ledge, tabletop, floor or mounting context when appropriate.",
+          "Make perspective, reflections and light direction coherent with a real object placed in the reserved region.",
+          "Use natural ambient occlusion and realistic depth. Avoid a flat studio gradient.",
           "Keep the upper 22 percent visually calm for a headline.",
-          "BACKGROUND ONLY: do not draw the product, a replica, similar objects, product parts, silhouettes, placeholder objects or a fake product shadow.",
+          "BACKGROUND ONLY: do not draw the product, replicas, similar objects, product parts, silhouettes, placeholder objects or fake product shadows.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
-        ].join(" ").slice(0, 2600);
+        ].join(" ").slice(0, 2048);
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
@@ -469,7 +467,7 @@ vertical — число от 43 до 62.
 
         const message = String(error?.message || "");
         const licenseHint = /license|accept|terms|403/i.test(message)
-          ? " Если модель Vision запускается впервые, сначала примите лицензию Meta для @cf/meta/llama-3.2-11b-vision-instruct в Cloudflare."
+          ? " Если модель Vision запускается впервые, сначала примите лицензию модели в Cloudflare."
           : "";
 
         return jsonResponse({
