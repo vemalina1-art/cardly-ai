@@ -257,7 +257,7 @@ textarea{
   overflow:auto;
 }
 
-/* ОСНОВНАЯ КАРТОЧКА */
+/* ОСНОВНАЯ КАРТОЧКА — коммерческая предметная композиция */
 #card{
   position:relative;
   width:450px;
@@ -271,7 +271,7 @@ textarea{
   box-shadow:0 28px 70px rgba(24,39,59,.20),0 5px 18px rgba(24,39,59,.08);
 }
 
-/* ФОН И СВЕТ */
+/* Фон и свет */
 #card .card-background{
   position:absolute;
   inset:0;
@@ -283,7 +283,6 @@ textarea{
   background-position:center;
   transform:scale(1.005);
 }
-
 #card .scene-overlay{
   position:absolute;
   inset:0;
@@ -293,7 +292,6 @@ textarea{
     linear-gradient(180deg,rgba(247,250,253,.70) 0%,rgba(247,250,253,.25) 24%,transparent 48%,rgba(17,30,43,.10) 100%),
     linear-gradient(90deg,rgba(255,255,255,.14),transparent 28%,transparent 75%,rgba(255,255,255,.10));
 }
-
 #card::before{
   content:"";
   position:absolute;
@@ -308,7 +306,6 @@ textarea{
   z-index:-2;
   pointer-events:none;
 }
-
 #card::after{
   content:"";
   position:absolute;
@@ -318,7 +315,7 @@ textarea{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -35px 65px rgba(14,28,43,.07);
 }
 
-/* ЗАГОЛОВОК */
+/* Заголовок: выразительная иерархия и зона читаемости */
 .card-title{
   position:absolute;
   z-index:5;
@@ -336,7 +333,6 @@ textarea{
   color:inherit;
   text-shadow:0 2px 12px rgba(255,255,255,.48);
 }
-
 .card-subtitle{
   position:absolute;
   z-index:5;
@@ -352,48 +348,31 @@ textarea{
   text-shadow:0 1px 8px rgba(255,255,255,.72);
 }
 
-/* СВЕЧЕНИЕ ЗА ТОВАРОМ */
-.product-aura{
+/* Реальная тень строится по альфа-маске оригинального товара */
+.product-shadow-layer{
   position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
   z-index:2;
-  left:50%;
-  top:59%;
-  width:82%;
-  height:43%;
-  transform:translate(-50%,-50%);
   pointer-events:none;
-  border-radius:50%;
-  background:
-    radial-gradient(ellipse at 42% 46%,rgba(255,255,255,.88) 0%,rgba(255,255,255,.38) 27%,rgba(218,237,250,.18) 48%,transparent 72%),
-    radial-gradient(ellipse at 62% 55%,rgba(185,220,248,.25),transparent 68%);
-  filter:blur(17px);
-  mix-blend-mode:screen;
-  opacity:.92;
 }
 
-/* ОРИГИНАЛЬНЫЙ ТОВАР */
+/* Оригинальный вырезанный товар — сохраняем пиксели и цвет */
 .card-product{
   position:absolute;
-  z-index:4;
-  width:70%;
-  max-height:68%;
+  z-index:3;
+  width:58%;
+  max-height:59%;
   object-fit:contain;
   left:50%;
   top:59%;
   transform:translate(-50%,-50%);
-  filter:
-    brightness(1.07)
-    contrast(1.10)
-    saturate(1.06)
-    drop-shadow(0 0 7px rgba(255,255,255,.34))
-    drop-shadow(0 3px 2px rgba(12,22,32,.24))
-    drop-shadow(0 10px 9px rgba(12,22,32,.22))
-    drop-shadow(0 21px 18px rgba(12,22,32,.18))
-    drop-shadow(0 34px 26px rgba(12,22,32,.13));
-  transition:filter .25s,transform .25s;
+  filter:none !important;
+  transition:transform .25s;
 }
 
-/* ПРЕИМУЩЕСТВА */
+/* Преимущества — типографическая подпись вместо кнопок */
 .card-features{
   position:absolute;
   z-index:6;
@@ -407,7 +386,6 @@ textarea{
   padding-top:13px;
   border-top:1px solid rgba(255,255,255,.62);
 }
-
 .feature{
   position:relative;
   max-width:100%;
@@ -425,7 +403,6 @@ textarea{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
-
 .feature::before{
   content:"";
   position:absolute;
@@ -448,7 +425,6 @@ textarea{
   background:var(--card-accent,#3c7de1);
   opacity:.9;
 }
-
 #card.accent-cyan{--card-accent:#20a9bf}
 #card.accent-green{--card-accent:#299477}
 #card.accent-orange{--card-accent:#d18a50}
@@ -458,65 +434,33 @@ textarea{
 
 #card.background-light,#card.background-soft{color:#17263c}
 #card.background-soft .card-background{background:linear-gradient(145deg,#f5f1eb,#e6ecef)}
-
 #card.background-gradient .card-background{
   background:radial-gradient(circle at 78% 20%,rgba(255,255,255,.92),transparent 38%),linear-gradient(135deg,#dcecff,#eff5fb 55%,#d8e5f2);
 }
-
 #card.background-accent .card-background{
   background:radial-gradient(circle at 80% 18%,rgba(255,255,255,.55),transparent 35%),linear-gradient(145deg,#d6e9fb,#a9c9e9);
 }
-
 #card.background-dark{color:#fff;background:#192638}
 #card.background-dark .card-background{background:linear-gradient(145deg,#152337,#33485f)}
-
 #card.background-dark .scene-overlay{
   background:linear-gradient(180deg,rgba(10,20,35,.48),rgba(10,20,35,.08) 43%,rgba(10,20,35,.38));
 }
-
-#card.background-dark .card-title,#card.background-dark .card-subtitle{
-  color:#fff;
-  text-shadow:0 2px 12px rgba(0,0,0,.28)
-}
-
-#card.background-dark .feature{
-  color:#fff;
-  text-shadow:0 1px 8px rgba(0,0,0,.4)
-}
-
+#card.background-dark .card-title,#card.background-dark .card-subtitle{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28)}
+#card.background-dark .feature{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)}
 #card.background-dark .card-features{border-color:rgba(255,255,255,.35)}
 
-/* ВАРИАНТЫ АРТ-ДИРЕКШЕНА */
-#card.design-editorial .card-title{
-  font-family:Georgia,serif;
-  font-size:36px;
-  font-weight:500;
-  letter-spacing:-1.1px
-}
-
-#card.design-editorial .card-subtitle{
-  font-family:Georgia,serif;
-  font-size:14px
-}
-
-#card.design-showcase .card-product{
-  filter:drop-shadow(0 4px 3px rgba(10,20,30,.22)) drop-shadow(0 13px 12px rgba(10,20,30,.22)) drop-shadow(0 27px 23px rgba(10,20,30,.18)) drop-shadow(0 42px 30px rgba(10,20,30,.12));
-}
-
+/* Варианты арт-дирекшена */
+#card.design-editorial .card-title{font-family:Georgia,serif;font-size:36px;font-weight:500;letter-spacing:-1.1px}
+#card.design-editorial .card-subtitle{font-family:Georgia,serif;font-size:14px}
+#card.design-showcase .card-product{filter:none !important;}
 #card.design-infographic .feature{font-size:10px;font-weight:800}
-
-#card.design-cinematic .card-product{
-  filter:drop-shadow(0 5px 4px rgba(0,0,0,.25)) drop-shadow(0 16px 15px rgba(0,0,0,.27)) drop-shadow(0 32px 25px rgba(0,0,0,.20));
-}
-
-#card.design-cinematic .scene-overlay{
-  background:linear-gradient(180deg,rgba(8,18,30,.28),transparent 36%,rgba(8,18,30,.22))
-}
-
+#card.design-cinematic .card-product{filter:none !important;}
+#card.design-cinematic .scene-overlay{background:linear-gradient(180deg,rgba(8,18,30,.28),transparent 36%,rgba(8,18,30,.22))}
 #card.design-lifestyle .card-title{font-weight:750;letter-spacing:-1px}
 #card.scene-composition .card-background{filter:saturate(.94) contrast(1.025)}
 
 /* ДЕЙСТВИЯ */
+
 .preview-actions{
   display:flex;
   gap:10px;
@@ -567,21 +511,18 @@ textarea{
   .panel{padding:17px}
   .preview-workspace{padding:8px;min-height:auto}
   #card{width:min(100%,360px);height:auto;aspect-ratio:3/4}
-
   .card-title{
     top:6%;
     left:7%;
     right:7%;
     font-size:clamp(19px,6vw,27px);
   }
-
   .card-subtitle{
     top:19%;
     left:7%;
     right:7%;
     font-size:11px;
   }
-
   .card-features{left:7%;right:7%;bottom:5%}
   .feature{font-size:10px;padding:7px 9px}
 }
@@ -680,8 +621,8 @@ textarea{
 
       <div class="card-background" id="cardBackground"></div>
       <div class="scene-overlay"></div>
-      <div class="product-aura" id="productAura"></div>
       <div class="card-accent"></div>
+      <canvas class="product-shadow-layer" id="productShadow" aria-hidden="true"></canvas>
 
       <h1 class="card-title" id="cardTitle">Ваш товар</h1>
 
@@ -745,6 +686,7 @@ const card = document.getElementById("card");
 const cardTitle = document.getElementById("cardTitle");
 const cardSubtitle = document.getElementById("cardSubtitle");
 const cardProduct = document.getElementById("cardProduct");
+const productShadow = document.getElementById("productShadow");
 const cardFeatures = document.getElementById("cardFeatures");
 
 let cutoutImage = null;
@@ -1070,6 +1012,75 @@ async function removeBackground(file){
   }
 }
 
+function updateProductShadow(){
+  if(!productShadow || !cardProduct || !cardProduct.complete || !cardProduct.naturalWidth){
+    return;
+  }
+
+  const cardRect=card.getBoundingClientRect();
+  const imageRect=cardProduct.getBoundingClientRect();
+  if(!cardRect.width || !cardRect.height || !imageRect.width || !imageRect.height){
+    return;
+  }
+
+  const pixelRatio=2;
+  const width=Math.round(cardRect.width*pixelRatio);
+  const height=Math.round(cardRect.height*pixelRatio);
+  productShadow.width=width;
+  productShadow.height=height;
+
+  const ctx=productShadow.getContext("2d");
+  ctx.clearRect(0,0,width,height);
+
+  const x=(imageRect.left-cardRect.left)*pixelRatio;
+  const y=(imageRect.top-cardRect.top)*pixelRatio;
+  const w=imageRect.width*pixelRatio;
+  const h=imageRect.height*pixelRatio;
+
+  // Чёрная маска сохраняет точный контур вырезанного PNG.
+  const mask=document.createElement("canvas");
+  mask.width=width;
+  mask.height=height;
+  const maskCtx=mask.getContext("2d");
+  maskCtx.drawImage(cardProduct,x,y,w,h);
+  maskCtx.globalCompositeOperation="source-in";
+  maskCtx.fillStyle="#000";
+  maskCtx.fillRect(0,0,width,height);
+
+  // Мягкая направленная тень от формы товара.
+  ctx.save();
+  ctx.globalAlpha=.20;
+  ctx.shadowColor="rgba(10,22,36,.48)";
+  ctx.shadowBlur=25*pixelRatio;
+  ctx.shadowOffsetX=2*pixelRatio;
+  ctx.shadowOffsetY=17*pixelRatio;
+  ctx.drawImage(mask,0,0);
+  ctx.restore();
+
+  // Контактная тень у нижней кромки — усиливает ощущение опоры.
+  const bottom=y+h;
+  const centerX=x+w/2;
+  const contactWidth=Math.min(w*.43,190*pixelRatio);
+  const contactHeight=Math.max(7*pixelRatio,Math.min(18*pixelRatio,w*.035));
+  const gradient=ctx.createRadialGradient(
+    centerX,bottom-2*pixelRatio,1,
+    centerX,bottom-2*pixelRatio,contactWidth*.62
+  );
+  gradient.addColorStop(0,"rgba(15,25,38,.30)");
+  gradient.addColorStop(.48,"rgba(15,25,38,.14)");
+  gradient.addColorStop(1,"rgba(15,25,38,0)");
+  ctx.save();
+  ctx.fillStyle=gradient;
+  ctx.filter=`blur(${5*pixelRatio}px)`;
+  ctx.beginPath();
+  ctx.ellipse(centerX,bottom-1*pixelRatio,contactWidth/2,contactHeight,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+cardProduct.addEventListener("load",()=>requestAnimationFrame(updateProductShadow));
+window.addEventListener("resize",()=>requestAnimationFrame(updateProductShadow));
+
 function renderProductPreview(){
   if(!cutoutImage)return;
 
@@ -1078,6 +1089,7 @@ function renderProductPreview(){
 
   hasGeneratedCard=true;
   downloadButton.disabled=false;
+  requestAnimationFrame(updateProductShadow);
 }
 
 async function makeVisionImage(imageSource){
@@ -1189,37 +1201,18 @@ function applyProductLayout(layout){
     Math.min(62,Number(layout?.vertical)||55)
   );
 
-  // Увеличиваем главный объект: прежний коэффициент .80 делал товар слишком мелким.
-  const composedScale=Math.min(88,Math.round(scale*1.05));
+  const composedScale=Math.round(scale*.80);
   cardProduct.style.width=composedScale+"%";
-  cardProduct.style.maxHeight="68%";
+  cardProduct.style.maxHeight="59%";
   cardProduct.style.top=vertical+"%";
   cardProduct.style.transform="translateY(-50%)";
-
-  const aura=document.getElementById("productAura");
-  if(aura){
-    aura.style.top=vertical+"%";
-    aura.style.width=Math.min(100,composedScale+22)+"%";
-    aura.style.height="46%";
-    aura.style.left="50%";
-    aura.style.right="auto";
-    aura.style.transform="translate(-50%,-50%)";
-  }
 
   if(position==="left"){
     cardProduct.style.left="8%";
     cardProduct.style.right="auto";
-    if(aura){
-      aura.style.left=(8+composedScale/2)+"%";
-      aura.style.right="auto";
-    }
   }else if(position==="right"){
     cardProduct.style.left="auto";
     cardProduct.style.right="8%";
-    if(aura){
-      aura.style.left="auto";
-      aura.style.right=(8+composedScale/2)+"%";
-    }
   }else{
     cardProduct.style.left="50%";
     cardProduct.style.right="auto";
@@ -1328,6 +1321,7 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
 
   hasGeneratedCard=true;
   downloadButton.disabled=false;
+  requestAnimationFrame(updateProductShadow);
 }
 
 async function generateAIComposition(){
@@ -1506,6 +1500,9 @@ async function handleFile(file){
 
   cardProduct.style.display="none";
   cardProduct.removeAttribute("src");
+  if(productShadow){
+    productShadow.getContext("2d").clearRect(0,0,productShadow.width,productShadow.height);
+  }
 
   downloadButton.disabled=true;
 
