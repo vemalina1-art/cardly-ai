@@ -193,7 +193,7 @@ export default {
         const body = await request.json();
         const image = String(body.image || "");
 
-        if (!/^data:image\\/(jpeg|png|webp);base64,/i.test(image)) {
+        if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
           return jsonResponse({
             error: "Передайте фото в поле image в формате data:image/jpeg;base64,..."
           }, 400);
@@ -422,24 +422,29 @@ vertical — число от 43 до 62.
         const cameraPerspective = safeText(analysis.camera_perspective, 250);
         const lightDirection = safeText(analysis.light_direction, 250);
 
-        // ШАГ 3. FLUX СОЗДАЁТ ПУСТОЕ ОКРУЖЕНИЕ ДЛЯ ОРИГИНАЛЬНОГО ТОВАРА
+        // ШАГ 3. FLUX СОЗДАЁТ СЦЕНУ С УЧЁТОМ РЕАЛЬНОЙ ФОРМЫ ТОВАРА
         // Сам товар остаётся оригинальным PNG и не перерисовывается.
         const finalPrompt = [
-          "Create a photorealistic vertical 3:4 advertising BACKGROUND PLATE only. This is an empty environment, NOT a product photograph and NOT a finished poster.",
-          "SCENE STYLE: " + selectedStyle + ".",
+          "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
+          "PRODUCT CATEGORY: " + category + ".",
+          "REFERENCE PRODUCT SILHOUETTE: " + productShape + ".",
+          "VISIBLE MATERIALS: " + materials + ".",
+          "VISIBLE PRODUCT COLORS: " + colors + ".",
+          "SCENE PALETTE: " + visualDescription + ".",
           "ENVIRONMENT: " + environment + ".",
-          "SURFACE AND ARCHITECTURE: " + supportSurface + ".",
-          "CAMERA PERSPECTIVE: " + cameraPerspective + ".",
+          "SUPPORTING ARCHITECTURE OR SURFACE: " + supportSurface + ".",
+          "CAMERA AND PERSPECTIVE: " + cameraPerspective + ".",
           "LIGHTING: " + lightDirection + ".",
-          "Create a believable real location with coherent perspective, refined materials, subtle texture, realistic ambient light, soft directional highlights and natural depth.",
-          "The lower-middle area is reserved for a product that will be added later. Keep this entire area EMPTY, clean and unobstructed.",
-          "If a support plane is appropriate, show only the empty plane itself. Do not place anything on it, beside it or behind it.",
-          "ABSOLUTE RULE: render NO product, NO object, NO equipment, NO fixture, NO hardware, NO accessory, NO tool, NO furniture, NO prop, NO replica, NO duplicate, NO silhouette, NO placeholder and NO object-shaped decoration.",
-          "Do not depict anything from the product category, even partially. Do not draw product parts or similar-looking items anywhere in the image.",
-          "Do not create a fake product, product outline, product reflection or product shadow. The real product will be composited separately.",
-          "Keep the upper 22 percent calm and uncluttered for a headline.",
+          "VISUAL STYLE: " + selectedStyle + ".",
+          "Compose the environment around the reference object's real silhouette and proportions, not around a generic central rectangle.",
+          "The lower-middle " + position + " region is reserved for compositing the real product, with enough clear space matching its shape.",
+          "Include a believable nearby support plane, ledge, tabletop, floor or mounting context when physically appropriate for this product.",
+          "Make the perspective lines, surface angle, material reflections and light direction coherent with a real object placed in the reserved region.",
+          "Use natural ambient occlusion and realistic depth in the environment; avoid a flat studio gradient.",
+          "Keep the upper 22 percent visually calm for a headline.",
+          "BACKGROUND ONLY: do not draw the product, a replica, similar objects, product parts, silhouettes, placeholder objects or a fake product shadow.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
-        ].join(" ").slice(0, 1900);
+        ].join(" ").slice(0, 2600);
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
