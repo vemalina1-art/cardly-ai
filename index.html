@@ -283,6 +283,7 @@ textarea{
   background-position:center;
   transform:scale(1.005);
 }
+
 #card .scene-overlay{
   position:absolute;
   inset:0;
@@ -292,6 +293,7 @@ textarea{
     linear-gradient(180deg,rgba(247,250,253,.70) 0%,rgba(247,250,253,.25) 24%,transparent 48%,rgba(17,30,43,.10) 100%),
     linear-gradient(90deg,rgba(255,255,255,.14),transparent 28%,transparent 75%,rgba(255,255,255,.10));
 }
+
 #card::before{
   content:"";
   position:absolute;
@@ -306,6 +308,7 @@ textarea{
   z-index:-2;
   pointer-events:none;
 }
+
 #card::after{
   content:"";
   position:absolute;
@@ -315,7 +318,7 @@ textarea{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -35px 65px rgba(14,28,43,.07);
 }
 
-/* Заголовок: выразительная иерархия и зона читаемости */
+/* Заголовок */
 .card-title{
   position:absolute;
   z-index:5;
@@ -333,6 +336,7 @@ textarea{
   color:inherit;
   text-shadow:0 2px 12px rgba(255,255,255,.48);
 }
+
 .card-subtitle{
   position:absolute;
   z-index:5;
@@ -348,7 +352,7 @@ textarea{
   text-shadow:0 1px 8px rgba(255,255,255,.72);
 }
 
-/* Реальная тень строится по альфа-маске оригинального товара */
+/* Тень по контуру оригинального товара */
 .product-shadow-layer{
   position:absolute;
   inset:0;
@@ -358,7 +362,7 @@ textarea{
   pointer-events:none;
 }
 
-/* Оригинальный вырезанный товар — сохраняем пиксели и цвет */
+/* Оригинальный вырезанный товар */
 .card-product{
   position:absolute;
   z-index:3;
@@ -372,7 +376,7 @@ textarea{
   transition:transform .25s;
 }
 
-/* Преимущества — типографическая подпись вместо кнопок */
+/* Преимущества */
 .card-features{
   position:absolute;
   z-index:6;
@@ -386,6 +390,7 @@ textarea{
   padding-top:13px;
   border-top:1px solid rgba(255,255,255,.62);
 }
+
 .feature{
   position:relative;
   max-width:100%;
@@ -403,6 +408,7 @@ textarea{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
+
 .feature::before{
   content:"";
   position:absolute;
@@ -425,6 +431,7 @@ textarea{
   background:var(--card-accent,#3c7de1);
   opacity:.9;
 }
+
 #card.accent-cyan{--card-accent:#20a9bf}
 #card.accent-green{--card-accent:#299477}
 #card.accent-orange{--card-accent:#d18a50}
@@ -433,34 +440,77 @@ textarea{
 #card.accent-blue{--card-accent:#3478df}
 
 #card.background-light,#card.background-soft{color:#17263c}
-#card.background-soft .card-background{background:linear-gradient(145deg,#f5f1eb,#e6ecef)}
+
+#card.background-soft .card-background{
+  background:linear-gradient(145deg,#f5f1eb,#e6ecef)
+}
+
 #card.background-gradient .card-background{
   background:radial-gradient(circle at 78% 20%,rgba(255,255,255,.92),transparent 38%),linear-gradient(135deg,#dcecff,#eff5fb 55%,#d8e5f2);
 }
+
 #card.background-accent .card-background{
   background:radial-gradient(circle at 80% 18%,rgba(255,255,255,.55),transparent 35%),linear-gradient(145deg,#d6e9fb,#a9c9e9);
 }
-#card.background-dark{color:#fff;background:#192638}
-#card.background-dark .card-background{background:linear-gradient(145deg,#152337,#33485f)}
+
+#card.background-dark{
+  color:#fff;
+  background:#192638;
+}
+
+#card.background-dark .card-background{
+  background:linear-gradient(145deg,#152337,#33485f)
+}
+
 #card.background-dark .scene-overlay{
   background:linear-gradient(180deg,rgba(10,20,35,.48),rgba(10,20,35,.08) 43%,rgba(10,20,35,.38));
 }
-#card.background-dark .card-title,#card.background-dark .card-subtitle{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28)}
-#card.background-dark .feature{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)}
-#card.background-dark .card-features{border-color:rgba(255,255,255,.35)}
 
-/* Варианты арт-дирекшена */
-#card.design-editorial .card-title{font-family:Georgia,serif;font-size:36px;font-weight:500;letter-spacing:-1.1px}
-#card.design-editorial .card-subtitle{font-family:Georgia,serif;font-size:14px}
+#card.background-dark .card-title,#card.background-dark .card-subtitle{
+  color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.28)
+}
+
+#card.background-dark .feature{
+  color:#fff;
+  text-shadow:0 1px 8px rgba(0,0,0,.4)
+}
+
+#card.background-dark .card-features{
+  border-color:rgba(255,255,255,.35)
+}
+
+/* Варианты оформления */
+#card.design-editorial .card-title{
+  font-family:Georgia,serif;
+  font-size:36px;
+  font-weight:500;
+  letter-spacing:-1.1px
+}
+
+#card.design-editorial .card-subtitle{
+  font-family:Georgia,serif;
+  font-size:14px
+}
+
 #card.design-showcase .card-product{filter:none !important;}
 #card.design-infographic .feature{font-size:10px;font-weight:800}
 #card.design-cinematic .card-product{filter:none !important;}
-#card.design-cinematic .scene-overlay{background:linear-gradient(180deg,rgba(8,18,30,.28),transparent 36%,rgba(8,18,30,.22))}
-#card.design-lifestyle .card-title{font-weight:750;letter-spacing:-1px}
-#card.scene-composition .card-background{filter:saturate(.94) contrast(1.025)}
 
-/* ДЕЙСТВИЯ */
+#card.design-cinematic .scene-overlay{
+  background:linear-gradient(180deg,rgba(8,18,30,.28),transparent 36%,rgba(8,18,30,.22))
+}
 
+#card.design-lifestyle .card-title{
+  font-weight:750;
+  letter-spacing:-1px
+}
+
+#card.scene-composition .card-background{
+  filter:saturate(.94) contrast(1.025)
+}
+
+/* Действия */
 .preview-actions{
   display:flex;
   gap:10px;
@@ -511,18 +561,21 @@ textarea{
   .panel{padding:17px}
   .preview-workspace{padding:8px;min-height:auto}
   #card{width:min(100%,360px);height:auto;aspect-ratio:3/4}
+
   .card-title{
     top:6%;
     left:7%;
     right:7%;
     font-size:clamp(19px,6vw,27px);
   }
+
   .card-subtitle{
     top:19%;
     left:7%;
     right:7%;
     font-size:11px;
   }
+
   .card-features{left:7%;right:7%;bottom:5%}
   .feature{font-size:10px;padding:7px 9px}
 }
@@ -1019,6 +1072,7 @@ function updateProductShadow(){
 
   const cardRect=card.getBoundingClientRect();
   const imageRect=cardProduct.getBoundingClientRect();
+
   if(!cardRect.width || !cardRect.height || !imageRect.width || !imageRect.height){
     return;
   }
@@ -1026,6 +1080,7 @@ function updateProductShadow(){
   const pixelRatio=2;
   const width=Math.round(cardRect.width*pixelRatio);
   const height=Math.round(cardRect.height*pixelRatio);
+
   productShadow.width=width;
   productShadow.height=height;
 
@@ -1041,6 +1096,7 @@ function updateProductShadow(){
   const mask=document.createElement("canvas");
   mask.width=width;
   mask.height=height;
+
   const maskCtx=mask.getContext("2d");
   maskCtx.drawImage(cardProduct,x,y,w,h);
   maskCtx.globalCompositeOperation="source-in";
@@ -1057,18 +1113,21 @@ function updateProductShadow(){
   ctx.drawImage(mask,0,0);
   ctx.restore();
 
-  // Контактная тень у нижней кромки — усиливает ощущение опоры.
+  // Контактная тень у нижней кромки.
   const bottom=y+h;
   const centerX=x+w/2;
   const contactWidth=Math.min(w*.43,190*pixelRatio);
   const contactHeight=Math.max(7*pixelRatio,Math.min(18*pixelRatio,w*.035));
+
   const gradient=ctx.createRadialGradient(
     centerX,bottom-2*pixelRatio,1,
     centerX,bottom-2*pixelRatio,contactWidth*.62
   );
+
   gradient.addColorStop(0,"rgba(15,25,38,.30)");
   gradient.addColorStop(.48,"rgba(15,25,38,.14)");
   gradient.addColorStop(1,"rgba(15,25,38,0)");
+
   ctx.save();
   ctx.fillStyle=gradient;
   ctx.filter=`blur(${5*pixelRatio}px)`;
@@ -1089,6 +1148,7 @@ function renderProductPreview(){
 
   hasGeneratedCard=true;
   downloadButton.disabled=false;
+
   requestAnimationFrame(updateProductShadow);
 }
 
@@ -1202,6 +1262,7 @@ function applyProductLayout(layout){
   );
 
   const composedScale=Math.round(scale*.80);
+
   cardProduct.style.width=composedScale+"%";
   cardProduct.style.maxHeight="59%";
   cardProduct.style.top=vertical+"%";
@@ -1321,6 +1382,7 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
 
   hasGeneratedCard=true;
   downloadButton.disabled=false;
+
   requestAnimationFrame(updateProductShadow);
 }
 
@@ -1500,8 +1562,11 @@ async function handleFile(file){
 
   cardProduct.style.display="none";
   cardProduct.removeAttribute("src");
+
   if(productShadow){
-    productShadow.getContext("2d").clearRect(0,0,productShadow.width,productShadow.height);
+    productShadow.getContext("2d").clearRect(
+      0,0,productShadow.width,productShadow.height
+    );
   }
 
   downloadButton.disabled=true;
