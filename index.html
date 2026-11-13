@@ -257,7 +257,6 @@ textarea{
   overflow:auto;
 }
 
-/* ОСНОВНАЯ КАРТОЧКА — коммерческая предметная композиция */
 #card{
   position:relative;
   width:450px;
@@ -271,7 +270,6 @@ textarea{
   box-shadow:0 28px 70px rgba(24,39,59,.20),0 5px 18px rgba(24,39,59,.08);
 }
 
-/* Фон и свет */
 #card .card-background{
   position:absolute;
   inset:0;
@@ -318,7 +316,6 @@ textarea{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -35px 65px rgba(14,28,43,.07);
 }
 
-/* Заголовок */
 .card-title{
   position:absolute;
   z-index:5;
@@ -352,7 +349,6 @@ textarea{
   text-shadow:0 1px 8px rgba(255,255,255,.72);
 }
 
-/* Тень по контуру оригинального товара */
 .product-shadow-layer{
   position:absolute;
   inset:0;
@@ -362,7 +358,6 @@ textarea{
   pointer-events:none;
 }
 
-/* Оригинальный вырезанный товар */
 .card-product{
   position:absolute;
   z-index:3;
@@ -376,7 +371,6 @@ textarea{
   transition:transform .25s;
 }
 
-/* Преимущества */
 .card-features{
   position:absolute;
   z-index:6;
@@ -480,7 +474,6 @@ textarea{
   border-color:rgba(255,255,255,.35)
 }
 
-/* Варианты оформления */
 #card.design-editorial .card-title{
   font-family:Georgia,serif;
   font-size:36px;
@@ -510,7 +503,6 @@ textarea{
   filter:saturate(.94) contrast(1.025)
 }
 
-/* Действия */
 .preview-actions{
   display:flex;
   gap:10px;
@@ -704,9 +696,7 @@ textarea{
 </section>
 
 </main>
-</div>
-
-<script type="module">
+</div><script type="module">
 import {
   AutoModel,
   AutoProcessor,
@@ -721,6 +711,20 @@ env.allowLocalModels = false;
 env.allowRemoteModels = true;
 env.remoteHost = API_BASE + "/api/model/";
 env.remotePathTemplate = "{model}/resolve/{revision}/";
+
+// Настройка многопоточности WASM для ускорения BiRefNet
+const canUseWasmThreads =
+  self.crossOriginIsolated &&
+  typeof SharedArrayBuffer !== "undefined";
+
+env.backends.onnx.wasm.numThreads = canUseWasmThreads
+  ? Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4))
+  : 1;
+
+console.log(
+  "Cardly AI: WASM threads =",
+  env.backends.onnx.wasm.numThreads
+);
 
 const fileInput = document.getElementById("fileInput");
 const uploadArea = document.getElementById("uploadArea");
@@ -1092,7 +1096,6 @@ function updateProductShadow(){
   const w=imageRect.width*pixelRatio;
   const h=imageRect.height*pixelRatio;
 
-  // Чёрная маска сохраняет точный контур вырезанного PNG.
   const mask=document.createElement("canvas");
   mask.width=width;
   mask.height=height;
@@ -1103,7 +1106,6 @@ function updateProductShadow(){
   maskCtx.fillStyle="#000";
   maskCtx.fillRect(0,0,width,height);
 
-  // Мягкая направленная тень от формы товара.
   ctx.save();
   ctx.globalAlpha=.20;
   ctx.shadowColor="rgba(10,22,36,.48)";
@@ -1113,7 +1115,6 @@ function updateProductShadow(){
   ctx.drawImage(mask,0,0);
   ctx.restore();
 
-  // Контактная тень у нижней кромки.
   const bottom=y+h;
   const centerX=x+w/2;
   const contactWidth=Math.min(w*.43,190*pixelRatio);
@@ -1150,9 +1151,7 @@ function renderProductPreview(){
   downloadButton.disabled=false;
 
   requestAnimationFrame(updateProductShadow);
-}
-
-async function makeVisionImage(imageSource){
+}async function makeVisionImage(imageSource){
   const img=await loadImage(imageSource);
   const maxSide=768;
 
