@@ -252,7 +252,7 @@ textarea {
   overflow:auto;
 }
 
-/* CARD CANVAS */
+/* CARD */
 
 #card {
   position:relative;
@@ -279,7 +279,6 @@ textarea {
     linear-gradient(145deg,#f8fafc,#e8edf2 55%,#dce3e9);
   background-size:cover;
   background-position:center;
-  transform:scale(1.01);
 }
 
 #card .scene-overlay {
@@ -287,8 +286,13 @@ textarea {
   inset:0;
   z-index:-4;
   pointer-events:none;
-  background:
-    linear-gradient(180deg,rgba(247,250,253,.70),rgba(247,250,253,.15) 35%,transparent 60%,rgba(17,30,43,.12));
+  background:linear-gradient(
+    180deg,
+    rgba(247,250,253,.60),
+    rgba(247,250,253,.12) 35%,
+    transparent 60%,
+    rgba(17,30,43,.10)
+  );
 }
 
 #card::before {
@@ -336,12 +340,14 @@ textarea {
   left:34px;
   right:34px;
   margin:0;
+  max-width:380px;
   font-family:'Manrope',sans-serif;
   font-size:30px;
   line-height:1.08;
   font-weight:900;
   letter-spacing:-1.3px;
   overflow-wrap:anywhere;
+  text-wrap:balance;
   color:var(--card-text);
   text-shadow:0 2px 12px rgba(255,255,255,.35);
 }
@@ -357,6 +363,7 @@ textarea {
   line-height:1.5;
   font-weight:600;
   color:var(--card-muted);
+  text-wrap:pretty;
 }
 
 .card-badge {
@@ -385,7 +392,7 @@ textarea {
   left:50%;
   top:61%;
   transform:translate(-50%,-50%);
-  filter:drop-shadow(0 17px 17px rgba(12,25,40,.20));
+  filter:drop-shadow(0 20px 22px rgba(15,28,45,.24));
   transition:transform .25s;
 }
 
@@ -411,20 +418,19 @@ textarea {
 }
 
 .feature {
-  position:relative;
   display:flex;
   align-items:center;
   gap:7px;
   max-width:100%;
   padding:9px 12px;
-  border:1px solid rgba(255,255,255,.72);
+  border:1px solid rgba(255,255,255,.85);
   border-radius:10px;
-  background:rgba(255,255,255,.78);
+  background:rgba(255,255,255,.84);
   color:#263b52;
   font-size:10px;
   line-height:1.25;
   font-weight:800;
-  box-shadow:0 5px 17px rgba(26,42,61,.07);
+  box-shadow:0 7px 22px rgba(20,35,55,.10);
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
@@ -496,7 +502,12 @@ textarea {
 }
 
 #card.background-dark .scene-overlay {
-  background:linear-gradient(180deg,rgba(10,20,35,.53),rgba(10,20,35,.08) 43%,rgba(10,20,35,.40));
+  background:linear-gradient(
+    180deg,
+    rgba(10,20,35,.48),
+    rgba(10,20,35,.06) 43%,
+    rgba(10,20,35,.34)
+  );
 }
 
 #card.background-dark .card-title,
@@ -508,7 +519,7 @@ textarea {
 }
 
 #card.background-dark .feature {
-  background:rgba(18,32,50,.76);
+  background:rgba(18,32,50,.82);
   color:#fff;
   border-color:rgba(255,255,255,.2);
 }
@@ -525,8 +536,19 @@ textarea {
   font-size:14px;
 }
 
+#card.design-editorial .feature {
+  border-radius:4px;
+  background:rgba(255,255,255,.9);
+}
+
 #card.design-showcase .card-title {font-size:32px}
 #card.design-showcase .card-product {width:80%}
+
+#card.design-premium .feature,
+#card.design-showcase .feature {
+  border-radius:30px;
+  padding:10px 15px;
+}
 
 #card.design-infographic .card-features {
   display:grid;
@@ -546,7 +568,18 @@ textarea {
 }
 
 #card.design-cinematic .scene-overlay {
-  background:linear-gradient(180deg,rgba(8,18,30,.32),transparent 40%,rgba(8,18,30,.3));
+  background:linear-gradient(
+    180deg,
+    rgba(8,18,30,.32),
+    transparent 40%,
+    rgba(8,18,30,.3)
+  );
+}
+
+#card.design-cinematic .feature {
+  background:rgba(15,27,43,.78);
+  color:white;
+  border-color:rgba(255,255,255,.2);
 }
 
 #card.design-lifestyle .card-title {
@@ -559,6 +592,8 @@ textarea {
 #card.layout-editorial .card-title {max-width:310px}
 #card.layout-asymmetric .card-product {left:56%}
 #card.layout-cards .card-features {left:24px;right:24px}
+#card.layout-minimal .card-features {gap:5px}
+
 #card.features-left .card-features {
   top:42%;
   bottom:auto;
@@ -568,6 +603,7 @@ textarea {
   flex-direction:column;
   align-items:stretch;
 }
+
 #card.features-right .card-features {
   top:42%;
   bottom:auto;
@@ -577,12 +613,19 @@ textarea {
   flex-direction:column;
   align-items:stretch;
 }
-#card.features-left .feature,#card.features-right .feature {
+
+#card.features-left .feature,
+#card.features-right .feature {
   font-size:9px;
   padding:8px;
 }
+
 #card.scene-composition .card-background {
   filter:saturate(.97) contrast(1.025);
+}
+
+#card.layout-split .card-features {
+  max-width:48%;
 }
 
 .preview-actions {display:flex;gap:10px;margin-top:16px}
@@ -976,7 +1019,6 @@ async function removeBackground(file){
     const originalWidth=originalImage.naturalWidth;
     const originalHeight=originalImage.naturalHeight;
 
-    // Сохраняем больше исходного разрешения.
     const maxDimension=2400;
     const ratio=Math.min(1,maxDimension/Math.max(originalWidth,originalHeight));
     const width=Math.round(originalWidth*ratio);
@@ -1162,7 +1204,12 @@ async function requestDesign(){
     })
   });
 
-  const data=await response.json();
+  let data={};
+  try{
+    data=await response.json();
+  }catch(error){
+    throw new Error("Сервер вернул некорректный ответ при создании дизайна.");
+  }
 
   if(!response.ok)throw new Error(data.error||"Не удалось создать дизайн");
   return data;
@@ -1197,6 +1244,8 @@ async function requestAIScene(){
 
   const blob=await response.blob();
 
+  if(!blob.size)throw new Error("AI вернул пустое изображение.");
+
   const position=response.headers.get("X-Cardly-Position")||"center";
   const scale=Math.max(55,Math.min(95,Number(response.headers.get("X-Cardly-Scale"))||78));
   const vertical=Math.max(40,Math.min(65,Number(response.headers.get("X-Cardly-Vertical"))||56));
@@ -1209,7 +1258,6 @@ function applyProductLayout(layout){
   const scale=Math.max(55,Math.min(95,Number(layout?.scale)||85));
   const vertical=Math.max(40,Math.min(65,Number(layout?.vertical)||56));
 
-  // Убрано искусственное уменьшение на 20%.
   cardProduct.style.width=scale+"%";
   cardProduct.style.maxHeight="72%";
   cardProduct.style.top=vertical+"%";
@@ -1266,42 +1314,33 @@ function renderCard(data,sceneUrl=null,sceneLayout=null){
   const backgrounds=["light","dark","soft","gradient","accent"];
   const accents=["blue","cyan","green","orange","violet","black"];
   const layouts=["hero","split","editorial","cards","asymmetric","minimal"];
+  const featurePositions=["bottom","left","right"];
 
   const design=designs.includes(data.design)?data.design:styleSelect.value;
   const background=backgrounds.includes(data.background)?data.background:"light";
   const accent=accents.includes(data.accent)?data.accent:"blue";
   const layout=layouts.includes(data.layout)?data.layout:"hero";
+  const featuresPosition=featurePositions.includes(data.featuresPosition)
+    ?data.featuresPosition:"bottom";
 
   card.className="";
-
   card.classList.add(
     "design-"+design,
     "background-"+background,
     "accent-"+accent,
     "layout-"+layout,
-    "features-"+(data.featuresPosition||"bottom")
+    "features-"+featuresPosition
   );
 
-  const titlePosition=data.titlePosition||"top";
+  const titlePosition=["top","middle","bottom"].includes(data.titlePosition)
+    ?data.titlePosition:"top";
 
-  if(titlePosition==="middle"){
-    cardTitle.style.top="38%";
-    cardTitle.style.bottom="auto";
-  }else if(titlePosition==="bottom"){
-    cardTitle.style.top="auto";
-    cardTitle.style.bottom="23%";
-  }else{
-    cardTitle.style.top="49px";
-    cardTitle.style.bottom="auto";
-  }
+  cardTitle.style.top=titlePosition==="middle"?"36%":
+    titlePosition==="bottom"?"auto":"49px";
+  cardTitle.style.bottom=titlePosition==="bottom"?"25%":"auto";
 
-  if(titlePosition==="top"){
-    cardSubtitle.style.top="120px";
-    cardSubtitle.style.bottom="auto";
-  }else{
-    cardSubtitle.style.top="auto";
-    cardSubtitle.style.bottom="17%";
-  }
+  cardSubtitle.style.top=titlePosition==="top"?"120px":"auto";
+  cardSubtitle.style.bottom=titlePosition==="top"?"auto":"17%";
 
   if(cutoutImage){
     cardProduct.src=cutoutImage;
@@ -1388,7 +1427,6 @@ async function generateSimpleCard(){
     const design=await requestDesign();
 
     revokeSceneUrl();
-
     renderCard(design);
 
     setStatus("Карточка готова. Можно скачать изображение.","success");
