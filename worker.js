@@ -3,43 +3,41 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    const corsHeaders = {
+    const cors = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
       "Access-Control-Allow-Headers": "*",
       "Access-Control-Expose-Headers": "*"
     };
 
-    const jsonResponse = (data, status = 200, extraHeaders = {}) =>
+    const json = (data, status = 200) =>
       new Response(JSON.stringify(data), {
         status,
         headers: {
-          ...corsHeaders,
-          ...extraHeaders,
-          "Content-Type": "application/json; charset=utf-8"
+          ...cors,
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-store"
         }
       });
 
-    const imageResponse = (base64, layout) => {
+    const imageResponse = (base64, layout = {}) => {
       const binary = atob(base64);
       const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
 
       return new Response(bytes, {
         headers: {
-          ...corsHeaders,
+          ...cors,
           "Content-Type": "image/jpeg",
           "Cache-Control": "no-store",
-          "X-Cardly-Position": layout.position,
-          "X-Cardly-Scale": String(layout.scale),
-          "X-Cardly-Vertical": String(layout.vertical)
+          "X-Cardly-Position": layout.position || "center",
+          "X-Cardly-Scale": String(layout.scale || 68),
+          "X-Cardly-Vertical": String(layout.vertical || 55)
         }
       });
     };
 
-    // Извлечение текста из разных форматов ответа AI
     const readAIText = result => {
       if (typeof result === "string") return result.trim();
-
       if (!result || typeof result !== "object") return "";
 
       const candidates = [
@@ -59,22 +57,21 @@ export default {
         }
 
         if (Array.isArray(value)) {
-          const text = value
+          const found = value
             .filter(item => typeof item?.text === "string")
             .map(item => item.text)
             .join("\n")
             .trim();
 
-          if (text) return text;
+          if (found) return found;
         }
       }
 
       return "";
     };
 
-    // Извлечение JSON из ответа модели
     const parseJSON = text => {
-      const clean = String(text)
+      const clean = String(text || "")
         .replace(/```json/gi, "")
         .replace(/```/g, "")
         .trim();
@@ -83,70 +80,62 @@ export default {
       const end = clean.lastIndexOf("}");
 
       if (start < 0 || end <= start) {
-        throw new Error(
-          "В ответе модели не найден JSON-объект. Ответ: " +
-          clean.slice(0, 1500)
-        );
+        throw new Error("AI не вернул JSON");
       }
 
-      const jsonText = clean.slice(start, end + 1);
-
-      try {
-        return JSON.parse(jsonText);
-      } catch (error) {
-        throw new Error(
-          "JSON от модели содержит ошибку: " +
-          error.message +
-          ". Фрагмент: " +
-          jsonText.slice(0, 1500)
-        );
-      }
+      return JSON.parse(clean.slice(start, end + 1));
     };
+
+    const safeText = (value, max = 200) =>
+      String(value || "")
+        .replace(/[<>]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, max);
 
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders
+        headers: cors
       });
     }
 
-    // 1. ПРОКСИ BIRE FNET — УДАЛЕНИЕ ФОНА
+    // --------------------------------------------------
+    // 1. BIRE FNET MODEL PROXY
+    // --------------------------------------------------
+
     if (url.pathname.startsWith("/api/model/")) {
       if (!["GET", "HEAD"].includes(request.method)) {
-        return jsonResponse({ error: "Method not allowed" }, 405);
+        return json({ error: "Method not allowed" }, 405);
       }
 
       try {
-        const prefix = "/api/model/";
-        const modelPath = url.pathname.slice(prefix.length);
+        const modelPath = url.pathname.slice("/api/model/".length);
 
-        const allowedPrefix =
+        const prefix =
           "onnx-community/BiRefNet_512x512-ONNX/resolve/main/";
 
-        const allowedFiles = [
+        const allowed = [
           "config.json",
           "preprocessor_config.json",
           "onnx/model.onnx"
         ];
 
-        if (!modelPath.startsWith(allowedPrefix)) {
-          return jsonResponse({ error: "Model path not allowed" }, 403);
+        if (!modelPath.startsWith(prefix)) {
+          return json({ error: "Model path not allowed" }, 403);
         }
 
-        const filePath = modelPath.slice(allowedPrefix.length);
+        const file = modelPath.slice(prefix.length);
 
-        if (!allowedFiles.includes(filePath)) {
-          return jsonResponse({
-            error: "Model file not allowed",
-            file: filePath
-          }, 403);
+        if (!allowed.includes(file)) {
+          return json({ error: "Model file not allowed" }, 403);
         }
 
-        const hfUrl = new URL(
+        const target = new URL(
           "https://huggingface.co/" + modelPath
         );
 
-        hfUrl.search = url.search;
+        target.search = url.search;
 
         const headers = new Headers();
 
@@ -161,59 +150,56 @@ export default {
           if (value) headers.set(name, value);
         }
 
-        const hfResponse = await fetch(hfUrl.toString(), {
+        const response = await fetch(target, {
           method: request.method,
           headers,
           redirect: "follow"
         });
 
-        const responseHeaders = new Headers(hfResponse.headers);
+        const responseHeaders = new Headers(response.headers);
 
-        for (const [key, value] of Object.entries(corsHeaders)) {
+        Object.entries(cors).forEach(([key, value]) => {
           responseHeaders.set(key, value);
-        }
+        });
 
         return new Response(
-          request.method === "HEAD" ? null : hfResponse.body,
+          request.method === "HEAD" ? null : response.body,
           {
-            status: hfResponse.status,
-            statusText: hfResponse.statusText,
+            status: response.status,
+            statusText: response.statusText,
             headers: responseHeaders
           }
         );
 
       } catch (error) {
-        console.error("MODEL PROXY ERROR:", error);
-
-        return jsonResponse({
-          error: "Model proxy failed",
-          message: error.message
-        }, 500);
+        console.error("MODEL PROXY:", error);
+        return json({ error: error.message }, 500);
       }
     }
 
-    // 2. ПРОВЕРКА МОДЕЛИ BIRE FNET
+    // --------------------------------------------------
+    // 2. MODEL TESTS
+    // --------------------------------------------------
+
     if (url.pathname === "/api/test-model") {
       try {
-        const testUrl =
+        const response = await fetch(
           "https://huggingface.co/onnx-community/" +
           "BiRefNet_512x512-ONNX/resolve/main/" +
-          "preprocessor_config.json";
+          "preprocessor_config.json"
+        );
 
-        const response = await fetch(testUrl);
-
-        return jsonResponse({
+        return json({
           ok: response.ok,
           status: response.status,
-          response: (await response.text()).slice(0, 2000)
+          response: (await response.text()).slice(0, 1500)
         });
 
       } catch (error) {
-        return jsonResponse({ error: error.message }, 500);
+        return json({ error: error.message }, 500);
       }
     }
 
-    // 3. ПРОВЕРКА ТЕКСТОВОЙ LLAMA
     if (url.pathname === "/api/test-ai") {
       try {
         const result = await env.AI.run(
@@ -226,14 +212,13 @@ export default {
           }
         );
 
-        return jsonResponse(result);
+        return json(result);
 
       } catch (error) {
-        return jsonResponse({ error: error.message }, 500);
+        return json({ error: error.message }, 500);
       }
     }
 
-    // 4. ПРОВЕРКА VISION-МОДЕЛИ QWEN
     if (
       url.pathname === "/api/test-vision" &&
       request.method === "POST"
@@ -243,9 +228,7 @@ export default {
         const image = String(body.image || "");
 
         if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
-          return jsonResponse({
-            error: "Передайте фото в поле image в формате data:image/jpeg;base64,..."
-          }, 400);
+          return json({ error: "Некорректное изображение" }, 400);
         }
 
         const result = await env.AI.run(
@@ -256,7 +239,7 @@ export default {
               content: [
                 {
                   type: "text",
-                  text: "Кратко опиши предмет на фото. Ответь по-русски."
+                  text: "Опиши видимый товар, его форму, цвет и материалы. Не выдумывай детали. Ответь по-русски."
                 },
                 {
                   type: "image_url",
@@ -269,23 +252,20 @@ export default {
           }
         );
 
-        return jsonResponse({
+        return json({
           ok: true,
-          model: "@cf/qwen/qwen3.8-27b",
-          result: readAIText(result) || result
+          result: readAIText(result)
         });
 
       } catch (error) {
-        console.error("VISION TEST ERROR:", error);
-
-        return jsonResponse({
-          ok: false,
-          error: error.message
-        }, 500);
+        return json({ error: error.message }, 500);
       }
     }
 
-    // 5. ПРОВЕРКА FLUX
+    // --------------------------------------------------
+    // 3. FLUX TEST
+    // --------------------------------------------------
+
     if (
       url.pathname === "/api/test-image" &&
       request.method === "POST"
@@ -293,145 +273,145 @@ export default {
       try {
         const body = await request.json();
 
-        const prompt = String(body.prompt || "")
-          .trim()
-          .slice(0, 2048);
-
-        const steps = Math.min(
-          8,
-          Math.max(4, Number(body.steps) || 4)
-        );
+        const prompt = safeText(body.prompt, 2048);
 
         if (!prompt) {
-          return jsonResponse({
-            error: "Введите описание сцены"
-          }, 400);
+          return json({ error: "Введите описание сцены" }, 400);
         }
 
         const result = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
-          { prompt, steps }
+          {
+            prompt,
+            steps: 8
+          }
         );
 
         if (!result?.image) {
-          throw new Error("Модель не вернула изображение");
+          throw new Error("FLUX не вернул изображение");
         }
 
-        return imageResponse(result.image, {
-          position: "center",
-          scale: 68,
-          vertical: 55
-        });
+        return imageResponse(result.image);
 
       } catch (error) {
-        console.error("IMAGE GENERATION ERROR:", error);
-
-        return jsonResponse({
-          error: error.message
-        }, 500);
+        return json({ error: error.message }, 500);
       }
     }
 
-    // 6. AI-КОМПОЗИЦИЯ: АНАЛИЗ ТОВАРА + FLUX
+    // --------------------------------------------------
+    // 4. PRODUCT SCENE GENERATION
+    // --------------------------------------------------
+
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
     ) {
-      let visionResult = null;
-      let qwenText = "";
+      let visionText = "";
 
       try {
         const body = await request.json();
 
-        const productName = String(body.productName || "")
-          .trim()
-          .slice(0, 160);
-
-        const characteristics = String(body.characteristics || "")
-          .trim()
-          .slice(0, 350);
-
-        const style = String(body.style || "premium")
-          .trim()
-          .slice(0, 40);
-
+        const productName = safeText(body.productName, 160);
+        const characteristics = safeText(body.characteristics, 500);
+        const style = safeText(body.style || "premium", 40);
         const image = String(body.image || "");
 
         if (!productName) {
-          return jsonResponse({
-            error: "Введите название товара"
-          }, 400);
+          return json({ error: "Введите название товара" }, 400);
         }
 
         if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
-          return jsonResponse({
-            error: "Не получено фото товара"
-          }, 400);
+          return json({ error: "Не получено фото товара" }, 400);
         }
 
         if (image.length > 7_000_000) {
-          return jsonResponse({
-            error: "Изображение слишком большое"
-          }, 413);
+          return json({ error: "Изображение слишком большое" }, 413);
         }
 
-        const styles = {
-          premium: "premium commercial photography, elegant materials, refined soft lighting",
-          editorial: "high-end editorial photography, artistic natural light, subtle textures",
-          showcase: "professional product showcase, clean architectural environment",
-          lifestyle: "realistic contemporary lifestyle setting, natural daylight",
-          infographic: "modern commercial background, clean geometric composition",
-          cinematic: "cinematic commercial photography, directional light, realistic depth"
+        const styleDescriptions = {
+          premium:
+            "luxury commercial product photography, refined materials, elegant architectural details, soft natural lighting",
+
+          editorial:
+            "high-end editorial art direction, sophisticated composition, tactile materials, restrained color palette",
+
+          showcase:
+            "clean premium product showcase, modern architectural environment, controlled studio lighting",
+
+          lifestyle:
+            "realistic contemporary interior, natural daylight, authentic everyday environment",
+
+          infographic:
+            "clean modern commercial environment, graphic geometric architecture, bright balanced palette",
+
+          cinematic:
+            "cinematic commercial photography, dramatic but realistic directional lighting, atmospheric depth"
         };
 
-        const selectedStyle = styles[style] || styles.premium;
+        const selectedStyle =
+          styleDescriptions[style] || styleDescriptions.premium;
 
-        // ШАГ 1. QWEN АНАЛИЗИРУЕТ ЗАГРУЖЕННОЕ ФОТО
+        // ANALYZE REAL PRODUCT PHOTO
+
         const visionPrompt = `
-Analyze the attached product photo. Use only visible facts.
+Analyze the attached real product photograph.
 
-Product: ${productName}
-Characteristics: ${characteristics || "not provided"}
+Product name: ${productName}
+Additional facts: ${characteristics || "Not provided"}
 
-Identify the category, shape, orientation, visible materials and colors. Do not invent details.
+Use only details actually visible in the photograph.
 
-Design a realistic advertising background for this exact object. Describe the environment, support surface, camera perspective, lighting and palette.
+Identify:
+- product category
+- exact visible shape
+- orientation
+- visible colors
+- visible materials
+- approximate proportions
+- suitable real-world environment
+- suitable supporting surface
+- camera perspective
+- light direction
 
-Rules:
-- Do not include the product or its copies in the background.
-- Keep the upper 22% calm for a headline.
-- Choose a physically suitable surface or mounting context.
-- Write scene descriptions in English.
-- Return only valid JSON without Markdown.
+The real product will be composited separately.
+Do not generate or describe a replacement product.
 
-Return this structure:
+Create an environment that makes sense for this exact product.
+
+The environment must be visually attractive, realistic and commercially usable.
+
+Keep the upper area relatively calm for graphic typography.
+Reserve a suitable area for the real product.
+
+Return only JSON:
+
 {
-  "category": "short category",
-  "product_shape": "visible shape and orientation",
-  "materials": "visible materials",
-  "colors": "main visible colors",
-  "visual_description": "scene style and palette",
-  "environment": "English environment description",
-  "support_surface": "English support surface description",
-  "camera_perspective": "English camera perspective",
-  "light_direction": "English lighting description",
-  "placement": "center",
-  "scale": 62,
-  "vertical": 58
+  "category": "",
+  "shape": "",
+  "colors": "",
+  "materials": "",
+  "environment": "",
+  "surface": "",
+  "camera": "",
+  "lighting": "",
+  "position": "center",
+  "scale": 78,
+  "vertical": 56
 }
 
-placement: left, center or right.
-scale: number from 50 to 78.
-vertical: number from 43 to 62.
+Position must be left, center or right.
+Scale must be between 55 and 95.
+Vertical must be between 40 and 65.
 `;
 
-        visionResult = await env.AI.run(
+        const vision = await env.AI.run(
           "@cf/qwen/qwen3.8-27b",
           {
             messages: [
               {
                 role: "system",
-                content: "Analyze the real product photo. Do not invent details. Return only valid JSON."
+                content:
+                  "You are a professional product photographer and art director. Analyze the supplied image carefully. Never invent product details. Return valid JSON only."
               },
               {
                 role: "user",
@@ -453,131 +433,92 @@ vertical: number from 43 to 62.
           }
         );
 
-        console.log(
-          "QWEN FULL RESULT:",
-          JSON.stringify(visionResult).slice(0, 5000)
+        visionText = readAIText(vision);
+
+        console.log("VISION:", visionText.slice(0, 3000));
+
+        const analysis = parseJSON(visionText);
+
+        const position = ["left", "center", "right"].includes(
+          analysis.position
+        ) ? analysis.position : "center";
+
+        const scale = Math.max(
+          55,
+          Math.min(95, Number(analysis.scale) || 78)
         );
 
-        qwenText = readAIText(visionResult);
-
-        console.log(
-          "QWEN EXTRACTED TEXT:",
-          qwenText.slice(0, 5000)
+        const vertical = Math.max(
+          40,
+          Math.min(65, Number(analysis.vertical) || 56)
         );
 
-        // ШАГ 2. ПРОВЕРКА И РАЗБОР JSON
-        let analysis;
+        const category = safeText(analysis.category, 120);
+        const shape = safeText(analysis.shape, 250);
+        const colors = safeText(analysis.colors, 150);
+        const materials = safeText(analysis.materials, 150);
+        const environment = safeText(analysis.environment, 400);
+        const surface = safeText(analysis.surface, 200);
+        const camera = safeText(analysis.camera, 200);
+        const lighting = safeText(analysis.lighting, 200);
 
-        try {
-          if (!qwenText) {
-            throw new Error("Текст ответа Qwen не найден");
-          }
-
-          analysis = parseJSON(qwenText);
-
-        } catch (error) {
-          throw new Error(
-            "Ошибка разбора Qwen: " +
-            error.message +
-            ". Ответ модели: " +
-            JSON.stringify(visionResult).slice(0, 2500)
-          );
-        }
-
-        // ШАГ 3. НОРМАЛИЗАЦИЯ ПОЛОЖЕНИЯ ТОВАРА
-        const position = ["left", "center", "right"].includes(analysis.placement)
-          ? analysis.placement
-          : "center";
-
-        const scale = Number.isFinite(Number(analysis.scale))
-          ? Math.max(50, Math.min(78, Number(analysis.scale)))
-          : 62;
-
-        const vertical = Number.isFinite(Number(analysis.vertical))
-          ? Math.max(43, Math.min(62, Number(analysis.vertical)))
-          : 58;
-
-        const safeText = (value, max = 450) =>
-          String(value || "")
-            .replace(/[\r\n]+/g, " ")
-            .slice(0, max);
-
-        const category = safeText(analysis.category || productName, 100);
-        const productShape = safeText(analysis.product_shape, 350);
-        const materials = safeText(analysis.materials, 250);
-        const colors = safeText(analysis.colors, 200);
-        const visualDescription = safeText(analysis.visual_description, 350);
-
-        const environment = safeText(
-          analysis.environment || "A clean modern commercial interior",
-          650
-        );
-
-        const supportSurface = safeText(analysis.support_surface, 250);
-        const cameraPerspective = safeText(analysis.camera_perspective, 250);
-        const lightDirection = safeText(analysis.light_direction, 250);
-
-        // ШАГ 4. FLUX СОЗДАЁТ ФОН
-        const finalPrompt = [
-          "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
-          "PRODUCT CATEGORY: " + category + ".",
-          "REFERENCE PRODUCT SILHOUETTE: " + productShape + ".",
-          "VISIBLE MATERIALS: " + materials + ".",
-          "VISIBLE PRODUCT COLORS: " + colors + ".",
-          "SCENE PALETTE: " + visualDescription + ".",
-          "ENVIRONMENT: " + environment + ".",
-          "SUPPORTING SURFACE: " + supportSurface + ".",
-          "CAMERA: " + cameraPerspective + ".",
-          "LIGHTING: " + lightDirection + ".",
-          "VISUAL STYLE: " + selectedStyle + ".",
-          "Compose the environment around the reference object's real silhouette and proportions.",
-          "The lower-middle " + position + " region is reserved for compositing the real product.",
-          "Include a believable support plane, ledge, tabletop, floor or mounting context when appropriate.",
-          "Make perspective, reflections and light direction coherent with a real object placed in the reserved region.",
-          "Use natural ambient occlusion and realistic depth. Avoid a flat studio gradient.",
-          "Keep the upper 22 percent visually calm for a headline.",
-          "BACKGROUND ONLY: do not draw the product, replicas, similar objects, product parts, silhouettes, placeholder objects or fake product shadows.",
-          "No text, letters, numbers, typography, logos, labels, watermark or people."
+        const prompt = [
+          "Create a photorealistic vertical 3:4 commercial product photography background.",
+          "This is a BACKGROUND PLATE, not a finished poster.",
+          "Product category: " + category + ".",
+          "Real product shape reference: " + shape + ".",
+          "Visible product colors: " + colors + ".",
+          "Visible materials: " + materials + ".",
+          "Environment: " + environment + ".",
+          "Supporting surface: " + surface + ".",
+          "Camera perspective: " + camera + ".",
+          "Lighting: " + lighting + ".",
+          "Art direction: " + selectedStyle + ".",
+          "Create a believable physical environment suitable for this exact category of product.",
+          "Use realistic architectural scale and coherent perspective.",
+          "Use natural material textures and controlled commercial lighting.",
+          "Create realistic depth, soft ambient light and subtle reflections.",
+          "Leave enough negative space for the real product to be composited later.",
+          "Keep the upper region visually calm for a headline.",
+          "Do not generate the product itself.",
+          "Do not generate copies, silhouettes, product parts or substitute objects.",
+          "Do not generate text, letters, numbers, labels, logos or watermarks.",
+          "No people.",
+          "Avoid generic abstract gradients, fantasy interiors, plastic-looking materials and excessive decoration."
         ].join(" ").slice(0, 2048);
 
-        console.log("FLUX PROMPT LENGTH:", finalPrompt.length);
-
-        const imageResult = await env.AI.run(
+        const generated = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
           {
-            prompt: finalPrompt,
+            prompt,
             steps: 8
           }
         );
 
-        if (!imageResult?.image) {
-          throw new Error("FLUX не вернул изображение рекламной сцены");
+        if (!generated?.image) {
+          throw new Error("FLUX не вернул фон");
         }
 
-        return imageResponse(imageResult.image, {
+        return imageResponse(generated.image, {
           position,
           scale,
           vertical
         });
 
       } catch (error) {
-        console.error("AD SCENE GENERATION ERROR:", error);
+        console.error("SCENE ERROR:", error);
 
-        const message = String(error?.message || "");
-
-        return jsonResponse({
-          error: message || "Не удалось создать рекламное окружение",
-          qwen_text: qwenText
-            ? qwenText.slice(0, 2500)
-            : null,
-          qwen_full_result: visionResult
-            ? JSON.stringify(visionResult).slice(0, 4000)
-            : null
+        return json({
+          error: error.message || "Ошибка создания фона",
+          vision: visionText.slice(0, 2000)
         }, 500);
       }
     }
 
-    // 7. ОБЫЧНАЯ ГЕНЕРАЦИЯ КАРТОЧКИ
+    // --------------------------------------------------
+    // 5. CARD DESIGN GENERATION
+    // --------------------------------------------------
+
     if (
       url.pathname === "/api/generate" &&
       request.method === "POST"
@@ -585,56 +526,96 @@ vertical: number from 43 to 62.
       try {
         const body = await request.json();
 
-        const productName = String(
-          body.productName || ""
-        ).trim().slice(0, 160);
+        const productName = safeText(body.productName, 160);
+        const characteristics = safeText(
+          body.characteristics || body.features || "",
+          2000
+        );
 
-        const characteristics = String(
-          body.characteristics || body.features || ""
-        ).slice(0, 2000);
+        const style = safeText(body.style || "premium", 40);
 
         if (!productName) {
-          return jsonResponse({
-            error: "Введите название товара"
-          }, 400);
+          return json({ error: "Введите название товара" }, 400);
         }
 
-        const prompt = `
-Ты арт-директор сервиса инфографики для маркетплейсов.
-Создай структуру дизайна карточки 900x1200.
-Не выдумывай характеристики.
+        const designPrompt = `
+Ты — профессиональный арт-директор международного сервиса дизайна карточек маркетплейсов.
 
-Название: ${productName}
-Характеристики: ${characteristics}
+Создай концепцию красивой продающей карточки товара размером 900x1200.
 
-Верни только JSON:
+ТОВАР:
+${productName}
+
+ПОДТВЕРЖДЁННЫЕ ХАРАКТЕРИСТИКИ:
+${characteristics || "Дополнительные характеристики не указаны."}
+
+СТИЛЬ:
+${style}
+
+Требования:
+- Выбирай современную профессиональную композицию.
+- Не делай скучный шаблон с обычным текстом внизу.
+- Заголовок должен быть коротким, выразительным и читаемым.
+- Подзаголовок должен объяснять товар.
+- Преимущества должны быть короткими.
+- Используй только сведения из названия и характеристик.
+- Не придумывай материалы, размеры, функции и свойства.
+- Не повторяй одну мысль разными словами.
+- Выбирай подходящий контрастный акцент.
+- Товар должен быть главным визуальным объектом.
+- Не перегружай карточку элементами.
+
+Верни только JSON следующей структуры:
+
 {
-"title":"короткий заголовок",
-"subtitle":"короткое пояснение",
-"features":["преимущество 1","преимущество 2"],
-"design":"hero",
-"productPosition":"center",
-"titlePosition":"top",
-"featuresPosition":"bottom",
-"background":"light",
-"accent":"blue",
-"shadow":"soft",
-"decoration":"none"
+  "title": "Короткий заголовок",
+  "subtitle": "Пояснение",
+  "eyebrow": "Короткая надпись над заголовком",
+  "badge": "Короткая плашка",
+  "features": [
+    "Преимущество 1",
+    "Преимущество 2",
+    "Преимущество 3"
+  ],
+  "design": "premium",
+  "background": "light",
+  "accent": "blue",
+  "productPosition": "center",
+  "productScale": 85,
+  "titlePosition": "top",
+  "featuresPosition": "bottom",
+  "layout": "hero",
+  "decoration": "minimal"
 }
 
-Заголовок максимум 5 слов.
-В features только подтверждённые факты.
-Максимум 4 преимущества.
-
 Допустимые значения:
-design: hero, split, editorial, dynamic, info, premium
-productPosition: left, center, right
-titlePosition: top, middle, bottom
-featuresPosition: left, right, bottom
-background: light, dark, soft, gradient, accent
-accent: blue, cyan, green, orange, violet, black
-shadow: soft, medium, none
-decoration: none
+
+design:
+premium, editorial, showcase, lifestyle, infographic, cinematic
+
+background:
+light, dark, soft, gradient, accent
+
+accent:
+blue, cyan, green, orange, violet, black
+
+productPosition:
+left, center, right
+
+productScale:
+55-95
+
+titlePosition:
+top, middle, bottom
+
+featuresPosition:
+left, right, bottom
+
+layout:
+hero, split, editorial, cards, asymmetric, minimal
+
+decoration:
+minimal, geometric, elegant, technical
 `;
 
         const result = await env.AI.run(
@@ -644,75 +625,125 @@ decoration: none
               {
                 role: "system",
                 content:
-                  "Ты профессиональный арт-директор. Возвращай только валидный JSON."
+                  "Ты профессиональный дизайнер маркетплейсов. Возвращай только корректный JSON без Markdown."
               },
               {
                 role: "user",
-                content: prompt
+                content: designPrompt
               }
             ],
-            max_tokens: 500,
+            max_tokens: 900,
             temperature: 0.35
           }
         );
 
         const data = parseJSON(readAIText(result));
 
-        const allowed = {
+        const choices = {
           design: [
-            "hero", "split", "editorial",
-            "dynamic", "info", "premium"
+            "premium",
+            "editorial",
+            "showcase",
+            "lifestyle",
+            "infographic",
+            "cinematic"
           ],
-          productPosition: ["left", "center", "right"],
-          titlePosition: ["top", "middle", "bottom"],
-          featuresPosition: ["left", "right", "bottom"],
-          background: ["light", "dark", "soft", "gradient", "accent"],
-          accent: ["blue", "cyan", "green", "orange", "violet", "black"]
+          background: [
+            "light",
+            "dark",
+            "soft",
+            "gradient",
+            "accent"
+          ],
+          accent: [
+            "blue",
+            "cyan",
+            "green",
+            "orange",
+            "violet",
+            "black"
+          ],
+          productPosition: [
+            "left",
+            "center",
+            "right"
+          ],
+          titlePosition: [
+            "top",
+            "middle",
+            "bottom"
+          ],
+          featuresPosition: [
+            "left",
+            "right",
+            "bottom"
+          ],
+          layout: [
+            "hero",
+            "split",
+            "editorial",
+            "cards",
+            "asymmetric",
+            "minimal"
+          ],
+          decoration: [
+            "minimal",
+            "geometric",
+            "elegant",
+            "technical"
+          ]
         };
 
         const defaults = {
-          design: "hero",
+          design: "premium",
+          background: "light",
+          accent: "blue",
           productPosition: "center",
           titlePosition: "top",
           featuresPosition: "bottom",
-          background: "light",
-          accent: "blue"
+          layout: "hero",
+          decoration: "minimal"
         };
 
-        for (const [key, values] of Object.entries(allowed)) {
+        for (const [key, values] of Object.entries(choices)) {
           if (!values.includes(data[key])) {
             data[key] = defaults[key];
           }
         }
 
-        data.title = String(
-          data.title || productName
-        ).slice(0, 100);
+        data.title = safeText(data.title || productName, 90);
+        data.subtitle = safeText(data.subtitle, 150);
+        data.eyebrow = safeText(data.eyebrow, 50);
+        data.badge = safeText(data.badge, 45);
 
-        data.subtitle = String(
-          data.subtitle || ""
-        ).slice(0, 150);
+        data.productScale = Math.max(
+          55,
+          Math.min(95, Number(data.productScale) || 85)
+        );
 
         data.features = Array.isArray(data.features)
           ? data.features
               .filter(item => typeof item === "string")
+              .map(item => safeText(item, 75))
+              .filter(Boolean)
               .slice(0, 4)
-              .map(item => item.slice(0, 90))
           : [];
 
-        return jsonResponse(data);
+        return json(data);
 
       } catch (error) {
-        console.error("GENERATE ERROR:", error);
+        console.error("DESIGN ERROR:", error);
 
-        return jsonResponse({
-          error: error.message ||
-            "Не удалось создать дизайн"
+        return json({
+          error: error.message || "Не удалось создать дизайн"
         }, 500);
       }
     }
 
-    // 8. СТАТИЧЕСКИЕ ФАЙЛЫ САЙТА
+    // --------------------------------------------------
+    // 6. STATIC ASSETS
+    // --------------------------------------------------
+
     return env.ASSETS.fetch(request);
   }
 };
