@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,66 +8,65 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
 
-:root{
+:root {
   --blue:#2868dc;
   --ink:#172337;
   --muted:#8190a5;
   --line:#e6ebf2;
-  --surface:#fff;
   --bg:#f3f6fa;
 }
 
-*{box-sizing:border-box}
+* {box-sizing:border-box}
 
-body{
+body {
   margin:0;
-  font-family:'DM Sans',Arial,sans-serif;
+  font-family:'DM Sans',sans-serif;
   background:var(--bg);
   color:var(--ink);
 }
 
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
+button,input,textarea,select {font:inherit}
+button {cursor:pointer}
 
-.app{
-  max-width:1340px;
+.app {
+  max-width:1380px;
   margin:auto;
-  padding:30px 24px 65px;
+  padding:28px 24px 60px;
 }
 
-header{
+header {
   display:flex;
   justify-content:space-between;
   align-items:center;
+  margin-bottom:28px;
   gap:20px;
-  margin-bottom:30px;
 }
 
-.logo{
+.logo {
   font-family:'Manrope',sans-serif;
-  font-size:28px;
-  font-weight:800;
-  letter-spacing:-1.5px;
+  font-size:29px;
+  font-weight:900;
+  letter-spacing:-1.6px;
   color:#2467db;
 }
 
-.logo span{color:#19283d}
+.logo span {color:#19283d}
 
-.header-caption{
-  color:#8592a5;
-  font-size:13px;
+.header-caption {
+  font-size:12px;
+  color:#8794a7;
 }
 
-.main-grid{
+.main-grid {
   display:grid;
-  grid-template-columns:minmax(300px,420px) minmax(0,1fr);
-  gap:25px;
+  grid-template-columns:minmax(300px,410px) minmax(0,1fr);
+  gap:24px;
   align-items:start;
 }
 
-.panel{
+.panel {
   background:#fff;
   border:1px solid #e8edf4;
   border-radius:22px;
@@ -74,17 +74,16 @@ header{
   box-shadow:0 12px 40px rgba(31,49,76,.045);
 }
 
-.panel h2{
+.panel h2 {
   font-family:'Manrope',sans-serif;
   font-size:18px;
   font-weight:800;
   margin:0 0 22px;
-  letter-spacing:-.4px;
 }
 
-.field{margin-bottom:19px}
+.field {margin-bottom:18px}
 
-.field label{
+.field label {
   display:block;
   margin-bottom:9px;
   font-size:13px;
@@ -92,7 +91,7 @@ header{
   color:#34445b;
 }
 
-input[type=text],textarea,select{
+input[type=text],textarea,select {
   display:block;
   width:100%;
   border:1px solid #e0e6ef;
@@ -104,49 +103,46 @@ input[type=text],textarea,select{
   transition:.2s;
 }
 
-input[type=text]:focus,textarea:focus,select:focus{
+input[type=text]:focus,textarea:focus,select:focus {
   border-color:#5b91e9;
   box-shadow:0 0 0 4px rgba(55,119,224,.09);
 }
 
-textarea{
-  min-height:100px;
+textarea {
+  min-height:105px;
   resize:vertical;
   line-height:1.55;
 }
 
-.upload-area{
+.upload-area {
   border:1.5px dashed #cbd6e5;
   border-radius:16px;
-  padding:26px 15px;
+  padding:25px 15px;
   text-align:center;
   background:#f9fbfe;
   transition:.2s;
 }
 
-.upload-area.dragover{
+.upload-area.dragover {
   border-color:#3478e6;
   background:#eff5ff;
 }
 
-.upload-icon{
-  font-size:30px;
-  margin-bottom:9px;
-}
+.upload-icon {font-size:30px;margin-bottom:9px}
 
-.upload-area p{
+.upload-area p {
   margin:5px 0;
   font-size:12px;
   color:#8592a5;
 }
 
-.upload-area strong{
+.upload-area strong {
   display:block;
   margin-bottom:5px;
   font-size:14px;
 }
 
-.upload-button{
+.upload-button {
   display:inline-block;
   margin-top:13px;
   padding:10px 17px;
@@ -158,15 +154,15 @@ textarea{
   cursor:pointer;
 }
 
-#fileInput{display:none}
+#fileInput {display:none}
 
-.uploaded-preview{
+.uploaded-preview {
   display:none;
   margin-top:14px;
   text-align:center;
 }
 
-.uploaded-preview img{
+.uploaded-preview img {
   max-width:100%;
   max-height:180px;
   object-fit:contain;
@@ -174,18 +170,18 @@ textarea{
   background:#f0f3f7;
 }
 
-.status{
+.status {
   margin-top:12px;
   color:#78879b;
   font-size:12px;
   line-height:1.55;
 }
 
-.status.success{color:#16834c}
-.status.error{color:#d13c3c}
-.status.loading{color:#2868dc}
+.status.success {color:#16834c}
+.status.error {color:#d13c3c}
+.status.loading {color:#2868dc}
 
-.primary-button,.secondary-button{
+.primary-button,.secondary-button {
   display:block;
   width:100%;
   border:0;
@@ -193,40 +189,40 @@ textarea{
   padding:15px 16px;
   font-size:14px;
   font-weight:750;
-  transition:transform .2s,box-shadow .2s;
+  transition:.2s;
 }
 
-.primary-button{
+.primary-button {
   color:#fff;
   background:linear-gradient(120deg,#347ff0,#2059c7);
   box-shadow:0 7px 18px rgba(39,105,219,.2);
 }
 
-.primary-button:hover{
+.primary-button:hover {
   transform:translateY(-1px);
   box-shadow:0 10px 23px rgba(39,105,219,.25);
 }
 
-.secondary-button{
+.secondary-button {
   margin-top:10px;
   color:#2467d8;
   background:#edf4ff;
 }
 
-.primary-button:disabled,.secondary-button:disabled{
+.primary-button:disabled,.secondary-button:disabled {
   opacity:.55;
   cursor:not-allowed;
 }
 
-.divider{
+.divider {
   height:1px;
   background:#edf0f5;
   margin:21px 0;
 }
 
-.preview-panel{min-height:690px}
+.preview-panel {min-height:690px}
 
-.preview-heading{
+.preview-heading {
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -234,9 +230,9 @@ textarea{
   margin-bottom:20px;
 }
 
-.preview-heading h2{margin:0}
+.preview-heading h2 {margin:0}
 
-.preview-tag{
+.preview-tag {
   padding:7px 11px;
   border-radius:30px;
   background:#edf4ff;
@@ -245,19 +241,20 @@ textarea{
   font-weight:800;
 }
 
-.preview-workspace{
+.preview-workspace {
   display:flex;
   justify-content:center;
   align-items:flex-start;
   padding:22px;
   min-height:610px;
   border-radius:17px;
-  background:
-    radial-gradient(circle at 50% 30%,#fff 0%,#f1f4f9 75%);
+  background:radial-gradient(circle at 50% 30%,#fff 0%,#f1f4f9 75%);
   overflow:auto;
 }
 
-#card{
+/* CARD CANVAS */
+
+#card {
   position:relative;
   width:450px;
   height:600px;
@@ -267,32 +264,34 @@ textarea{
   background:#e9edf1;
   color:#17263c;
   isolation:isolate;
-  box-shadow:0 28px 70px rgba(24,39,59,.20),0 5px 18px rgba(24,39,59,.08);
+  box-shadow:0 28px 70px rgba(24,39,59,.20);
+  --card-accent:#3478df;
+  --card-text:#17263c;
+  --card-muted:#536276;
 }
 
-#card .card-background{
+#card .card-background {
   position:absolute;
   inset:0;
   z-index:-5;
   background:
     radial-gradient(ellipse at 72% 28%,rgba(255,255,255,.95),transparent 38%),
-    linear-gradient(145deg,#f8fafc 0%,#e8edf2 55%,#dce3e9 100%);
+    linear-gradient(145deg,#f8fafc,#e8edf2 55%,#dce3e9);
   background-size:cover;
   background-position:center;
-  transform:scale(1.005);
+  transform:scale(1.01);
 }
 
-#card .scene-overlay{
+#card .scene-overlay {
   position:absolute;
   inset:0;
   z-index:-4;
   pointer-events:none;
   background:
-    linear-gradient(180deg,rgba(247,250,253,.70) 0%,rgba(247,250,253,.25) 24%,transparent 48%,rgba(17,30,43,.10) 100%),
-    linear-gradient(90deg,rgba(255,255,255,.14),transparent 28%,transparent 75%,rgba(255,255,255,.10));
+    linear-gradient(180deg,rgba(247,250,253,.70),rgba(247,250,253,.15) 35%,transparent 60%,rgba(17,30,43,.12));
 }
 
-#card::before{
+#card::before {
   content:"";
   position:absolute;
   width:370px;
@@ -301,55 +300,96 @@ textarea{
   top:57%;
   transform:translate(-50%,-50%);
   border-radius:50%;
-  background:rgba(255,255,255,.34);
+  background:rgba(255,255,255,.25);
   filter:blur(75px);
   z-index:-2;
   pointer-events:none;
 }
 
-#card::after{
+#card::after {
   content:"";
   position:absolute;
   inset:0;
-  z-index:8;
+  z-index:9;
   pointer-events:none;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -35px 65px rgba(14,28,43,.07);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
 }
 
-.card-title{
+.card-eyebrow {
   position:absolute;
-  z-index:5;
-  top:34px;
+  z-index:6;
+  top:28px;
+  left:34px;
+  right:34px;
+  font-size:9px;
+  line-height:1.3;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--card-accent);
+}
+
+.card-title {
+  position:absolute;
+  z-index:6;
+  top:49px;
   left:34px;
   right:34px;
   margin:0;
-  font-family:'Manrope','DM Sans',sans-serif;
+  font-family:'Manrope',sans-serif;
   font-size:30px;
   line-height:1.08;
-  font-weight:800;
-  letter-spacing:-1.35px;
-  text-transform:none;
+  font-weight:900;
+  letter-spacing:-1.3px;
   overflow-wrap:anywhere;
-  color:inherit;
-  text-shadow:0 2px 12px rgba(255,255,255,.48);
+  color:var(--card-text);
+  text-shadow:0 2px 12px rgba(255,255,255,.35);
 }
 
-.card-subtitle{
+.card-subtitle {
   position:absolute;
-  z-index:5;
-  top:91px;
+  z-index:6;
+  top:120px;
   left:35px;
   right:42px;
   max-width:340px;
-  font-size:13px;
+  font-size:12px;
   line-height:1.5;
-  font-weight:500;
-  letter-spacing:-.1px;
-  color:#536276;
-  text-shadow:0 1px 8px rgba(255,255,255,.72);
+  font-weight:600;
+  color:var(--card-muted);
 }
 
-.product-shadow-layer{
+.card-badge {
+  position:absolute;
+  z-index:7;
+  top:22px;
+  right:25px;
+  max-width:125px;
+  padding:8px 12px;
+  border-radius:30px;
+  background:var(--card-accent);
+  color:#fff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  box-shadow:0 5px 14px rgba(20,35,55,.13);
+}
+
+.card-product {
+  position:absolute;
+  z-index:3;
+  width:75%;
+  max-height:72%;
+  object-fit:contain;
+  left:50%;
+  top:61%;
+  transform:translate(-50%,-50%);
+  filter:drop-shadow(0 17px 17px rgba(12,25,40,.20));
+  transition:transform .25s;
+}
+
+.product-shadow-layer {
   position:absolute;
   inset:0;
   width:100%;
@@ -358,167 +398,204 @@ textarea{
   pointer-events:none;
 }
 
-.card-product{
+.card-features {
   position:absolute;
-  z-index:3;
-  width:58%;
-  max-height:59%;
-  object-fit:contain;
-  left:50%;
-  top:59%;
-  transform:translate(-50%,-50%);
-  filter:none !important;
-  transition:transform .25s;
-}
-
-.card-features{
-  position:absolute;
-  z-index:6;
-  left:34px;
+  z-index:7;
+  left:30px;
   right:30px;
-  bottom:28px;
+  bottom:25px;
   display:flex;
   flex-wrap:wrap;
-  align-items:flex-end;
-  gap:8px 19px;
-  padding-top:13px;
-  border-top:1px solid rgba(255,255,255,.62);
+  align-items:center;
+  gap:8px;
 }
 
-.feature{
+.feature {
   position:relative;
+  display:flex;
+  align-items:center;
+  gap:7px;
   max-width:100%;
-  padding:2px 0 2px 12px;
-  border:0;
-  border-radius:0;
+  padding:9px 12px;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:10px;
+  background:rgba(255,255,255,.78);
   color:#263b52;
-  background:transparent;
   font-size:10px;
-  line-height:1.35;
-  font-weight:700;
-  letter-spacing:.05px;
-  text-shadow:0 1px 7px rgba(255,255,255,.75);
-  box-shadow:none;
-  backdrop-filter:none;
-  -webkit-backdrop-filter:none;
+  line-height:1.25;
+  font-weight:800;
+  box-shadow:0 5px 17px rgba(26,42,61,.07);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
 
-.feature::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:5px;
-  width:4px;
-  height:4px;
+.feature-dot {
+  flex:0 0 6px;
+  width:6px;
+  height:6px;
   border-radius:50%;
-  background:var(--card-accent,#3478df);
-  box-shadow:0 0 0 3px rgba(255,255,255,.42);
+  background:var(--card-accent);
 }
 
-.card-accent{
+.card-accent {
   position:absolute;
   z-index:4;
   top:0;
   left:0;
   width:3px;
   height:100%;
-  background:var(--card-accent,#3c7de1);
-  opacity:.9;
+  background:var(--card-accent);
 }
 
-#card.accent-cyan{--card-accent:#20a9bf}
-#card.accent-green{--card-accent:#299477}
-#card.accent-orange{--card-accent:#d18a50}
-#card.accent-violet{--card-accent:#8064c8}
-#card.accent-black{--card-accent:#283449}
-#card.accent-blue{--card-accent:#3478df}
-
-#card.background-light,#card.background-soft{color:#17263c}
-
-#card.background-soft .card-background{
-  background:linear-gradient(145deg,#f5f1eb,#e6ecef)
+.card-kicker {
+  position:absolute;
+  z-index:6;
+  bottom:18px;
+  left:34px;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:1.8px;
+  color:var(--card-muted);
+  text-transform:uppercase;
+  opacity:.8;
 }
 
-#card.background-gradient .card-background{
-  background:radial-gradient(circle at 78% 20%,rgba(255,255,255,.92),transparent 38%),linear-gradient(135deg,#dcecff,#eff5fb 55%,#d8e5f2);
+#card.accent-cyan {--card-accent:#20a9bf}
+#card.accent-green {--card-accent:#299477}
+#card.accent-orange {--card-accent:#d18a50}
+#card.accent-violet {--card-accent:#8064c8}
+#card.accent-black {--card-accent:#283449}
+#card.accent-blue {--card-accent:#3478df}
+
+#card.background-light,#card.background-soft {color:#17263c}
+
+#card.background-soft .card-background {
+  background:linear-gradient(145deg,#f5f1eb,#e6ecef);
 }
 
-#card.background-accent .card-background{
-  background:radial-gradient(circle at 80% 18%,rgba(255,255,255,.55),transparent 35%),linear-gradient(145deg,#d6e9fb,#a9c9e9);
+#card.background-gradient .card-background {
+  background:
+    radial-gradient(circle at 78% 20%,rgba(255,255,255,.92),transparent 38%),
+    linear-gradient(135deg,#dcecff,#eff5fb 55%,#d8e5f2);
 }
 
-#card.background-dark{
+#card.background-accent .card-background {
+  background:
+    radial-gradient(circle at 80% 18%,rgba(255,255,255,.55),transparent 35%),
+    linear-gradient(145deg,#d6e9fb,#a9c9e9);
+}
+
+#card.background-dark {
   color:#fff;
-  background:#192638;
+  --card-text:#fff;
+  --card-muted:#d7e1ee;
 }
 
-#card.background-dark .card-background{
-  background:linear-gradient(145deg,#152337,#33485f)
+#card.background-dark .card-background {
+  background:linear-gradient(145deg,#152337,#33485f);
 }
 
-#card.background-dark .scene-overlay{
-  background:linear-gradient(180deg,rgba(10,20,35,.48),rgba(10,20,35,.08) 43%,rgba(10,20,35,.38));
+#card.background-dark .scene-overlay {
+  background:linear-gradient(180deg,rgba(10,20,35,.53),rgba(10,20,35,.08) 43%,rgba(10,20,35,.40));
 }
 
-#card.background-dark .card-title,#card.background-dark .card-subtitle{
+#card.background-dark .card-title,
+#card.background-dark .card-subtitle,
+#card.background-dark .card-eyebrow,
+#card.background-dark .card-kicker {
   color:#fff;
-  text-shadow:0 2px 12px rgba(0,0,0,.28)
+  text-shadow:0 2px 12px rgba(0,0,0,.3);
 }
 
-#card.background-dark .feature{
+#card.background-dark .feature {
+  background:rgba(18,32,50,.76);
   color:#fff;
-  text-shadow:0 1px 8px rgba(0,0,0,.4)
+  border-color:rgba(255,255,255,.2);
 }
 
-#card.background-dark .card-features{
-  border-color:rgba(255,255,255,.35)
-}
-
-#card.design-editorial .card-title{
-  font-family:Georgia,serif;
+#card.design-editorial .card-title {
+  font-family:'Playfair Display',Georgia,serif;
   font-size:36px;
-  font-weight:500;
-  letter-spacing:-1.1px
+  font-weight:600;
+  letter-spacing:-.8px;
 }
 
-#card.design-editorial .card-subtitle{
+#card.design-editorial .card-subtitle {
   font-family:Georgia,serif;
-  font-size:14px
+  font-size:14px;
 }
 
-#card.design-showcase .card-product{filter:none !important;}
-#card.design-infographic .feature{font-size:10px;font-weight:800}
-#card.design-cinematic .card-product{filter:none !important;}
+#card.design-showcase .card-title {font-size:32px}
+#card.design-showcase .card-product {width:80%}
 
-#card.design-cinematic .scene-overlay{
-  background:linear-gradient(180deg,rgba(8,18,30,.28),transparent 36%,rgba(8,18,30,.22))
+#card.design-infographic .card-features {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
 }
 
-#card.design-lifestyle .card-title{
-  font-weight:750;
-  letter-spacing:-1px
+#card.design-infographic .feature {
+  min-height:36px;
+  border-radius:8px;
+  font-size:9px;
 }
 
-#card.scene-composition .card-background{
-  filter:saturate(.94) contrast(1.025)
+#card.design-cinematic .card-title {
+  font-size:32px;
+  letter-spacing:-1.4px;
 }
 
-.preview-actions{
-  display:flex;
-  gap:10px;
-  margin-top:16px;
+#card.design-cinematic .scene-overlay {
+  background:linear-gradient(180deg,rgba(8,18,30,.32),transparent 40%,rgba(8,18,30,.3));
 }
 
-.preview-actions button{flex:1}
+#card.design-lifestyle .card-title {
+  font-weight:800;
+  letter-spacing:-1px;
+}
 
-.small-note{
+#card.layout-split .card-product {left:62%}
+#card.layout-split .card-title {right:48%;font-size:26px}
+#card.layout-editorial .card-title {max-width:310px}
+#card.layout-asymmetric .card-product {left:56%}
+#card.layout-cards .card-features {left:24px;right:24px}
+#card.features-left .card-features {
+  top:42%;
+  bottom:auto;
+  left:22px;
+  right:auto;
+  width:38%;
+  flex-direction:column;
+  align-items:stretch;
+}
+#card.features-right .card-features {
+  top:42%;
+  bottom:auto;
+  left:auto;
+  right:20px;
+  width:38%;
+  flex-direction:column;
+  align-items:stretch;
+}
+#card.features-left .feature,#card.features-right .feature {
+  font-size:9px;
+  padding:8px;
+}
+#card.scene-composition .card-background {
+  filter:saturate(.97) contrast(1.025);
+}
+
+.preview-actions {display:flex;gap:10px;margin-top:16px}
+.preview-actions button {flex:1}
+
+.small-note {
   margin-top:12px;
   color:#8a96a8;
   font-size:11px;
   line-height:1.55;
 }
 
-.progress-line{
+.progress-line {
   display:none;
   height:5px;
   background:#e7edf5;
@@ -527,7 +604,7 @@ textarea{
   overflow:hidden;
 }
 
-.progress-line span{
+.progress-line span {
   display:block;
   width:35%;
   height:100%;
@@ -536,40 +613,30 @@ textarea{
   animation:progress 1.3s ease-in-out infinite alternate;
 }
 
-@keyframes progress{
-  from{transform:translateX(-30%)}
-  to{transform:translateX(210%)}
+@keyframes progress {
+  from {transform:translateX(-30%)}
+  to {transform:translateX(210%)}
 }
 
-@media(max-width:850px){
-  .main-grid{grid-template-columns:1fr}
-  .preview-panel{min-height:auto}
-  .preview-workspace{min-height:470px}
+@media(max-width:850px) {
+  .main-grid {grid-template-columns:1fr}
+  .preview-panel {min-height:auto}
+  .preview-workspace {min-height:470px}
 }
 
-@media(max-width:520px){
-  .app{padding:18px 12px 35px}
-  .header-caption{display:none}
-  .panel{padding:17px}
-  .preview-workspace{padding:8px;min-height:auto}
-  #card{width:min(100%,360px);height:auto;aspect-ratio:3/4}
-
-  .card-title{
-    top:6%;
-    left:7%;
-    right:7%;
-    font-size:clamp(19px,6vw,27px);
-  }
-
-  .card-subtitle{
-    top:19%;
-    left:7%;
-    right:7%;
-    font-size:11px;
-  }
-
-  .card-features{left:7%;right:7%;bottom:5%}
-  .feature{font-size:10px;padding:7px 9px}
+@media(max-width:520px) {
+  .app {padding:18px 12px 35px}
+  .header-caption {display:none}
+  .panel {padding:17px}
+  .preview-workspace {padding:8px;min-height:auto}
+  #card {width:min(100%,360px);height:auto;aspect-ratio:3/4}
+  .card-eyebrow {top:5%;left:7%;font-size:8px}
+  .card-title {top:9%;left:7%;right:7%;font-size:clamp(19px,6vw,27px)}
+  .card-subtitle {top:23%;left:7%;right:7%;font-size:10px}
+  .card-badge {top:3%;right:5%;font-size:7px;padding:6px 8px}
+  .card-features {left:6%;right:6%;bottom:5%;gap:6px}
+  .feature {font-size:9px;padding:7px 9px}
+  .card-kicker {left:7%;bottom:2%}
 }
 </style>
 </head>
@@ -589,17 +656,12 @@ textarea{
 
   <div class="field">
     <label>Фотография товара</label>
-
     <div class="upload-area" id="uploadArea">
       <div class="upload-icon">📦</div>
       <strong>Загрузите фотографию товара</strong>
       <p>PNG, JPG или WEBP</p>
       <p>Рекомендуется изображение на простом фоне</p>
-
-      <label class="upload-button" for="fileInput">
-        Выбрать фотографию
-      </label>
-
+      <label class="upload-button" for="fileInput">Выбрать фотографию</label>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp">
     </div>
 
@@ -607,7 +669,6 @@ textarea{
       <img id="uploadedImage" alt="Загруженный товар">
       <div class="status" id="removeStatus">Фотография загружена</div>
     </div>
-
     <div class="progress-line" id="progressLine"><span></span></div>
   </div>
 
@@ -648,39 +709,32 @@ textarea{
   </div>
 
   <div class="small-note">
-    AI подбирает окружение по названию и характеристикам товара.
-    Оригинальная фотография сохраняется и накладывается поверх фона.
+    AI анализирует товар, подбирает окружение и создаёт дизайн карточки.
+    Оригинальная фотография товара сохраняется отдельно от фона.
   </div>
 </section>
 
 <section class="panel preview-panel">
-
   <div class="preview-heading">
     <h2>Предпросмотр</h2>
     <span class="preview-tag">900 × 1200</span>
   </div>
 
   <div class="preview-workspace">
-
-    <div id="card" class="background-light accent-blue design-premium">
-
+    <div id="card" class="background-light accent-blue design-premium layout-hero features-bottom">
       <div class="card-background" id="cardBackground"></div>
       <div class="scene-overlay"></div>
       <div class="card-accent"></div>
-      <canvas class="product-shadow-layer" id="productShadow" aria-hidden="true"></canvas>
+      <canvas class="product-shadow-layer" id="productShadow"></canvas>
 
+      <div class="card-eyebrow" id="cardEyebrow"></div>
+      <div class="card-badge" id="cardBadge" style="display:none"></div>
       <h1 class="card-title" id="cardTitle">Ваш товар</h1>
-
-      <div class="card-subtitle" id="cardSubtitle">
-        Здесь появится описание товара
-      </div>
-
+      <div class="card-subtitle" id="cardSubtitle">Здесь появится описание товара</div>
       <img class="card-product" id="cardProduct" alt="Товар" style="display:none">
-
       <div class="card-features" id="cardFeatures"></div>
-
+      <div class="card-kicker" id="cardKicker">CARDLY AI · PRODUCT DESIGN</div>
     </div>
-
   </div>
 
   <div class="preview-actions">
@@ -690,13 +744,14 @@ textarea{
   </div>
 
   <div class="small-note">
-    Итоговое изображение сохраняется в формате PNG размером 900 × 1200 пикселей.
+    Итоговое изображение сохраняется в PNG размером 900 × 1200 пикселей.
   </div>
-
 </section>
 
 </main>
-</div><script type="module">
+</div>
+
+<script type="module">
 import {
   AutoModel,
   AutoProcessor,
@@ -704,53 +759,49 @@ import {
   env
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
-const API_BASE = window.location.origin;
-const MODEL_ID = "onnx-community/BiRefNet_512x512-ONNX";
+const API_BASE=window.location.origin;
+const MODEL_ID="onnx-community/BiRefNet_512x512-ONNX";
 
-env.allowLocalModels = false;
-env.allowRemoteModels = true;
-env.remoteHost = API_BASE + "/api/model/";
-env.remotePathTemplate = "{model}/resolve/{revision}/";
+env.allowLocalModels=false;
+env.allowRemoteModels=true;
+env.remoteHost=API_BASE+"/api/model/";
+env.remotePathTemplate="{model}/resolve/{revision}/";
 
-// Настройка многопоточности WASM для ускорения BiRefNet
-const canUseWasmThreads =
+const canUseWasmThreads=
   self.crossOriginIsolated &&
-  typeof SharedArrayBuffer !== "undefined";
+  typeof SharedArrayBuffer!=="undefined";
 
-env.backends.onnx.wasm.numThreads = canUseWasmThreads
-  ? Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4))
-  : 1;
+env.backends.onnx.wasm.numThreads=canUseWasmThreads
+  ?Math.max(1,Math.min(4,navigator.hardwareConcurrency||4))
+  :1;
 
-console.log(
-  "Cardly AI: WASM threads =",
-  env.backends.onnx.wasm.numThreads
-);
+const $=id=>document.getElementById(id);
 
-const fileInput = document.getElementById("fileInput");
-const uploadArea = document.getElementById("uploadArea");
-const uploadedPreview = document.getElementById("uploadedPreview");
-const uploadedImage = document.getElementById("uploadedImage");
-const productName = document.getElementById("productName");
-const characteristics = document.getElementById("characteristics");
-const styleSelect = document.getElementById("styleSelect");
-const removeStatus = document.getElementById("removeStatus");
-const mainStatus = document.getElementById("mainStatus");
-const progressLine = document.getElementById("progressLine");
-const generateButton = document.getElementById("generateButton");
-const simpleButton = document.getElementById("simpleButton");
-const downloadButton = document.getElementById("downloadButton");
-const card = document.getElementById("card");
-const cardTitle = document.getElementById("cardTitle");
-const cardSubtitle = document.getElementById("cardSubtitle");
-const cardProduct = document.getElementById("cardProduct");
-const productShadow = document.getElementById("productShadow");
-const cardFeatures = document.getElementById("cardFeatures");
+const fileInput=$("fileInput");
+const uploadArea=$("uploadArea");
+const uploadedPreview=$("uploadedPreview");
+const uploadedImage=$("uploadedImage");
+const productName=$("productName");
+const characteristics=$("characteristics");
+const styleSelect=$("styleSelect");
+const removeStatus=$("removeStatus");
+const mainStatus=$("mainStatus");
+const progressLine=$("progressLine");
+const generateButton=$("generateButton");
+const simpleButton=$("simpleButton");
+const downloadButton=$("downloadButton");
+const card=$("card");
+const cardTitle=$("cardTitle");
+const cardSubtitle=$("cardSubtitle");
+const cardProduct=$("cardProduct");
+const productShadow=$("productShadow");
+const cardFeatures=$("cardFeatures");
 
-let cutoutImage = null;
-let modelPromise = null;
-let isRemoving = false;
-let sceneObjectUrl = null;
-let hasGeneratedCard = false;
+let cutoutImage=null;
+let modelPromise=null;
+let isRemoving=false;
+let sceneObjectUrl=null;
+let hasGeneratedCard=false;
 
 function setStatus(message,type=""){
   mainStatus.textContent=message;
@@ -800,7 +851,6 @@ async function loadSegmentationModel(){
       setRemoveStatus("Загружаем AI-модель удаления фона...","loading");
 
       const processor=await AutoProcessor.from_pretrained(MODEL_ID);
-
       const model=await AutoModel.from_pretrained(MODEL_ID,{
         device:"wasm",
         dtype:"fp32"
@@ -822,10 +872,7 @@ function getModelInput(processed){
     processed?.pixel_values||
     processed?.images;
 
-  if(!input){
-    throw new Error("AutoProcessor не вернул входное изображение.");
-  }
-
+  if(!input)throw new Error("AutoProcessor не вернул входное изображение.");
   return input;
 }
 
@@ -852,7 +899,6 @@ function trimTransparentEdges(sourceCanvas){
   if(!found)return sourceCanvas;
 
   const padding=Math.round(Math.min(width,height)*.025);
-
   minX=Math.max(0,minX-padding);
   minY=Math.max(0,minY-padding);
   maxX=Math.min(width-1,maxX+padding);
@@ -860,8 +906,8 @@ function trimTransparentEdges(sourceCanvas){
 
   const cropWidth=maxX-minX+1;
   const cropHeight=maxY-minY+1;
-
   const result=document.createElement("canvas");
+
   result.width=cropWidth;
   result.height=cropHeight;
 
@@ -874,46 +920,20 @@ function trimTransparentEdges(sourceCanvas){
   return result;
 }
 
-function createMaskCanvas(maskTensor,originalWidth,originalHeight){
-  if(!maskTensor||!maskTensor.dims){
-    throw new Error("BiRefNet вернул результат без размерностей.");
-  }
+function createMaskCanvas(maskTensor,width,height){
+  if(!maskTensor?.dims)throw new Error("BiRefNet не вернул маску.");
 
   const dims=Array.from(maskTensor.dims).map(Number);
-
-  if(dims.length<2){
-    throw new Error("Неподдерживаемая форма маски: "+JSON.stringify(dims));
-  }
-
   const maskHeight=dims[dims.length-2];
   const maskWidth=dims[dims.length-1];
 
-  if(
-    !Number.isInteger(maskWidth)||
-    !Number.isInteger(maskHeight)||
-    maskWidth<=0||
-    maskHeight<=0
-  ){
-    throw new Error("Некорректные размерности маски: "+JSON.stringify(dims));
-  }
-
-  const width=Math.floor(Number(originalWidth));
-  const height=Math.floor(Number(originalHeight));
-
-  if(
-    !Number.isInteger(width)||
-    !Number.isInteger(height)||
-    width<=0||
-    height<=0
-  ){
-    throw new Error("Некорректный размер исходного изображения.");
-  }
+  if(!maskWidth||!maskHeight)throw new Error("Некорректные размеры маски.");
 
   const probabilityTensor=maskTensor.sigmoid();
   const values=probabilityTensor.data;
 
   if(!values||values.length<maskWidth*maskHeight){
-    throw new Error("Недостаточно данных в маске.");
+    throw new Error("Недостаточно данных маски.");
   }
 
   const canvas=document.createElement("canvas");
@@ -924,30 +944,17 @@ function createMaskCanvas(maskTensor,originalWidth,originalHeight){
   const imageData=ctx.createImageData(width,height);
 
   for(let y=0;y<height;y++){
-    const sourceY=Math.min(
-      maskHeight-1,
-      Math.floor(y*maskHeight/height)
-    );
+    const sy=Math.min(maskHeight-1,Math.floor(y*maskHeight/height));
 
     for(let x=0;x<width;x++){
-      const sourceX=Math.min(
-        maskWidth-1,
-        Math.floor(x*maskWidth/width)
-      );
+      const sx=Math.min(maskWidth-1,Math.floor(x*maskWidth/width));
+      const alpha=Math.max(0,Math.min(255,Math.round(Number(values[sy*maskWidth+sx])*255)));
+      const index=(y*width+x)*4;
 
-      const sourceIndex=sourceY*maskWidth+sourceX;
-
-      const alpha=Math.max(
-        0,
-        Math.min(255,Math.round(Number(values[sourceIndex])*255))
-      );
-
-      const targetIndex=(y*width+x)*4;
-
-      imageData.data[targetIndex]=255;
-      imageData.data[targetIndex+1]=255;
-      imageData.data[targetIndex+2]=255;
-      imageData.data[targetIndex+3]=alpha;
+      imageData.data[index]=255;
+      imageData.data[index+1]=255;
+      imageData.data[index+2]=255;
+      imageData.data[index+3]=alpha;
     }
   }
 
@@ -957,7 +964,6 @@ function createMaskCanvas(maskTensor,originalWidth,originalHeight){
 
 async function removeBackground(file){
   if(isRemoving)return;
-
   isRemoving=true;
   progressLine.style.display="block";
 
@@ -969,13 +975,10 @@ async function removeBackground(file){
 
     const originalWidth=originalImage.naturalWidth;
     const originalHeight=originalImage.naturalHeight;
-    const maxDimension=1800;
 
-    const ratio=Math.min(
-      1,
-      maxDimension/Math.max(originalWidth,originalHeight)
-    );
-
+    // Сохраняем больше исходного разрешения.
+    const maxDimension=2400;
+    const ratio=Math.min(1,maxDimension/Math.max(originalWidth,originalHeight));
     const width=Math.round(originalWidth*ratio);
     const height=Math.round(originalHeight*ratio);
 
@@ -983,57 +986,35 @@ async function removeBackground(file){
     inputCanvas.width=width;
     inputCanvas.height=height;
 
-    inputCanvas.getContext("2d").drawImage(
-      originalImage,0,0,width,height
-    );
+    inputCanvas.getContext("2d").drawImage(originalImage,0,0,width,height);
 
-    const modelImage=await RawImage.fromURL(
-      inputCanvas.toDataURL("image/png")
-    );
+    const modelImage=await RawImage.fromURL(inputCanvas.toDataURL("image/png"));
 
     setRemoveStatus("AI удаляет фон...","loading");
 
     const {processor,model}=await loadSegmentationModel();
-
     const processed=await processor(modelImage);
-    const inputImage=getModelInput(processed);
-
-    const output=await model({
-      input_image:inputImage
-    });
-
-    console.log("BIRE FNET OUTPUT:",output);
+    const output=await model({input_image:getModelInput(processed)});
 
     const maskTensor=
       output?.output||
       output?.logits||
       output?.[Object.keys(output||{})[0]];
 
-    if(!maskTensor||!maskTensor.dims){
-      throw new Error("Модель не вернула подходящую маску.");
-    }
+    if(!maskTensor?.dims)throw new Error("Модель не вернула подходящую маску.");
 
-    const maskCanvas=createMaskCanvas(
-      maskTensor,width,height
-    );
-
+    const maskCanvas=createMaskCanvas(maskTensor,width,height);
     const resultCanvas=document.createElement("canvas");
+
     resultCanvas.width=width;
     resultCanvas.height=height;
 
-    const resultContext=resultCanvas.getContext(
-      "2d",{willReadFrequently:true}
-    );
-
+    const resultContext=resultCanvas.getContext("2d",{willReadFrequently:true});
     resultContext.drawImage(inputCanvas,0,0,width,height);
 
-    const resultPixels=resultContext.getImageData(
-      0,0,width,height
-    );
-
-    const maskPixels=maskCanvas.getContext(
-      "2d",{willReadFrequently:true}
-    ).getImageData(0,0,width,height);
+    const resultPixels=resultContext.getImageData(0,0,width,height);
+    const maskPixels=maskCanvas.getContext("2d",{willReadFrequently:true})
+      .getImageData(0,0,width,height);
 
     for(let i=0;i<resultPixels.data.length;i+=4){
       resultPixels.data[i+3]=maskPixels.data[i+3];
@@ -1042,18 +1023,16 @@ async function removeBackground(file){
     resultContext.putImageData(resultPixels,0,0);
 
     const trimmedCanvas=trimTransparentEdges(resultCanvas);
-
     cutoutImage=trimmedCanvas.toDataURL("image/png");
 
     uploadedImage.src=cutoutImage;
     uploadedPreview.style.display="block";
 
     setRemoveStatus("Фон удалён. Товар готов к размещению.","success");
-
     renderProductPreview();
 
   }catch(error){
-    console.error("BACKGROUND REMOVAL ERROR:",error);
+    console.error("BACKGROUND REMOVAL:",error);
 
     setRemoveStatus("Не удалось удалить фон: "+error.message,"error");
 
@@ -1070,20 +1049,16 @@ async function removeBackground(file){
 }
 
 function updateProductShadow(){
-  if(!productShadow || !cardProduct || !cardProduct.complete || !cardProduct.naturalWidth){
-    return;
-  }
+  if(!cardProduct.complete||!cardProduct.naturalWidth)return;
 
   const cardRect=card.getBoundingClientRect();
   const imageRect=cardProduct.getBoundingClientRect();
 
-  if(!cardRect.width || !cardRect.height || !imageRect.width || !imageRect.height){
-    return;
-  }
+  if(!cardRect.width||!imageRect.width)return;
 
-  const pixelRatio=2;
-  const width=Math.round(cardRect.width*pixelRatio);
-  const height=Math.round(cardRect.height*pixelRatio);
+  const ratio=2;
+  const width=Math.round(cardRect.width*ratio);
+  const height=Math.round(cardRect.height*ratio);
 
   productShadow.width=width;
   productShadow.height=height;
@@ -1091,10 +1066,10 @@ function updateProductShadow(){
   const ctx=productShadow.getContext("2d");
   ctx.clearRect(0,0,width,height);
 
-  const x=(imageRect.left-cardRect.left)*pixelRatio;
-  const y=(imageRect.top-cardRect.top)*pixelRatio;
-  const w=imageRect.width*pixelRatio;
-  const h=imageRect.height*pixelRatio;
+  const x=(imageRect.left-cardRect.left)*ratio;
+  const y=(imageRect.top-cardRect.top)*ratio;
+  const w=imageRect.width*ratio;
+  const h=imageRect.height*ratio;
 
   const mask=document.createElement("canvas");
   mask.width=width;
@@ -1107,33 +1082,33 @@ function updateProductShadow(){
   maskCtx.fillRect(0,0,width,height);
 
   ctx.save();
-  ctx.globalAlpha=.20;
-  ctx.shadowColor="rgba(10,22,36,.48)";
-  ctx.shadowBlur=25*pixelRatio;
-  ctx.shadowOffsetX=2*pixelRatio;
-  ctx.shadowOffsetY=17*pixelRatio;
+  ctx.globalAlpha=.17;
+  ctx.shadowColor="rgba(10,22,36,.55)";
+  ctx.shadowBlur=24*ratio;
+  ctx.shadowOffsetX=2*ratio;
+  ctx.shadowOffsetY=13*ratio;
   ctx.drawImage(mask,0,0);
   ctx.restore();
 
   const bottom=y+h;
   const centerX=x+w/2;
-  const contactWidth=Math.min(w*.43,190*pixelRatio);
-  const contactHeight=Math.max(7*pixelRatio,Math.min(18*pixelRatio,w*.035));
+  const contactWidth=Math.min(w*.43,190*ratio);
+  const contactHeight=Math.max(7*ratio,Math.min(17*ratio,w*.035));
 
   const gradient=ctx.createRadialGradient(
-    centerX,bottom-2*pixelRatio,1,
-    centerX,bottom-2*pixelRatio,contactWidth*.62
+    centerX,bottom-2*ratio,1,
+    centerX,bottom-2*ratio,contactWidth*.62
   );
 
-  gradient.addColorStop(0,"rgba(15,25,38,.30)");
-  gradient.addColorStop(.48,"rgba(15,25,38,.14)");
+  gradient.addColorStop(0,"rgba(15,25,38,.28)");
+  gradient.addColorStop(.48,"rgba(15,25,38,.12)");
   gradient.addColorStop(1,"rgba(15,25,38,0)");
 
   ctx.save();
   ctx.fillStyle=gradient;
-  ctx.filter=`blur(${5*pixelRatio}px)`;
+  ctx.filter=`blur(${5*ratio}px)`;
   ctx.beginPath();
-  ctx.ellipse(centerX,bottom-1*pixelRatio,contactWidth/2,contactHeight,0,0,Math.PI*2);
+  ctx.ellipse(centerX,bottom-1*ratio,contactWidth/2,contactHeight,0,0,Math.PI*2);
   ctx.fill();
   ctx.restore();
 }
@@ -1151,15 +1126,13 @@ function renderProductPreview(){
   downloadButton.disabled=false;
 
   requestAnimationFrame(updateProductShadow);
-}async function makeVisionImage(imageSource){
+}
+
+async function makeVisionImage(imageSource){
   const img=await loadImage(imageSource);
   const maxSide=768;
 
-  const ratio=Math.min(
-    1,
-    maxSide/Math.max(img.width,img.height)
-  );
-
+  const ratio=Math.min(1,maxSide/Math.max(img.width,img.height));
   const width=Math.round(img.width*ratio);
   const height=Math.round(img.height*ratio);
 
@@ -1177,7 +1150,6 @@ function renderProductPreview(){
 
 async function requestDesign(){
   const name=productName.value.trim();
-
   if(!name)throw new Error("Введите название товара");
 
   const response=await fetch(API_BASE+"/api/generate",{
@@ -1185,23 +1157,19 @@ async function requestDesign(){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       productName:name,
-      characteristics:characteristics.value.trim()
+      characteristics:characteristics.value.trim(),
+      style:styleSelect.value
     })
   });
 
   const data=await response.json();
 
-  if(!response.ok){
-    throw new Error(data.error||"Не удалось создать дизайн");
-  }
-
+  if(!response.ok)throw new Error(data.error||"Не удалось создать дизайн");
   return data;
 }
 
 async function requestAIScene(){
-  if(!cutoutImage){
-    throw new Error("Сначала загрузите фотографию товара");
-  }
+  if(!cutoutImage)throw new Error("Сначала загрузите фотографию товара");
 
   const analysisImage=await makeVisionImage(cutoutImage);
 
@@ -1230,49 +1198,30 @@ async function requestAIScene(){
   const blob=await response.blob();
 
   const position=response.headers.get("X-Cardly-Position")||"center";
+  const scale=Math.max(55,Math.min(95,Number(response.headers.get("X-Cardly-Scale"))||78));
+  const vertical=Math.max(40,Math.min(65,Number(response.headers.get("X-Cardly-Vertical"))||56));
 
-  const scale=Math.max(
-    50,
-    Math.min(78,Number(response.headers.get("X-Cardly-Scale"))||68)
-  );
-
-  const vertical=Math.max(
-    43,
-    Math.min(62,Number(response.headers.get("X-Cardly-Vertical"))||55)
-  );
-
-  return {
-    blob,
-    layout:{position,scale,vertical}
-  };
+  return {blob,layout:{position,scale,vertical}};
 }
 
 function applyProductLayout(layout){
   const position=layout?.position||"center";
+  const scale=Math.max(55,Math.min(95,Number(layout?.scale)||85));
+  const vertical=Math.max(40,Math.min(65,Number(layout?.vertical)||56));
 
-  const scale=Math.max(
-    50,
-    Math.min(78,Number(layout?.scale)||68)
-  );
-
-  const vertical=Math.max(
-    43,
-    Math.min(62,Number(layout?.vertical)||55)
-  );
-
-  const composedScale=Math.round(scale*.80);
-
-  cardProduct.style.width=composedScale+"%";
-  cardProduct.style.maxHeight="59%";
+  // Убрано искусственное уменьшение на 20%.
+  cardProduct.style.width=scale+"%";
+  cardProduct.style.maxHeight="72%";
   cardProduct.style.top=vertical+"%";
-  cardProduct.style.transform="translateY(-50%)";
 
   if(position==="left"){
-    cardProduct.style.left="8%";
+    cardProduct.style.left="36%";
     cardProduct.style.right="auto";
+    cardProduct.style.transform="translate(-50%,-50%)";
   }else if(position==="right"){
-    cardProduct.style.left="auto";
-    cardProduct.style.right="8%";
+    cardProduct.style.left="64%";
+    cardProduct.style.right="auto";
+    cardProduct.style.transform="translate(-50%,-50%)";
   }else{
     cardProduct.style.left="50%";
     cardProduct.style.right="auto";
@@ -1280,58 +1229,58 @@ function applyProductLayout(layout){
   }
 }
 
-async function renderCard(data,sceneUrl=null,sceneLayout=null){
+function clearFeatureCards(){
+  cardFeatures.replaceChildren();
+}
+
+function renderFeatures(features){
+  clearFeatureCards();
+
+  if(!Array.isArray(features))return;
+
+  features.slice(0,4).forEach(text=>{
+    const item=document.createElement("div");
+    item.className="feature";
+
+    const dot=document.createElement("span");
+    dot.className="feature-dot";
+
+    const label=document.createElement("span");
+    label.textContent=String(text);
+
+    item.append(dot,label);
+    cardFeatures.appendChild(item);
+  });
+}
+
+function renderCard(data,sceneUrl=null,sceneLayout=null){
   cardTitle.textContent=data.title||productName.value||"Ваш товар";
   cardSubtitle.textContent=data.subtitle||"";
-  cardFeatures.innerHTML="";
+  $("cardEyebrow").textContent=data.eyebrow||"";
+  $("cardBadge").textContent=data.badge||"";
+  $("cardBadge").style.display=data.badge?"block":"none";
 
-  const features=Array.isArray(data.features)
-    ?data.features.slice(0,4)
-    :[];
+  renderFeatures(data.features);
 
-  features.forEach(text=>{
-    const feature=document.createElement("div");
-    feature.className="feature";
-    feature.textContent=text;
-    cardFeatures.appendChild(feature);
-  });
+  const designs=["premium","editorial","showcase","lifestyle","infographic","cinematic"];
+  const backgrounds=["light","dark","soft","gradient","accent"];
+  const accents=["blue","cyan","green","orange","violet","black"];
+  const layouts=["hero","split","editorial","cards","asymmetric","minimal"];
+
+  const design=designs.includes(data.design)?data.design:styleSelect.value;
+  const background=backgrounds.includes(data.background)?data.background:"light";
+  const accent=accents.includes(data.accent)?data.accent:"blue";
+  const layout=layouts.includes(data.layout)?data.layout:"hero";
 
   card.className="";
 
-  const designs=[
-    "premium",
-    "editorial",
-    "showcase",
-    "lifestyle",
-    "infographic",
-    "cinematic"
-  ];
-
-  const design=designs.includes(styleSelect.value)
-    ?styleSelect.value
-    :"premium";
-
-  card.classList.add("design-"+design);
-
-  const backgrounds=[
-    "light","dark","soft","gradient","accent"
-  ];
-
-  const background=backgrounds.includes(data.background)
-    ?data.background
-    :"light";
-
-  card.classList.add("background-"+background);
-
-  const accents=[
-    "blue","cyan","green","orange","violet","black"
-  ];
-
-  const accent=accents.includes(data.accent)
-    ?data.accent
-    :"blue";
-
-  card.classList.add("accent-"+accent);
+  card.classList.add(
+    "design-"+design,
+    "background-"+background,
+    "accent-"+accent,
+    "layout-"+layout,
+    "features-"+(data.featuresPosition||"bottom")
+  );
 
   const titlePosition=data.titlePosition||"top";
 
@@ -1342,12 +1291,12 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
     cardTitle.style.top="auto";
     cardTitle.style.bottom="23%";
   }else{
-    cardTitle.style.top="5.5%";
+    cardTitle.style.top="49px";
     cardTitle.style.bottom="auto";
   }
 
   if(titlePosition==="top"){
-    cardSubtitle.style.top="19%";
+    cardSubtitle.style.top="120px";
     cardSubtitle.style.bottom="auto";
   }else{
     cardSubtitle.style.top="auto";
@@ -1360,23 +1309,22 @@ async function renderCard(data,sceneUrl=null,sceneLayout=null){
 
     applyProductLayout(sceneLayout||{
       position:data.productPosition||"center",
-      scale:68,
-      vertical:57
+      scale:data.productScale||85,
+      vertical:56
     });
   }
 
-  const cardBackground=document.getElementById("cardBackground");
+  const backgroundElement=$("cardBackground");
 
   if(sceneUrl){
     card.classList.add("scene-composition");
-    cardBackground.style.backgroundImage=`url("${sceneUrl}")`;
-    cardBackground.style.backgroundSize="cover";
-    cardBackground.style.backgroundPosition="center";
+    backgroundElement.style.backgroundImage=`url("${sceneUrl}")`;
+    backgroundElement.style.backgroundSize="cover";
+    backgroundElement.style.backgroundPosition="center";
   }else{
-    card.classList.remove("scene-composition");
-    cardBackground.style.backgroundImage="";
-    cardBackground.style.backgroundSize="";
-    cardBackground.style.backgroundPosition="";
+    backgroundElement.style.backgroundImage="";
+    backgroundElement.style.backgroundSize="";
+    backgroundElement.style.backgroundPosition="";
   }
 
   hasGeneratedCard=true;
@@ -1402,35 +1350,20 @@ async function generateAIComposition(){
   try{
     const design=await requestDesign();
 
-    setStatus(
-      "Шаг 2 из 2: AI подбирает сцену и создаёт фон...",
-      "loading"
-    );
+    setStatus("Шаг 2 из 2: AI анализирует товар и создаёт окружение...","loading");
 
     const scene=await requestAIScene();
 
     revokeSceneUrl();
-
     sceneObjectUrl=URL.createObjectURL(scene.blob);
 
-    await renderCard(
-      design,
-      sceneObjectUrl,
-      scene.layout
-    );
+    renderCard(design,sceneObjectUrl,scene.layout);
 
-    setStatus(
-      "AI-композиция готова. Можно скачать карточку.",
-      "success"
-    );
+    setStatus("AI-композиция готова. Можно скачать карточку.","success");
 
   }catch(error){
     console.error("COMPOSITION ERROR:",error);
-
-    setStatus(
-      error.message||"Не удалось создать композицию",
-      "error"
-    );
+    setStatus(error.message||"Не удалось создать композицию","error");
 
   }finally{
     setLoading(false);
@@ -1456,20 +1389,13 @@ async function generateSimpleCard(){
 
     revokeSceneUrl();
 
-    const cardBackground=document.getElementById("cardBackground");
-    cardBackground.style.backgroundImage="";
-
-    await renderCard(design);
+    renderCard(design);
 
     setStatus("Карточка готова. Можно скачать изображение.","success");
 
   }catch(error){
     console.error("SIMPLE GENERATION ERROR:",error);
-
-    setStatus(
-      error.message||"Не удалось создать карточку",
-      "error"
-    );
+    setStatus(error.message||"Не удалось создать карточку","error");
 
   }finally{
     setLoading(false);
@@ -1486,6 +1412,8 @@ async function downloadCard(){
   downloadButton.textContent="Подготавливаем PNG...";
 
   try{
+    await document.fonts.ready;
+
     const canvas=await html2canvas(card,{
       scale:2,
       useCORS:true,
@@ -1498,17 +1426,13 @@ async function downloadCard(){
     exportCanvas.width=900;
     exportCanvas.height=1200;
 
-    exportCanvas.getContext("2d").drawImage(
-      canvas,0,0,900,1200
-    );
+    exportCanvas.getContext("2d").drawImage(canvas,0,0,900,1200);
 
     const blob=await new Promise(resolve=>{
       exportCanvas.toBlob(resolve,"image/png");
     });
 
-    if(!blob){
-      throw new Error("Не удалось подготовить PNG");
-    }
+    if(!blob)throw new Error("Не удалось подготовить PNG");
 
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");
@@ -1526,7 +1450,6 @@ async function downloadCard(){
 
   }catch(error){
     console.error("DOWNLOAD ERROR:",error);
-
     setStatus("Ошибка скачивания: "+error.message,"error");
 
   }finally{
@@ -1538,11 +1461,7 @@ async function downloadCard(){
 async function handleFile(file){
   if(!file)return;
 
-  const allowedTypes=[
-    "image/png",
-    "image/jpeg",
-    "image/webp"
-  ];
+  const allowedTypes=["image/png","image/jpeg","image/webp"];
 
   if(!allowedTypes.includes(file.type)){
     setStatus("Поддерживаются только PNG, JPG и WEBP.","error");
@@ -1562,11 +1481,9 @@ async function handleFile(file){
   cardProduct.style.display="none";
   cardProduct.removeAttribute("src");
 
-  if(productShadow){
-    productShadow.getContext("2d").clearRect(
-      0,0,productShadow.width,productShadow.height
-    );
-  }
+  productShadow.getContext("2d").clearRect(
+    0,0,productShadow.width,productShadow.height
+  );
 
   downloadButton.disabled=true;
 
@@ -1575,17 +1492,13 @@ async function handleFile(file){
   uploadedImage.src=previewUrl;
   uploadedPreview.style.display="block";
 
-  setRemoveStatus(
-    "Фотография загружена. Начинаем удаление фона...",
-    "loading"
-  );
+  setRemoveStatus("Фотография загружена. Начинаем удаление фона...","loading");
 
   await removeBackground(file);
 }
 
 fileInput.addEventListener("change",async event=>{
-  const file=event.target.files?.[0];
-  await handleFile(file);
+  await handleFile(event.target.files?.[0]);
   fileInput.value="";
 });
 
@@ -1601,9 +1514,7 @@ uploadArea.addEventListener("dragleave",()=>{
 uploadArea.addEventListener("drop",async event=>{
   event.preventDefault();
   uploadArea.classList.remove("dragover");
-
-  const file=event.dataTransfer.files?.[0];
-  await handleFile(file);
+  await handleFile(event.dataTransfer.files?.[0]);
 });
 
 generateButton.addEventListener("click",generateAIComposition);
