@@ -36,9 +36,43 @@ export default {
       });
     };
 
-    const readAIText = result =>
-      String(result?.response || result?.result || result?.text || "").trim();
+    // Извлечение текста из разных форматов ответа AI
+    const readAIText = result => {
+      if (typeof result === "string") return result.trim();
 
+      if (!result || typeof result !== "object") return "";
+
+      const candidates = [
+        result.response,
+        result.result,
+        result.text,
+        result.content,
+        result.output_text,
+        result.choices?.[0]?.message?.content,
+        result.choices?.[0]?.text,
+        result.message?.content
+      ];
+
+      for (const value of candidates) {
+        if (typeof value === "string" && value.trim()) {
+          return value.trim();
+        }
+
+        if (Array.isArray(value)) {
+          const text = value
+            .filter(item => typeof item?.text === "string")
+            .map(item => item.text)
+            .join("\n")
+            .trim();
+
+          if (text) return text;
+        }
+      }
+
+      return "";
+    };
+
+    // Извлечение JSON из ответа модели
     const parseJSON = text => {
       const clean = String(text)
         .replace(/```json/gi, "")
@@ -49,10 +83,24 @@ export default {
       const end = clean.lastIndexOf("}");
 
       if (start < 0 || end <= start) {
-        throw new Error("AI не вернул корректный JSON");
+        throw new Error(
+          "В ответе модели не найден JSON-объект. Ответ: " +
+          clean.slice(0, 1500)
+        );
       }
 
-      return JSON.parse(clean.slice(start, end + 1));
+      const jsonText = clean.slice(start, end + 1);
+
+      try {
+        return JSON.parse(jsonText);
+      } catch (error) {
+        throw new Error(
+          "JSON от модели содержит ошибку: " +
+          error.message +
+          ". Фрагмент: " +
+          jsonText.slice(0, 1500)
+        );
+      }
     };
 
     if (request.method === "OPTIONS") {
@@ -229,6 +277,7 @@ export default {
 
       } catch (error) {
         console.error("VISION TEST ERROR:", error);
+
         return jsonResponse({
           ok: false,
           error: error.message
@@ -283,11 +332,14 @@ export default {
       }
     }
 
-    // 6. AI-КОМПОЗИЦИЯ: VISION АНАЛИЗ ТОВАРА + FLUX
+    // 6. AI-КОМПОЗИЦИЯ: АНАЛИЗ ТОВАРА + FLUX
     if (
       url.pathname === "/api/generate-scene" &&
       request.method === "POST"
     ) {
+      let visionResult = null;
+      let qwenText = "";
+
       try {
         const body = await request.json();
 
@@ -306,15 +358,21 @@ export default {
         const image = String(body.image || "");
 
         if (!productName) {
-          return jsonResponse({ error: "Введите название товара" }, 400);
+          return jsonResponse({
+            error: "Введите название товара"
+          }, 400);
         }
 
         if (!/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
-          return jsonResponse({ error: "Не получено фото товара" }, 400);
+          return jsonResponse({
+            error: "Не получено фото товара"
+          }, 400);
         }
 
         if (image.length > 7_000_000) {
-          return jsonResponse({ error: "Изображение слишком большое" }, 413);
+          return jsonResponse({
+            error: "Изображение слишком большое"
+          }, 413);
         }
 
         const styles = {
@@ -328,27 +386,27 @@ export default {
 
         const selectedStyle = styles[style] || styles.premium;
 
-        // ШАГ 1. АНАЛИЗ ФОТО ТОВАРА ЧЕРЕЗ QWEN
+        // ШАГ 1. QWEN АНАЛИЗИРУЕТ ЗАГРУЖЕННОЕ ФОТО
         const visionPrompt = `
 Analyze the attached product photo. Use only visible facts.
 
 Product: ${productName}
 Characteristics: ${characteristics || "not provided"}
 
-Identify the product category, shape, orientation, visible materials and colors. Do not invent details or alter the product design.
+Identify the category, shape, orientation, visible materials and colors. Do not invent details.
 
-Design a realistic advertising background suitable for this exact object. Specify its environment, support surface, camera perspective, light direction and color palette.
+Design a realistic advertising background for this exact object. Describe the environment, support surface, camera perspective, lighting and palette.
 
 Rules:
-- No product, replicas or similar objects in the background.
-- Leave the upper 22% calm for a headline.
+- Do not include the product or its copies in the background.
+- Keep the upper 22% calm for a headline.
 - Choose a physically suitable surface or mounting context.
 - Write scene descriptions in English.
-- Return only valid JSON, without Markdown.
+- Return only valid JSON without Markdown.
 
-Use exactly this structure:
+Return this structure:
 {
-  "category": "short product category",
+  "category": "short category",
   "product_shape": "visible shape and orientation",
   "materials": "visible materials",
   "colors": "main visible colors",
@@ -367,7 +425,7 @@ scale: number from 50 to 78.
 vertical: number from 43 to 62.
 `;
 
-        const visionResult = await env.AI.run(
+        visionResult = await env.AI.run(
           "@cf/qwen/qwen3.8-27b",
           {
             messages: [
@@ -378,8 +436,14 @@ vertical: number from 43 to 62.
               {
                 role: "user",
                 content: [
-                  { type: "text", text: visionPrompt },
-                  { type: "image_url", image_url: { url: image } }
+                  {
+                    type: "text",
+                    text: visionPrompt
+                  },
+                  {
+                    type: "image_url",
+                    image_url: { url: image }
+                  }
                 ]
               }
             ],
@@ -389,9 +453,38 @@ vertical: number from 43 to 62.
           }
         );
 
-        const analysis = parseJSON(readAIText(visionResult));
+        console.log(
+          "QWEN FULL RESULT:",
+          JSON.stringify(visionResult).slice(0, 5000)
+        );
 
-        // ШАГ 2. НОРМАЛИЗАЦИЯ ПОЛОЖЕНИЯ ТОВАРА
+        qwenText = readAIText(visionResult);
+
+        console.log(
+          "QWEN EXTRACTED TEXT:",
+          qwenText.slice(0, 5000)
+        );
+
+        // ШАГ 2. ПРОВЕРКА И РАЗБОР JSON
+        let analysis;
+
+        try {
+          if (!qwenText) {
+            throw new Error("Текст ответа Qwen не найден");
+          }
+
+          analysis = parseJSON(qwenText);
+
+        } catch (error) {
+          throw new Error(
+            "Ошибка разбора Qwen: " +
+            error.message +
+            ". Ответ модели: " +
+            JSON.stringify(visionResult).slice(0, 2500)
+          );
+        }
+
+        // ШАГ 3. НОРМАЛИЗАЦИЯ ПОЛОЖЕНИЯ ТОВАРА
         const position = ["left", "center", "right"].includes(analysis.placement)
           ? analysis.placement
           : "center";
@@ -405,23 +498,26 @@ vertical: number from 43 to 62.
           : 58;
 
         const safeText = (value, max = 450) =>
-          String(value || "").replace(/[\r\n]+/g, " ").slice(0, max);
+          String(value || "")
+            .replace(/[\r\n]+/g, " ")
+            .slice(0, max);
 
         const category = safeText(analysis.category || productName, 100);
         const productShape = safeText(analysis.product_shape, 350);
         const materials = safeText(analysis.materials, 250);
         const colors = safeText(analysis.colors, 200);
         const visualDescription = safeText(analysis.visual_description, 350);
+
         const environment = safeText(
           analysis.environment || "A clean modern commercial interior",
           650
         );
+
         const supportSurface = safeText(analysis.support_surface, 250);
         const cameraPerspective = safeText(analysis.camera_perspective, 250);
         const lightDirection = safeText(analysis.light_direction, 250);
 
-        // ШАГ 3. FLUX СОЗДАЁТ ТОЛЬКО ФОН
-        // ОРИГИНАЛЬНЫЙ ТОВАР ДОБАВЛЯЕТСЯ ОТДЕЛЬНО
+        // ШАГ 4. FLUX СОЗДАЁТ ФОН
         const finalPrompt = [
           "Create a photorealistic vertical 3:4 premium marketplace advertising background, not a finished poster.",
           "PRODUCT CATEGORY: " + category + ".",
@@ -430,8 +526,8 @@ vertical: number from 43 to 62.
           "VISIBLE PRODUCT COLORS: " + colors + ".",
           "SCENE PALETTE: " + visualDescription + ".",
           "ENVIRONMENT: " + environment + ".",
-          "SUPPORTING ARCHITECTURE OR SURFACE: " + supportSurface + ".",
-          "CAMERA AND PERSPECTIVE: " + cameraPerspective + ".",
+          "SUPPORTING SURFACE: " + supportSurface + ".",
+          "CAMERA: " + cameraPerspective + ".",
           "LIGHTING: " + lightDirection + ".",
           "VISUAL STYLE: " + selectedStyle + ".",
           "Compose the environment around the reference object's real silhouette and proportions.",
@@ -443,6 +539,8 @@ vertical: number from 43 to 62.
           "BACKGROUND ONLY: do not draw the product, replicas, similar objects, product parts, silhouettes, placeholder objects or fake product shadows.",
           "No text, letters, numbers, typography, logos, labels, watermark or people."
         ].join(" ").slice(0, 2048);
+
+        console.log("FLUX PROMPT LENGTH:", finalPrompt.length);
 
         const imageResult = await env.AI.run(
           "@cf/black-forest-labs/flux-1-schnell",
@@ -466,12 +564,15 @@ vertical: number from 43 to 62.
         console.error("AD SCENE GENERATION ERROR:", error);
 
         const message = String(error?.message || "");
-        const licenseHint = /license|accept|terms|403/i.test(message)
-          ? " Если модель Vision запускается впервые, сначала примите лицензию модели в Cloudflare."
-          : "";
 
         return jsonResponse({
-          error: (message || "Не удалось создать рекламное окружение") + licenseHint
+          error: message || "Не удалось создать рекламное окружение",
+          qwen_text: qwenText
+            ? qwenText.slice(0, 2500)
+            : null,
+          qwen_full_result: visionResult
+            ? JSON.stringify(visionResult).slice(0, 4000)
+            : null
         }, 500);
       }
     }
